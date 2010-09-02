@@ -3,7 +3,7 @@
 #
 #  NEKO_INCLUDE_DIR - where to find mysql.h, etc.
 #  NEKO_LIBRARIES   - List of libraries when using Neko.
-#  NEKO_FOUND       - True if MySQL found.
+#  NEKO_FOUND       - True if Neko found.
 
 IF (NEKO_INCLUDE_DIR)
   # Already in cache, be silent
@@ -14,7 +14,6 @@ FIND_PATH(NEKO_INCLUDE_DIR
   NAMES	neko.h
   PATHS /usr/local/include 
 		/usr/include 
-		F:/Program\ Files/Motion-Twin/neko/include
 )
 
 # Finally the library itself
@@ -22,7 +21,6 @@ find_library(NEKO_LIBRARY
   NAMES neko
   PATHS /usr/lib
 		/usr/local/lib
-		F:/Program\ Files/Motion-Twin/neko
 )
 
 SET(NEKO_NAMES neko)
