@@ -1,0 +1,10 @@
+CMakeCache.txt
+CMakeFiles
+CMakeFiles/**/*
+Makefile
+cmake_install.cmake
+libOiVibrations.so
+*.swp
+#
+tags
+oitest

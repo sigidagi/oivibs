@@ -18,6 +18,9 @@ UniversalFormat::UniversalFormat(const vector<string>& vFiles) : bExistNodes(fal
     
     __vFiles.resize(vFiles.size());
     std::copy(vFiles.begin(), vFiles.end(), __vFiles.begin());
+
+
+    parse();
 }
 
 void UniversalFormat::parse()
@@ -59,7 +62,7 @@ void UniversalFormat::parse()
         bool braw_data = false;
         if (strExtension == "txt")
         {
-            bool status = m_matData.load(file, arma::raw_ascii);            
+            bool status = m_Data.getData().load(file, arma::raw_ascii);            
             if (status == false)
             {
                 // save into status and return 
@@ -121,7 +124,7 @@ void UniversalFormat::parse()
 				for (size_t t = 0; t < m_vposData.size(); ++t)
 					parseData(m_vposData[t], t);
                     
-                m_matData.save(strBaseName + ".mat");     
+                m_Data.getData().save(strBaseName + ".mat");     
 			}
             if ( !bExistNodes && !bExistLines && !bExistSurfaces) 
             {
@@ -372,8 +375,8 @@ void UniversalFormat::parseData(const int pos, int column )
 	ss.str("");
 	ss.clear();
 
-    vSamplingInterval.push_back(dSamplingInterval);
-    vNumberOfSamples.push_back(nNumberOfPoints);
+    m_Data.vSamplingInterval.push_back(dSamplingInterval);
+    m_Data.vNumberOfSamples.push_back(nNumberOfPoints);
 
 	getline(uffFile, line);
 	getline(uffFile, line);
@@ -384,12 +387,12 @@ void UniversalFormat::parseData(const int pos, int column )
     if (column == 0)
         // (rows, columns) - rows represent nummber of points in a channel, columns - 
         // number of channels.
-        m_matData.set_size( nNumberOfPoints, (int)m_vposData.size() );
+        m_Data.getData().set_size( nNumberOfPoints, (int)m_vposData.size() );
     else
     {
         // truncate matrix to a smaller number of columns.
-        if ((int)m_matData.n_cols > nNumberOfPoints)
-            m_matData.set_size( nNumberOfPoints, (int)m_vposData.size() );
+        if ((int)m_Data.getData().n_cols > nNumberOfPoints)
+            m_Data.getData().set_size( nNumberOfPoints, (int)m_vposData.size() );
     }
 
 	int nCount = 0;
@@ -404,7 +407,7 @@ void UniversalFormat::parseData(const int pos, int column )
 
         do 
         {
-            m_matData(nCount, column) = dValue;
+            m_Data.getData()(nCount, column) = dValue;
             ++nCount;
         }
 		while (ss >> dValue);
@@ -413,11 +416,6 @@ void UniversalFormat::parseData(const int pos, int column )
 		ss.clear();
 	}
 
-}
-
-const arma::Mat<double>& UniversalFormat::getData() const
-{
-    return m_matData;
 }
 
 void UniversalFormat::searchForSamplingT()
@@ -449,7 +447,7 @@ void UniversalFormat::searchForSamplingT()
     }
 
     if (dT != 0.0)
-        vSamplingInterval.push_back(dT);       
+        m_Data.vSamplingInterval.push_back(dT);       
 
 }
 

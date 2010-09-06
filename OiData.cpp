@@ -53,9 +53,9 @@ void OiData::createPSD(cube& psd, mat& chunk)
 
 }
 
-bool OiData::startProcessing(UniversalFormat* pUFF)
+bool OiData::startProcessing()
 {
-    const mat& refData = pUFF->getData();
+    const mat& refData = getData();
     int nrows = refData.n_rows;
     int ncols = refData.n_cols;
     if (nrows == 0 || ncols == 0)
@@ -114,10 +114,10 @@ bool OiData::startProcessing(UniversalFormat* pUFF)
     }
     
     double T;
-    if (pUFF->vSamplingInterval.empty())
+    if (vSamplingInterval.empty())
         T = 1.0;    
 
-    T = pUFF->vSamplingInterval[0];
+    T = vSamplingInterval[0];
     m_Freq = 1/(2.0*T) * linspace<colvec>(0,1, segmentLength/2); 
 
     
@@ -145,4 +145,10 @@ bool OiData::startProcessing(UniversalFormat* pUFF)
     return true;
 
 }
+
+arma::Mat<double>& OiData::getData() 
+{
+    return m_matData;
+}
+
 

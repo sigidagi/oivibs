@@ -7,6 +7,8 @@
 #include <string>
 #include <boost/shared_array.hpp>
 #include <mysql++.h>
+#include "OiData.h" 
+
 
 using std::vector;
 using std::string;
@@ -18,6 +20,8 @@ class UniversalFormat
 	// pivate data
 private:
 	std::ifstream uffFile;
+    
+    OiData m_Data;
 
 	bool bExistNodes;
     bool bExistLines;
@@ -25,9 +29,6 @@ private:
     bool bExistData;
 	int posNodes, posLines, posSurface;
 	vector<int> m_vposData;
-
-    // channels are represented in columns 
-    arma::mat m_matData;
 
 	string m_strFile;
     vector<string> __strStatus;
@@ -42,22 +43,19 @@ private:
 	void parseSurfaces(mysqlpp::Connection& con);
 	void parseData(const int pos, int column);
 
+    void parse();
 
 public:
 	explicit UniversalFormat(const vector<string>& file);
 	~UniversalFormat();
 
-    vector<double> vSamplingInterval;
-    vector<int> vNumberOfSamples;
-    
-    void parse();
+   
 
     bool existNodes();
     bool existLines();
     bool existSurfaces();
     bool existData();
 
-    const arma::Mat<double>& getData() const;
 };
 
 

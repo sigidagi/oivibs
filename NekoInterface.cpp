@@ -1,10 +1,9 @@
-#include "UniversalFormat.h"
 #include <iostream>
 #include <neko.h>
 
+#include "UniversalFormat.h"
 #include "OiDatabase.h"
 #include "OiGeometry.h"
-#include "OiData.h"
 
 value init( value varr )
 {
@@ -24,17 +23,14 @@ value init( value varr )
     if (vFileNames.empty())
         return val_false;
     
-	UniversalFormat uff(vFileNames);
+    // cration of of UniversalFormat object and initialization - parsing data. 
     // search for goemetry: nodes, lines and surfaces and search for data.
-    uff.parse();
+	UniversalFormat uff(vFileNames);
 
-    if ( uff.existData())
-    {
-        OiData oid;
-        oid.startProcessing(&uff);
+    if ( !uff.existData())
+        return val_false;
 
-    }
-	    if ( !uff.existNodes() )
+    if ( !uff.existNodes() )
         return val_false;
 
     if ( !uff.existLines() && !uff.existSurfaces() )

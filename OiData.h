@@ -17,8 +17,8 @@
 #ifndef _OIDATA_H
 #define _OIDATA_H
 
-#include "UniversalFormat.h"
 #include <armadillo>
+#include <vector>
 
 using namespace arma;
 
@@ -31,6 +31,9 @@ private:
 	 *OiData& operator=(OiData const&){ return *this;};
      */
 
+    // channels are represented in columns 
+    arma::mat m_matData;
+
     cube m_Pxx;
     mat m_SVD;
     colvec m_Freq;
@@ -41,8 +44,12 @@ private:
 public:
 
 //	static OiData& Instance();
-    bool startProcessing(UniversalFormat* pUFF);
+    bool startProcessing();
+    arma::Mat<double>& getData();
 
+    std::vector<double> vSamplingInterval;
+    std::vector<int> vNumberOfSamples;
+ 
 }; // class OiData
 
 #endif 
