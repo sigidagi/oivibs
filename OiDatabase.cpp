@@ -202,3 +202,39 @@ bool OiDatabase::createTable_Data(mysqlpp::Connection& con)
     return true;
 }
 
+// Implementation of ProxyBase interface
+
+void OiDatabase::getNodes(int* array, int& nnodes)
+{
+    OiDatabase dbase;
+    mysqlpp::Connection conn;
+    dbase.connect("test", conn);
+    
+
+    mysqlpp::Query query = conn.query("select * from geonodes");
+    mysqlpp::StoreQueryResult res = query.store();
+   
+    nnodes = (int)(res.num_rows())*3; 
+    if (nnodes == 0)
+        return;
+
+    array = new int[nnodes];
+
+	for (size_t i = 0; i < res.num_rows()*3; i+=3)
+    {
+		array[i] = (res[i/3]["x"]);
+		array[i+1] = (res[i/3]["y"]);
+		array[i+2] = (res[i/3]["z"]);
+    }
+   
+}
+
+void OiDatabase::getLines(double* array, int& nlines)
+{
+
+}
+
+void OiDatabase::getSurfaces(double* array, int& nsurfaces)
+{
+
+}

@@ -5,6 +5,7 @@
 #include <vector>
 #include <string>
 #include <map>
+#include "OiProxy.h"
 
 using std::ostream;
 using std::map;
@@ -32,41 +33,33 @@ struct Surface
 	int node3;
 };
 
-ostream& operator<<(ostream& stream, Point3D& ob);
-ostream& operator<<(ostream& stream, Line& ob);
-ostream& operator<<(ostream& stream, Surface& ob);
-
-
-class OiGeometry
+class OiGeometry : ProxyBase
 {
-private:
-	OiGeometry(){};
-	OiGeometry(OiGeometry const&){};
-	OiGeometry& operator=(OiGeometry const&){ return *this;};
+    private:
+        OiGeometry(){};
+        OiGeometry(OiGeometry const&){};
+        OiGeometry& operator=(OiGeometry const&){ return *this;};
 
-	map<int,Point3D> m_vNodes;
-	vector< Surface > m_vSurfaces;
-	vector< Line > m_vLines;
-    
-    vector<string> __strStatus;
+        map<int,Point3D> m_vNodes;
+        vector< Surface > m_vSurfaces;
+        vector< Line > m_vLines;
+        
+        vector<string> __strStatus;
+//        static OiGeometry* instance_;
+        
+        friend class UniversalFormat;
 
-	friend class UniversalFormat;
+    public:
+        
+        void getNodes(int* array, int& nnnodes);
+        void getLines(double* array, int& nlines);
+        void getSurfaces(double* array, int& nSurfaces);
 
-public:
+        static OiGeometry& Instance();
 
-	static OiGeometry& Instance();
 
-	void getNodes(vector<int>& vNodes);
-	Point3D getNodeLocation(int nNode);
-
-	int getNumberOfLines();
-	Line getLine(int index);
-
-	int getNumberOfSurfaces();
-	Surface getSurface(int index);
-
-    vector<string> getStatus();
-    void clearStatus();
+        vector<string> getStatus();
+        void clearStatus();
 };
 
 #endif

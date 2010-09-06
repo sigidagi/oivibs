@@ -60,23 +60,6 @@ value getPSD()
 
 value getNodes()
 {
-    OiDatabase dbase;
-    mysqlpp::Connection conn;
-    dbase.connect("test", conn);
-    
-    mysqlpp::Query query = conn.query("select * from geonodes");
-    mysqlpp::StoreQueryResult res = query.store();
-
-    value arr = alloc_array((int)res.num_rows()*3);
-
-	for (size_t i = 0; i < res.num_rows()*3; i+=3)
-    {
-		val_array_ptr(arr)[i] = alloc_int(res[i/3]["x"]);
-		val_array_ptr(arr)[i+1] = alloc_int(res[i/3]["y"]);
-		val_array_ptr(arr)[i+2] = alloc_int(res[i/3]["z"]);
-    }
-
-	return arr;
 
 
 /*
@@ -116,11 +99,13 @@ static value getNodeLocation(value iNode)
 	if (!val_is_int(iNode))
 		return o;
 
-	Point3D pt = OiGeometry::Instance().getNodeLocation(val_int(iNode));
-	
-	alloc_field(o, val_id("x"), alloc_float(pt.x));
-	alloc_field(o, val_id("y"), alloc_float(pt.y));
-	alloc_field(o, val_id("z"), alloc_float(pt.z));
+    /*
+	 *Point3D pt = OiGeometry::Instance().getNodeLocation(val_int(iNode));
+	 *
+	 *alloc_field(o, val_id("x"), alloc_float(pt.x));
+	 *alloc_field(o, val_id("y"), alloc_float(pt.y));
+	 *alloc_field(o, val_id("z"), alloc_float(pt.z));
+     */
 
 	return o;
 }
@@ -325,21 +310,25 @@ static value getNumberOfLines()
 
 static value getStatus()
 {
-    vector<string> vstr = OiGeometry::Instance().getStatus();
-    if (vstr.empty())
-    {
-        value arr = alloc_array(1);
-        val_array_ptr(arr)[0] = alloc_string("Status is empty");
-
-        return arr;   
-    }
-   
-    value arr = alloc_array( (int)vstr.size() );
-    for (size_t t = 0; t < vstr.size(); ++t)
-    {
-        string str = vstr[t];
-        val_array_ptr(arr)[t] = alloc_string( str.c_str() );
-    }
+/*
+ *    vector<string> vstr = OiGeometry::Instance().getStatus();
+ *    if (vstr.empty())
+ *    {
+ *        value arr = alloc_array(1);
+ *        val_array_ptr(arr)[0] = alloc_string("Status is empty");
+ *
+ *        return arr;   
+ *    }
+ *   
+ *    value arr = alloc_array( (int)vstr.size() );
+ *    for (size_t t = 0; t < vstr.size(); ++t)
+ *    {
+ *        string str = vstr[t];
+ *        val_array_ptr(arr)[t] = alloc_string( str.c_str() );
+ *    }
+ */
+    
+    value arr = val_null;
 
     return arr;
 

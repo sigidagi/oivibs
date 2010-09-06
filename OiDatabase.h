@@ -19,10 +19,11 @@
 
 #include <string>
 #include <mysql++.h>
+#include "OiProxy.h"
 
 using std::string;
 
-class OiDatabase
+class OiDatabase : public ProxyBase
 {
     public:
 	    bool init(const string& strFileName,  mysqlpp::Connection& con);
@@ -34,6 +35,13 @@ class OiDatabase
         bool createTable_Data(mysqlpp::Connection& con);
 
         bool saveNodes();
+
+    // ProxyBase interface
+    public:
+        void getNodes(int* array, int& nnodes);
+        void getLines(double* array, int& nlines);
+        void getSurfaces(double* array, int& nSurfaces);
+ 
 };
 
 #endif

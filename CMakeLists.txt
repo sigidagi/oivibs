@@ -17,9 +17,9 @@ SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "./cmake/Modules/")
 
 PROJECT(OiVibrations CXX)
 
-SET(ARMA_USE_NEKO false)
-SET(ARMA_USE_MYSQL false)
-SET(ARMA_USE_BOOST  false)
+SET(OI_USE_NEKO false)
+SET(OI_USE_MYSQLPP false)
+SET(OI_USE_BOOST  false)
 
 MESSAGE(STATUS "*** ")
 MESSAGE(STATUS "*** The OiVibrations run-time library component will be an alias for the following libraries:")
@@ -36,6 +36,7 @@ IF(MYSQLPP_FOUND)
     MESSAGE(STATUS "Mysql++_INCLUDE_DIR = ${MYSQLPP_INCLUDE_DIR}")
     INCLUDE_DIRECTORIES(${MYSQL_INCLUDE_DIR})
     MESSAGE(STATUS "Mysql_INCLUDE_DIR = ${MYSQL_INCLUDE_DIR}")
+    SET(OI_USE_MYSQLPP true)
 ENDIF(MYSQLPP_FOUND)
 
 
@@ -46,34 +47,43 @@ IF(Boost_FOUND)
   
   IF(Boost_MAJOR_VERSION GREATER 0)
     IF(Boost_MINOR_VERSION GREATER 33)
-      SET(ARMA_USE_BOOST true)
+      SET(OI_USE_BOOST true)
       MESSAGE(STATUS "Boost_INCLUDE_DIR = ${Boost_INCLUDE_DIR}")
     ENDIF(Boost_MINOR_VERSION GREATER 33)
   ENDIF(Boost_MAJOR_VERSION GREATER 0)
-  
+ 
+  SET(OI_USE_BOOST true)
 ENDIF(Boost_FOUND)
 
-IF(ARMA_USE_BOOST STREQUAL false)
+IF(OI_USE_BOOST STREQUAL false)
   MESSAGE(STATUS "Boost libraries either not found or their version is too low (version 1.34 or later is good).")
   MESSAGE(STATUS "( It's possible that CMake didn't find the particular version of Boost you may have. )")
-ENDIF(ARMA_USE_BOOST STREQUAL false)
+ENDIF(OI_USE_BOOST STREQUAL false)
 
 
-# If Boost libraries were found, explicitly check if Boost's date_time library is also present.
+IF(NEKO_FOUND)
+    SET(OI_USE_NEKO true)
+ENDIF(NEKO_FOUND)
+
+
 # This is due to the non-standard packaging of Boost libraries on Debian and Ubuntu systems,
 # where certain individual Boost libraries are packaged separately.
 
-#IF(ARMA_USE_BOOST STREQUAL true)
+#IF(OI_USE_BOOST STREQUAL true)
   #SET(CMAKE_REQUIRED_INCLUDES ${CMAKE_REQUIRED_INCLUDES} ${Boost_INCLUDE_DIR})
-  #CHECK_INCLUDE_FILE_CXX("boost/date_time/posix_time/posix_time.hpp" ARMA_USE_BOOST_DATE)
-#ENDIF(ARMA_USE_BOOST STREQUAL true)
+  #CHECK_INCLUDE_FILE_CXX("boost/date_time/posix_time/posix_time.hpp" OI_USE_BOOST_DATE)
+#ENDIF(OI_USE_BOOST STREQUAL true)
 
 
-IF(ARMA_USE_BOOST STREQUAL true)
+IF(OI_USE_BOOST STREQUAL true)
   INCLUDE_DIRECTORIES(include ${Boost_INCLUDE_DIR})
-ELSE(ARMA_USE_BOOST STREQUAL true)
+ELSE(OI_USE_BOOST STREQUAL true)
   INCLUDE_DIRECTORIES(include)
-ENDIF(ARMA_USE_BOOST STREQUAL true)
+ENDIF(OI_USE_BOOST STREQUAL true)
+
+
+MESSAGE(STATUS "Generating 'config.hpp'")
+CONFIGURE_FILE(config.hpp.cmake config.hpp)
 
 
 ## For any library that is not in a default location,

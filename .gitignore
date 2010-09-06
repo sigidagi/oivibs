@@ -5,6 +5,7 @@ Makefile
 cmake_install.cmake
 libOiVibrations.so
 *.swp
+config.hpp
 #
 tags
 oitest

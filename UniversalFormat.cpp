@@ -11,11 +11,13 @@ using namespace std;
 UniversalFormat::UniversalFormat(const vector<string>& vFiles) : bExistNodes(false), bExistLines(false), bExistSurfaces(false), bExistData(false)
 {
     
-     if( !OiGeometry::Instance().getStatus().empty() )
-     {
-        OiGeometry::Instance().clearStatus();         
-     }
-    
+    /*
+     * if( !OiGeometry::Instance().getStatus().empty() )
+     * {
+     *    OiGeometry::Instance().clearStatus();         
+     * }
+     *
+     */
     __vFiles.resize(vFiles.size());
     std::copy(vFiles.begin(), vFiles.end(), __vFiles.begin());
 
@@ -42,7 +44,7 @@ void UniversalFormat::parse()
         string path = "/var/www/uploads";
         chdir(path.c_str());
 
-        OiGeometry::Instance().__strStatus.push_back("File: " + file); 
+        //OiGeometry::Instance().__strStatus.push_back("File: " + file); 
 
     	string strBaseName;
         string strExtension;
@@ -98,28 +100,28 @@ void UniversalFormat::parse()
                  return;
             }
 
-            OiGeometry::Instance().__strStatus.push_back(" Found: ");
+            //OiGeometry::Instance().__strStatus.push_back(" Found: ");
 			if (bExistNodes)
             {
-                OiGeometry::Instance().__strStatus.push_back("nodes ");
+                //OiGeometry::Instance().__strStatus.push_back("nodes ");
                 database.createTable_Nodes(con);
 				parseNodes(con);
             }
 			if (bExistLines)
             {
-                OiGeometry::Instance().__strStatus.push_back("lines ");
+                //OiGeometry::Instance().__strStatus.push_back("lines ");
                 database.createTable_Lines(con);
 				parseLines(con);
             }
 			if (bExistSurfaces)
             {
-                OiGeometry::Instance().__strStatus.push_back("surfaces ");
+                //OiGeometry::Instance().__strStatus.push_back("surfaces ");
                 database.createTable_Surfaces(con);
 				parseSurfaces(con);
             }
 			if (bExistData)
 			{
-                OiGeometry::Instance().__strStatus.push_back("data ");
+                //OiGeometry::Instance().__strStatus.push_back("data ");
                 
 				for (size_t t = 0; t < m_vposData.size(); ++t)
 					parseData(m_vposData[t], t);
@@ -128,18 +130,18 @@ void UniversalFormat::parse()
 			}
             if ( !bExistNodes && !bExistLines && !bExistSurfaces) 
             {
-                OiGeometry::Instance().__strStatus.push_back("No geometry" );
+                //OiGeometry::Instance().__strStatus.push_back("No geometry" );
             }
             if (!bExistData )
             {
-                OiGeometry::Instance().__strStatus.push_back("No data" );
+                //OiGeometry::Instance().__strStatus.push_back("No data" );
             }
             
-            OiGeometry::Instance().__strStatus.push_back("\r" );
+            //OiGeometry::Instance().__strStatus.push_back("\r" );
 		}
         else
         {
-            OiGeometry::Instance().__strStatus.push_back("Can not open file: " + file);
+            //OiGeometry::Instance().__strStatus.push_back("Can not open file: " + file);
         }
        
         if (uffFile.is_open())
@@ -206,7 +208,7 @@ void UniversalFormat::parseNodes(mysqlpp::Connection& con)
         location.y = y;
         location.z = z;
         
-		OiGeometry::Instance().m_vNodes.insert( std::make_pair(nodeNumber, location) );
+		//OiGeometry::Instance().m_vNodes.insert( std::make_pair(nodeNumber, location) );
 
         query.execute(nodeNumber, x, y, z);
 	}
@@ -217,7 +219,7 @@ void UniversalFormat::parseNodes(mysqlpp::Connection& con)
 
 void UniversalFormat::parseLines(mysqlpp::Connection& con)
 {
-	if (!bExistLines || OiGeometry::Instance().m_vNodes.empty() )
+	if (!bExistLines /* || OiGeometry::Instance().m_vNodes.empty()*/ )
 		return;
 
     mysqlpp::Query query = con.query();
@@ -268,7 +270,7 @@ void UniversalFormat::parseLines(mysqlpp::Connection& con)
 		return;
 
 	vTempNodes.erase(lastPos, vTempNodes.end());
-	OiGeometry::Instance().m_vLines.clear();
+	//OiGeometry::Instance().m_vLines.clear();
 
 	for (size_t i = 0; i < vTempNodes.size(); i+=2)
 	{
@@ -277,7 +279,7 @@ void UniversalFormat::parseLines(mysqlpp::Connection& con)
 		sline.node2 = vTempNodes[i+1];
 
         query.execute(i/2+1, vTempNodes[i], vTempNodes[i+1]);
-		OiGeometry::Instance().m_vLines.push_back( sline );
+		//OiGeometry::Instance().m_vLines.push_back( sline );
 	}
 	
 	//catch ( std::out_of_range outOfRange )
@@ -343,7 +345,7 @@ void UniversalFormat::parseSurfaces(mysqlpp::Connection& con)
 		//}
 
         query.execute(SurfaceNumber, node1, node2, node3);
-		OiGeometry::Instance().m_vSurfaces.push_back( sSurface );
+		//OiGeometry::Instance().m_vSurfaces.push_back( sSurface );
 	}
 	//bExistSurfaces = false;
 }
