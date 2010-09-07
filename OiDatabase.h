@@ -26,22 +26,34 @@ using std::string;
 class OiDatabase : public ProxyBase
 {
     public:
-	    bool init(const string& strFileName,  mysqlpp::Connection& con);
-        bool connect(const string& dname, mysqlpp::Connection& conn);
+        OiDatabase(const string name);
+        OiDatabase();
 
-        bool createTable_Nodes( mysqlpp::Connection& con);
-        bool createTable_Lines( mysqlpp::Connection& con);
-        bool createTable_Surfaces( mysqlpp::Connection& con);
-        bool createTable_Data(mysqlpp::Connection& con);
+    public:
+	    bool init(const string& strFileName);
+        mysqlpp::Connection& getConnection();
+        
+        bool createTable_Nodes();
+        bool createTable_Lines();
+        bool createTable_Surfaces();
+        bool createTable_Data();
 
         bool saveNodes();
 
     // ProxyBase interface
     public:
-        void getNodes(int* array, int& nnodes);
-        void getLines(double* array, int& nlines);
-        void getSurfaces(double* array, int& nSurfaces);
- 
+        void getNodes(double** array, int& nnodes);
+        void getLines(double** array, int& nlines);
+        void getSurfaces(double** array, int& nSurfaces);
+        bool isConnected();
+    
+    private:
+        bool connect(const string& dname);
+
+    private:
+        bool bConnected_;
+        mysqlpp::Connection connection_;
+
 };
 
 #endif

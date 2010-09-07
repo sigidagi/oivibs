@@ -17,6 +17,10 @@
 #ifndef _OIPROXY_H
 #define _OIPROXY_H
 
+#include <string>
+
+using std::string;
+
 class ProxyBase
 {
     public:
@@ -24,24 +28,25 @@ class ProxyBase
     
     // Interfaces
     public:
-        virtual void getNodes(int*, int& ) = 0;
-        virtual void getLines(double*, int& ) = 0;
-        virtual void getSurfaces(double*, int& ) = 0;
+        virtual void getNodes(double**, int& ) = 0;
+        virtual void getLines(double**, int& ) = 0;
+        virtual void getSurfaces(double**, int& ) = 0;
 };
 
 class Proxy : ProxyBase {
     public:
-        Proxy(); 
+        Proxy(const string name); 
         ~Proxy ();
 
     // Interfaces
     public:
-        void getNodes(int*, int& nnnodes);
-        void getLines(double*, int& nlines);
-        void getSurfaces(double*, int& nSurfaces);
+        void getNodes(double**, int& nnnodes);
+        void getLines(double**, int& nlines);
+        void getSurfaces(double**, int& nSurfaces);
 
     private:
         ProxyBase* impl_; 
+        string geoname_;
 };
 
 #endif

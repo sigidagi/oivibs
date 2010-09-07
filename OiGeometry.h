@@ -51,12 +51,11 @@ class OiGeometry : ProxyBase
 
     public:
         
-        void getNodes(int* array, int& nnnodes);
-        void getLines(double* array, int& nlines);
-        void getSurfaces(double* array, int& nSurfaces);
+        void getNodes(double** array, int& nnnodes);
+        void getLines(double** array, int& nlines);
+        void getSurfaces(double** array, int& nSurfaces);
 
         static OiGeometry& Instance();
-
 
         vector<string> getStatus();
         void clearStatus();

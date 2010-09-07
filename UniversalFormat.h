@@ -6,9 +6,8 @@
 #include <fstream>
 #include <string>
 #include <boost/shared_array.hpp>
-#include <mysql++.h>
 #include "OiData.h" 
-
+#include "OiDatabase.h"
 
 using std::vector;
 using std::string;
@@ -38,9 +37,9 @@ private:
 private:
     void searchForSamplingT();
 	void searchForData();
-	void parseNodes(mysqlpp::Connection& con);
-	void parseLines(mysqlpp::Connection& con);
-	void parseSurfaces(mysqlpp::Connection& con);
+	void parseNodes( OiDatabase& dbase);
+	void parseLines( OiDatabase& dbase);
+	void parseSurfaces(OiDatabase& dbase);
 	void parseData(const int pos, int column);
 
     void parse();

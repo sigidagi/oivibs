@@ -15,14 +15,15 @@
 // =====================================================================================
 
 #include "OiProxy.h"
+#include "OiDatabase.h"
 #include "config.hpp"
 
-Proxy::Proxy()
+Proxy::Proxy(string name) : geoname_(name)
 {
 #if defined(OI_USE_MYSQLPP)
-    impl_ = new OiDatabase;
+    impl_ = new OiDatabase(geoname_);
 #else
-    impl_ = new OiGeometry;
+    impl_ = OiGeometry::Instance();
 #endif
 }
 
@@ -31,18 +32,18 @@ Proxy::~Proxy()
     delete impl_;
 }
 
-void Proxy::getNodes(int* array, int& nnodes)
+void Proxy::getNodes(double** array, int& nnodes)
 {
-    impl->getNodes(array, nnodes);
+    impl_->getNodes(array, nnodes);
 }
 
-void Proxy::getLines(double* array, int& nlines)
+void Proxy::getLines(double** array, int& nlines)
 {
-    impl->getLines(array, nlines);
+    impl_->getLines(array, nlines);
 }
 
-void Proxy::getSurfaces(double* array, int& nsurfaces)
+void Proxy::getSurfaces(double** array, int& nsurfaces)
 {
-    impl->getSurfaces(array, nsurfaces);
+    impl_->getSurfaces(array, nsurfaces);
 }
 

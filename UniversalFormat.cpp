@@ -76,9 +76,8 @@ void UniversalFormat::parse()
         }
 
         //  Create database . Database  name is asociated with file name.
-        mysqlpp::Connection con;
         OiDatabase database;
-        bool bSuccess = database.init(strBaseName, con); 
+        bool bSuccess = database.init(strBaseName); 
         if (!bSuccess)
             return;
 
@@ -104,20 +103,20 @@ void UniversalFormat::parse()
 			if (bExistNodes)
             {
                 //OiGeometry::Instance().__strStatus.push_back("nodes ");
-                database.createTable_Nodes(con);
-				parseNodes(con);
+                database.createTable_Nodes();
+				parseNodes(database);
             }
 			if (bExistLines)
             {
                 //OiGeometry::Instance().__strStatus.push_back("lines ");
-                database.createTable_Lines(con);
-				parseLines(con);
+                database.createTable_Lines();
+				parseLines(database);
             }
 			if (bExistSurfaces)
             {
                 //OiGeometry::Instance().__strStatus.push_back("surfaces ");
-                database.createTable_Surfaces(con);
-				parseSurfaces(con);
+                database.createTable_Surfaces();
+				parseSurfaces(database);
             }
 			if (bExistData)
 			{
@@ -169,12 +168,12 @@ UniversalFormat::~UniversalFormat()
 
 }
 
-void UniversalFormat::parseNodes(mysqlpp::Connection& con)
+void UniversalFormat::parseNodes(OiDatabase& dbase)
 {
 	if (!bExistNodes)
 		return;
 
-    mysqlpp::Query query = con.query();
+    mysqlpp::Query query = dbase.getConnection().query();
     query  << "insert into %4:table values" <<
         "(%0, %1, %2, %3)";
     query.parse();
@@ -217,12 +216,12 @@ void UniversalFormat::parseNodes(mysqlpp::Connection& con)
 //	bExistNodes = false;
 }
 
-void UniversalFormat::parseLines(mysqlpp::Connection& con)
+void UniversalFormat::parseLines(OiDatabase& dbase)
 {
 	if (!bExistLines /* || OiGeometry::Instance().m_vNodes.empty()*/ )
 		return;
 
-    mysqlpp::Query query = con.query();
+    mysqlpp::Query query = dbase.getConnection().query();
     query  << "insert into %3:table values" <<
         "(%0, %1, %2)";
     query.parse();
@@ -291,12 +290,12 @@ void UniversalFormat::parseLines(mysqlpp::Connection& con)
 	//bExistLines = false;
 }
 
-void UniversalFormat::parseSurfaces(mysqlpp::Connection& con)
+void UniversalFormat::parseSurfaces(OiDatabase& dbase)
 {
 	if (!bExistSurfaces)
 		return;
     
-    mysqlpp::Query query = con.query();
+    mysqlpp::Query query = dbase.getConnection().query();
     query  << "insert into %4:table values" <<
         "(%0, %1, %2, %3)";
     query.parse();

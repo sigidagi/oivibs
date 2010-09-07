@@ -18,68 +18,90 @@
 #include <iostream>
 #include <stdexcept>
 
+OiDatabase::OiDatabase(const string name) : bConnected_(false)
+{
+    if (name.empty())
+        return;
 
-bool OiDatabase::init(const string& strFileName, mysqlpp::Connection& con)
+    bConnected_ = connect(name);        
+}
+
+OiDatabase::OiDatabase() : bConnected_(false)
+{
+
+}
+
+
+bool OiDatabase::isConnected()
+{
+    return bConnected_;
+}
+
+mysqlpp::Connection& OiDatabase::getConnection()
+{
+    return connection_;
+}
+
+bool OiDatabase::init(const string& strFileName)
 {
     if (strFileName.empty())
         return false;
 
     // noexception is needed not to throw exception when such database exist.
-    mysqlpp::NoExceptions ne(con);
-    if (connect(strFileName, con))
+    mysqlpp::NoExceptions ne(connection_);
+    
+    if (connect(strFileName))
     {
         std::cout << "Dropping existing sample data tables..." << std::endl;
-        con.drop_db(strFileName);
+        connection_.drop_db(strFileName);
     }
     
-    if (!con.create_db(strFileName))
+    if (!connection_.create_db(strFileName))
     {
-        std::cerr << "Error creating DB: " << con.error() << std::endl; 
+        std::cerr << "Error creating DB: " << connection_.error() << std::endl; 
         return false;
     }
 
-    if (!con.select_db(strFileName))
+    if (!connection_.select_db(strFileName))
     {
-        std::cerr << "Error selecting DB: " << con.error() << std::endl;
+        std::cerr << "Error selecting DB: " << connection_.error() << std::endl;
         return false;
     }
-    
+   
+    bConnected_ = true;    
     return true;
 }
 
-bool OiDatabase::connect(const string& dname, mysqlpp::Connection& con)
+bool OiDatabase::connect(const string& dname)
 {
     if (dname.empty() )
         return false;
 
-    const char *server = 0, *user = "root", *pass = "test";
+    const char *server = 0, *user = "root", *pass = "testas";
 
     try 
     {
-//        std::cout << "Connecting to database server...\n";
-        if (!con.connect(0, server, user, pass))
+        if (!connection_.connect(0, server, user, pass))
         {
-//            std::cerr << "can't connect to database server\n";
             return false;
         }
-//        std::cout << "Succeded!\n";
     }
     catch (std::exception& er) 
     {
-//        std::cerr << "Connection failed: " << er.what() << std::endl;
         return false;
     }
 
-    mysqlpp::NoExceptions ne(con);
-    if (!con.select_db(dname))
+    mysqlpp::NoExceptions ne(connection_);
+    if (!connection_.select_db(dname))
         return false;
 
+    bConnected_ = true;
     return true;
 }
 
-bool OiDatabase::createTable_Lines(mysqlpp::Connection& con)
+bool OiDatabase::createTable_Lines()
 {
-    mysqlpp::Query query = con.query();
+    mysqlpp::Query query = connection_.query();
 
     try
     {
@@ -105,9 +127,9 @@ bool OiDatabase::createTable_Lines(mysqlpp::Connection& con)
     return true;
 }
 
-bool OiDatabase::createTable_Surfaces(mysqlpp::Connection& con)
+bool OiDatabase::createTable_Surfaces()
 {
-    mysqlpp::Query query = con.query();
+    mysqlpp::Query query = connection_.query();
     
     try
     {
@@ -134,9 +156,9 @@ bool OiDatabase::createTable_Surfaces(mysqlpp::Connection& con)
     return true;
 }
 
-bool OiDatabase::createTable_Nodes(mysqlpp::Connection& con)
+bool OiDatabase::createTable_Nodes()
 {
-    mysqlpp::Query query = con.query();
+    mysqlpp::Query query = connection_.query();
 
     // Creating tables;
     try
@@ -166,9 +188,9 @@ bool OiDatabase::createTable_Nodes(mysqlpp::Connection& con)
 }
 
 // Function creates MySql tables according UFF file.
-bool OiDatabase::createTable_Data(mysqlpp::Connection& con)
+bool OiDatabase::createTable_Data()
 {
-    mysqlpp::Query query = con.query();
+    mysqlpp::Query query = connection_.query();
     
     try
     {
@@ -204,37 +226,120 @@ bool OiDatabase::createTable_Data(mysqlpp::Connection& con)
 
 // Implementation of ProxyBase interface
 
-void OiDatabase::getNodes(int* array, int& nnodes)
+void OiDatabase::getNodes(double** array, int& nnodes)
 {
-    OiDatabase dbase;
-    mysqlpp::Connection conn;
-    dbase.connect("test", conn);
-    
+    if (!connect("test"))
+        return;    
 
-    mysqlpp::Query query = conn.query("select * from geonodes");
+    mysqlpp::Query query = connection_.query("select * from geonodes");
     mysqlpp::StoreQueryResult res = query.store();
    
-    nnodes = (int)(res.num_rows())*3; 
+    nnodes = (int)res.num_rows(); 
     if (nnodes == 0)
         return;
+    
+    // allocation of memory of 2D array
+    // Dealocation of memory should be carried out by CLIENT! 
+    array = new double*[nnodes];
+    for (int n = 0; n < nnodes; ++n)
+        array[n] = new double[3];
 
-    array = new int[nnodes];
-
-	for (size_t i = 0; i < res.num_rows()*3; i+=3)
+    // assign values
+	for (size_t i = 0; i < res.num_rows(); ++i)
     {
-		array[i] = (res[i/3]["x"]);
-		array[i+1] = (res[i/3]["y"]);
-		array[i+2] = (res[i/3]["z"]);
+		array[i][0] = (res[i]["x"]);
+		array[i][1] = (res[i]["y"]);
+		array[i][2] = (res[i]["z"]);
     }
    
 }
 
-void OiDatabase::getLines(double* array, int& nlines)
+void OiDatabase::getLines(double** array, int& nlines)
 {
+    bool bRet = connect("test");
+    if (bRet == false)
+        return;
 
+    mysqlpp::Query query_nodes = connection_.query("select * from geonodes");
+    mysqlpp::StoreQueryResult resNodes = query_nodes.store(); 
+
+    mysqlpp::Query query_lines = connection_.query("select * from geolines");
+    mysqlpp::StoreQueryResult resLines = query_lines.store();
+    
+    
+    if (!resLines || !resNodes)
+        return;
+
+    nlines = (int)resLines.num_rows();
+
+    // allocation memeory
+    //
+    array = new double*[nlines];
+    for (int n = 0; n < nlines; ++n)
+        array[n] = new double[6];
+
+    int node1, node2;
+    
+    for (int idx = 0; idx < nlines; ++idx)
+    {
+        node1 = resLines[idx]["node1"];
+        array[idx][0] = resNodes[node1-1]["x"];
+        array[idx][1] = resNodes[node1-1]["y"];
+        array[idx][2] = resNodes[node1-1]["z"];
+        
+        node2 = resLines[idx]["node2"];
+        array[idx][3] = resNodes[node2-1]["x"];
+        array[idx][4] = resNodes[node2-1]["y"];
+        array[idx][5] = resNodes[node2-1]["z"];
+    }
+    
 }
 
-void OiDatabase::getSurfaces(double* array, int& nsurfaces)
+void OiDatabase::getSurfaces(double** surfacearray, int& nsurfaces)
 {
+        bool bRet = connect("test");
+        if (bRet == false)
+            return;
 
+    
+        mysqlpp::Query query = connection_.query("select * from surfaces");
+        mysqlpp::StoreQueryResult resSurfaces = query.store();
+        if (!resSurfaces)
+            return;
+
+        query.reset();
+        query = connection_.query("select * from geonodes");
+        mysqlpp::StoreQueryResult resNodes = query.store(); 
+        if (!resNodes)
+            return;
+
+        
+        nsurfaces = (int)resSurfaces.num_rows();
+
+        // memory allocation
+        surfacearray = new double*[nsurfaces];
+        for (int n = 0; n < nsurfaces; ++n)
+            surfacearray[n] = new double[9];
+
+        int node1, node2, node3;
+       
+       for (int idx = 0; idx < nsurfaces; ++idx)
+        {
+            node1 = resSurfaces[idx]["node1"];
+            surfacearray[idx][0] = resNodes[node1-1]["x"];
+            surfacearray[idx][1] = resNodes[node1-1]["y"];
+            surfacearray[idx][2] = resNodes[node1-1]["z"];
+ 
+            node2 = resSurfaces[idx]["node2"];
+            surfacearray[idx][3] = resNodes[node2-1]["x"];
+            surfacearray[idx][4] = resNodes[node2-1]["y"];
+            surfacearray[idx][5] = resNodes[node2-1]["z"];
+            
+            node3 = resSurfaces[idx]["node3"];
+            surfacearray[idx][6] = resNodes[node3-1]["x"];
+            surfacearray[idx][7] = resNodes[node3-1]["y"];
+            surfacearray[idx][8] = resNodes[node3-1]["z"];
+        }
+        
 }
+

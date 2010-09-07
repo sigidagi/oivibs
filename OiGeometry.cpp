@@ -21,17 +21,17 @@ OiGeometry& OiGeometry::Instance()
  *}
  */
 
-void OiGeometry::getNodes(int* array, int& nnodes)
+void OiGeometry::getNodes(double** array, int& nnodes)
 {
  
 }
 
-void OiGeometry::getLines(double* array, int& nlines)
+void OiGeometry::getLines(double** array, int& nlines)
 {
 
 }
 
-void OiGeometry::getSurfaces(double* array, int& nsurfaces)
+void OiGeometry::getSurfaces(double** array, int& nsurfaces)
 {
 
 }
