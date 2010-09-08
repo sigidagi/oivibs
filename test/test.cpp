@@ -123,10 +123,7 @@ int main(int argc, char* argv[])
          --pos;
     }
 
-//    out = out / tt;
-    
     colvec outa(nfft);
-//   outa = arma::abs( out % arma::conj(out) );
     outa = arma::pow( arma::abs(out), 2)/tt;
     outa.save("gfft.dat", raw_ascii);
  

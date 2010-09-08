@@ -1,18 +1,16 @@
 #ifndef _UNIVERSALFORMAT_H
 #define _UNIVERSALFORMAT_H
 
-#include <armadillo>
 #include <vector>
 #include <fstream>
 #include <string>
-#include <boost/shared_array.hpp>
 #include "OiData.h" 
-#include "OiDatabase.h"
 
 using std::vector;
 using std::string;
 using std::streampos;
-using boost::shared_array;
+
+namespace Oi {
 
 class UniversalFormat
 {
@@ -21,6 +19,10 @@ private:
 	std::ifstream uffFile;
     
     OiData m_Data;
+
+    arma::mat nodes_;
+    arma::umat lines_;
+    arma::umat surfaces_;
 
 	bool bExistNodes;
     bool bExistLines;
@@ -37,26 +39,27 @@ private:
 private:
     void searchForSamplingT();
 	void searchForData();
-	void parseNodes( OiDatabase& dbase);
-	void parseLines( OiDatabase& dbase);
-	void parseSurfaces(OiDatabase& dbase);
+	void parseNodes();
+	void parseLines();
+	void parseSurfaces();
 	void parseData(const int pos, int column);
 
-    void parse();
-
 public:
-	explicit UniversalFormat(const vector<string>& file);
+    UniversalFormat();
 	~UniversalFormat();
 
-   
-
+    void parse(const string file);
+    
     bool existNodes();
     bool existLines();
     bool existSurfaces();
     bool existData();
 
+    const arma::mat& getNodes();
+    const arma::umat& getLines();
+    const arma::umat& getSurfaces();
 };
 
-
+} // namespace Oi
 
 #endif

@@ -14,21 +14,20 @@
 // 
 // =====================================================================================
 
+#include "OiUtil.h"
 #include "OiDatabase.h"
 #include <iostream>
 #include <stdexcept>
 
-OiDatabase::OiDatabase(const string name) : bConnected_(false)
+
+namespace Oi {
+
+OiDatabase::OiDatabase(const string dbname) : bConnected_(false), name_(dbname)
 {
-    if (name.empty())
+    if (dbname.empty())
         return;
 
-    bConnected_ = connect(name);        
-}
-
-OiDatabase::OiDatabase() : bConnected_(false)
-{
-
+    bConnected_ = connect(dbname);        
 }
 
 
@@ -42,39 +41,72 @@ mysqlpp::Connection& OiDatabase::getConnection()
     return connection_;
 }
 
-bool OiDatabase::init(const string& strFileName)
+
+/* *
+ * init function creates database with specified name and makes a connection
+ * which is stored in private variable mysqlpp::Connection connection_
+ *
+ * Second phase is to parse given file and store found data: nodes, lines, surfaces and recorded data 
+ * into that database.
+ *
+ */
+bool OiDatabase::init(const string pathAndFileName)
 {
-    if (strFileName.empty())
+    if (pathAndFileName.empty())
+        return false;
+
+    string baseName = Oi::stripToBaseName(pathAndFileName);
+    if (baseName.empty())
         return false;
 
     // noexception is needed not to throw exception when such database exist.
     mysqlpp::NoExceptions ne(connection_);
     
-    if (connect(strFileName))
+    if (connect(baseName))
     {
         std::cout << "Dropping existing sample data tables..." << std::endl;
-        connection_.drop_db(strFileName);
+        connection_.drop_db(baseName);
     }
     
-    if (!connection_.create_db(strFileName))
+    if (!connection_.create_db(baseName))
     {
         std::cerr << "Error creating DB: " << connection_.error() << std::endl; 
         return false;
     }
 
-    if (!connection_.select_db(strFileName))
+    if (!connection_.select_db(baseName))
     {
         std::cerr << "Error selecting DB: " << connection_.error() << std::endl;
         return false;
     }
    
     bConnected_ = true;    
+    
+    uff_.parse(pathAndFileName);
+
+    // next to check if any data were found. If not return false.
+    if (!uff_.existNodes() || !uff_.existLines() || uff_.existSurfaces() || uff_.existData())
+        return false;
+   
+    if (uff_.existNodes())
+    {
+        saveNodes(uff_.getNodes());
+    }
+    if (uff_.existLines())
+    {
+        saveLines(uff_.getLines());
+    }
+    if (uff_.existSurfaces())
+    {
+        saveSurfaces(uff_.getSurfaces());
+    }
+
     return true;
 }
 
-bool OiDatabase::connect(const string& dname)
+bool OiDatabase::connect(const string& dbname)
 {
-    if (dname.empty() )
+    if (dbname.empty() )
         return false;
 
     const char *server = 0, *user = "root", *pass = "testas";
@@ -92,7 +124,7 @@ bool OiDatabase::connect(const string& dname)
     }
 
     mysqlpp::NoExceptions ne(connection_);
-    if (!connection_.select_db(dname))
+    if (!connection_.select_db(dbname))
         return false;
 
     bConnected_ = true;
@@ -224,6 +256,67 @@ bool OiDatabase::createTable_Data()
     return true;
 }
 
+void OiDatabase::saveNodes(const arma::mat& nodes)
+{
+    if (nodes.n_elem == 0 || nodes.n_rows != 4)
+        return;
+    
+    createTable_Nodes();
+
+    mysqlpp::Query query = getConnection().query();
+    query  << "insert into %4:table values" <<
+        "(%0, %1, %2, %3)";
+    query.parse();
+
+    query.template_defaults["table"] = "geonodes";
+   
+    for (size_t i = 0; i < nodes.n_cols; ++i)
+    {
+        query.execute(nodes(0,i), nodes(1,i), nodes(2,i), nodes(3,i));
+    }
+      
+}
+
+void OiDatabase::saveLines(const arma::umat& lines)
+{
+    if (lines.n_elem == 0 || lines.n_rows != 3)
+        return;
+
+    createTable_Lines();
+
+    mysqlpp::Query query = getConnection().query();
+    query  << "insert into %3:table values" <<
+        "(%0, %1, %2)";
+    query.parse();
+
+    query.template_defaults["table"] = "geolines";
+
+    for (size_t i = 0; i < lines.n_cols; ++i)
+    {
+        query.execute(lines(0,i), lines(1,i), lines(2,i));
+    }
+}
+
+void OiDatabase::saveSurfaces(const arma::umat& surfaces)
+{
+    if (surfaces.n_elem == 0 || surfaces.n_rows != 4)
+        return;
+
+    createTable_Surfaces();
+
+    mysqlpp::Query query = getConnection().query();
+    query  << "insert into %4:table values" <<
+        "(%0, %1, %2, %3)";
+    query.parse();
+
+    query.template_defaults["table"] = "geosurfaces";
+
+    for (size_t i = 0; i < surfaces.n_cols; ++i)
+    {
+        query.execute(surfaces(0,i), surfaces(1,i), surfaces(2,i), surfaces(3,i));
+    }
+}
+
 // Implementation of ProxyBase interface
 
 void OiDatabase::getNodes(double** array, int& nnodes)
@@ -343,3 +436,4 @@ void OiDatabase::getSurfaces(double** surfacearray, int& nsurfaces)
         
 }
 
+} // namespace Oi

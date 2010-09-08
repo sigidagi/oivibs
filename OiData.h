@@ -22,6 +22,9 @@
 
 using namespace arma;
 
+
+namespace Oi {
+
 class OiData
 {
 private:
@@ -45,12 +48,17 @@ public:
 
 //	static OiData& Instance();
     bool startProcessing();
+
     arma::Mat<double>& getData();
+    
 
     std::vector<double> vSamplingInterval;
     std::vector<int> vNumberOfSamples;
  
 }; // class OiData
+
+} // namespace Oi
+
 
 #endif 
 

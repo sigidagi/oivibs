@@ -1,6 +1,7 @@
 #include "UniversalFormat.h"
 #include "OiGeometry.h"
 #include "OiDatabase.h"
+#include "OiUtil.h"
 
 #include <algorithm>
 #include <sstream>
@@ -8,159 +9,81 @@
 
 using namespace std;
 
-UniversalFormat::UniversalFormat(const vector<string>& vFiles) : bExistNodes(false), bExistLines(false), bExistSurfaces(false), bExistData(false)
+namespace Oi {
+
+UniversalFormat::UniversalFormat() : bExistNodes(false), bExistLines(false), bExistSurfaces(false), bExistData(false)
 {
     
-    /*
-     * if( !OiGeometry::Instance().getStatus().empty() )
-     * {
-     *    OiGeometry::Instance().clearStatus();         
-     * }
-     *
-     */
-    __vFiles.resize(vFiles.size());
-    std::copy(vFiles.begin(), vFiles.end(), __vFiles.begin());
-
-
-    parse();
 }
 
-void UniversalFormat::parse()
+void UniversalFormat::parse(const string file)
 {
-	if (__vFiles.empty())
+	if (file.empty())
 		return;
 
-	for (size_t i = 0; i < __vFiles.size(); ++i)
-	{
-		string file = __vFiles[i];
-       
-/*
- *        size_t psize;
- *        char* path = NULL;
- *        path = getcwd(path, psize);
- *
- *        OiGeometry::Instance().__strStatus.push_back( string(path) );
- */
-        string path = "/var/www/uploads";
-        chdir(path.c_str());
+    string strExtension = Oi::stripToExtension(file);
 
-        //OiGeometry::Instance().__strStatus.push_back("File: " + file); 
-
-    	string strBaseName;
-        string strExtension;
-    	string::size_type idx = file.find('.');
-    	if (idx != string::npos)
-    	{
-    		strBaseName = file.substr(0, idx);
-            strExtension = file.substr(idx+1, string::npos);
-    	}
-    	else 
-    		strBaseName = file;
-
-        idx = strBaseName.rfind('/');
-        if ( idx != string::npos)
-            strBaseName = strBaseName.substr(idx+1, string::npos);
-
-        bool braw_data = false;
-        if (strExtension == "txt")
+    bool braw_data = false;
+    if (strExtension == "txt")
+    {
+        bool status = m_Data.getData().load(file, arma::raw_ascii);            
+        if (status == false)
         {
-            bool status = m_Data.getData().load(file, arma::raw_ascii);            
-            if (status == false)
-            {
-                // save into status and return 
-                continue;
-            }
-            bExistData = true;
-            braw_data = true;
-            continue;
-        }
-
-        //  Create database . Database  name is asociated with file name.
-        OiDatabase database;
-        bool bSuccess = database.init(strBaseName); 
-        if (!bSuccess)
+            // save into status and return 
             return;
+        }
+        bExistData = true;
+        braw_data = true;
+        return;
+    }
 
-		uffFile.open(file.c_str(), ios::in);
-		if (uffFile.is_open())
-		{
-            if (strExtension == "cfg")
-            {
-                searchForSamplingT();
-            }
-            else if (strExtension == "uff")
-            {
-                // serches for nodes, lines, surfaces and data in UFF file.
-	    		searchForData();
-            }
-            else
-            {
-                // notify that program do not support such file extension.
-                 return;
-            }
+    string path = Oi::stripToPath(file);
+    chdir(path.c_str());
 
-            //OiGeometry::Instance().__strStatus.push_back(" Found: ");
-			if (bExistNodes)
-            {
-                //OiGeometry::Instance().__strStatus.push_back("nodes ");
-                database.createTable_Nodes();
-				parseNodes(database);
-            }
-			if (bExistLines)
-            {
-                //OiGeometry::Instance().__strStatus.push_back("lines ");
-                database.createTable_Lines();
-				parseLines(database);
-            }
-			if (bExistSurfaces)
-            {
-                //OiGeometry::Instance().__strStatus.push_back("surfaces ");
-                database.createTable_Surfaces();
-				parseSurfaces(database);
-            }
-			if (bExistData)
-			{
-                //OiGeometry::Instance().__strStatus.push_back("data ");
-                
-				for (size_t t = 0; t < m_vposData.size(); ++t)
-					parseData(m_vposData[t], t);
-                    
-                m_Data.getData().save(strBaseName + ".mat");     
-			}
-            if ( !bExistNodes && !bExistLines && !bExistSurfaces) 
-            {
-                //OiGeometry::Instance().__strStatus.push_back("No geometry" );
-            }
-            if (!bExistData )
-            {
-                //OiGeometry::Instance().__strStatus.push_back("No data" );
-            }
-            
-            //OiGeometry::Instance().__strStatus.push_back("\r" );
-		}
+    string fileName = Oi::stripToFileName(file);
+
+    uffFile.open(fileName.c_str(), ios::in);
+    if (uffFile.is_open())
+    {
+        if (strExtension == "cfg")
+        {
+            searchForSamplingT();
+        }
+        else if (strExtension == "uff")
+        {
+            // serches for nodes, lines, surfaces and data in UFF file.
+            searchForData();
+        }
         else
         {
-            //OiGeometry::Instance().__strStatus.push_back("Can not open file: " + file);
+            // notify that program do not support such file extension.
+             return;
         }
-       
-        if (uffFile.is_open())
-            uffFile.close();
 
-	}
+        if (bExistNodes)
+        {
+            parseNodes();
+        }
+        if (bExistLines)
+        {
+            parseLines();
+        }
+        if (bExistSurfaces)
+        {
+            parseSurfaces();
+        }
+        if (bExistData)
+        {
+            for (size_t t = 0; t < m_vposData.size(); ++t)
+                parseData(m_vposData[t], t);
+             
+             
+          //  m_Data.getData().save(strBaseName + ".mat");     
+        }
+        
+        uffFile.close();
+    }
 
-	// First file name is used to create database with the same name.
-	string strBaseName;
-	string::size_type idx = __vFiles[0].find('.');
-	if (idx != string::npos)
-	{
-		strBaseName = __vFiles[0].substr(0, idx);
-	}
-	else 
-		strBaseName = __vFiles[0];
-
-
-
-	m_strFile = __vFiles[0];
 }
 
 UniversalFormat::~UniversalFormat()
@@ -168,18 +91,12 @@ UniversalFormat::~UniversalFormat()
 
 }
 
-void UniversalFormat::parseNodes(OiDatabase& dbase)
+void UniversalFormat::parseNodes()
 {
 	if (!bExistNodes)
 		return;
 
-    mysqlpp::Query query = dbase.getConnection().query();
-    query  << "insert into %4:table values" <<
-        "(%0, %1, %2, %3)";
-    query.parse();
-
-    query.template_defaults["table"] = "geonodes";
-
+    nodes_.reset();
 	uffFile.clear();
 	uffFile.seekg(posNodes, ios::beg);
 
@@ -197,7 +114,6 @@ void UniversalFormat::parseNodes(OiDatabase& dbase)
 		if (nodeNumber == -1)
 			break;
     
-        
 		ss >> temp >> temp >> temp;
         double x, y, z;     
 
@@ -206,29 +122,19 @@ void UniversalFormat::parseNodes(OiDatabase& dbase)
         location.x = x;
         location.y = y;
         location.z = z;
-        
-		//OiGeometry::Instance().m_vNodes.insert( std::make_pair(nodeNumber, location) );
-
-        query.execute(nodeNumber, x, y, z);
+       
+        nodes_ << nodeNumber << x << y << z << arma::endr;
 	}
     
-
-//	bExistNodes = false;
 }
 
-void UniversalFormat::parseLines(OiDatabase& dbase)
+void UniversalFormat::parseLines()
 {
 	if (!bExistLines /* || OiGeometry::Instance().m_vNodes.empty()*/ )
 		return;
 
-    mysqlpp::Query query = dbase.getConnection().query();
-    query  << "insert into %3:table values" <<
-        "(%0, %1, %2)";
-    query.parse();
-
-    query.template_defaults["table"] = "geolines";
-
-	uffFile.clear();
+    lines_.reset();    
+    uffFile.clear();
 	uffFile.seekg(posLines, ios::beg);
 
 	int temp, nNumberOfEntries, nTraceLineNumber, nColor;
@@ -269,16 +175,10 @@ void UniversalFormat::parseLines(OiDatabase& dbase)
 		return;
 
 	vTempNodes.erase(lastPos, vTempNodes.end());
-	//OiGeometry::Instance().m_vLines.clear();
 
 	for (size_t i = 0; i < vTempNodes.size(); i+=2)
 	{
-		Line sline;
-		sline.node1 = vTempNodes[i];
-		sline.node2 = vTempNodes[i+1];
-
-        query.execute(i/2+1, vTempNodes[i], vTempNodes[i+1]);
-		//OiGeometry::Instance().m_vLines.push_back( sline );
+        lines_ << (i/2+1) << vTempNodes[i] << vTempNodes[i+1] << arma::endr;
 	}
 	
 	//catch ( std::out_of_range outOfRange )
@@ -290,18 +190,12 @@ void UniversalFormat::parseLines(OiDatabase& dbase)
 	//bExistLines = false;
 }
 
-void UniversalFormat::parseSurfaces(OiDatabase& dbase)
+void UniversalFormat::parseSurfaces()
 {
 	if (!bExistSurfaces)
 		return;
     
-    mysqlpp::Query query = dbase.getConnection().query();
-    query  << "insert into %4:table values" <<
-        "(%0, %1, %2, %3)";
-    query.parse();
-
-    query.template_defaults["table"] = "geosurfaces";
-
+    surfaces_.reset();   
 	uffFile.clear();
 	uffFile.seekg(posSurface, ios::beg);
 
@@ -330,21 +224,17 @@ void UniversalFormat::parseSurfaces(OiDatabase& dbase)
 		ss.clear();
 		ss << line;
 
-		Surface sSurface;
         int node1, node2, node3;
 		ss >> node1 >>  node2 >> node3; 
-        sSurface.node1 = node1;
-        sSurface.node2 = node2;
-        sSurface.node3 = node3;
         
 		//catch ( std::out_of_range outOfRange)
 		//{
 		//	std::cout << "\n\nExeption: " << outOfRange.what();
 		//	return;
 		//}
-
-        query.execute(SurfaceNumber, node1, node2, node3);
-		//OiGeometry::Instance().m_vSurfaces.push_back( sSurface );
+    
+        surfaces_ << node1 << node2 << node3 << arma::endr; 
+        
 	}
 	//bExistSurfaces = false;
 }
@@ -511,6 +401,21 @@ void UniversalFormat::searchForData()
     //std::cout << "\n\n";
 }
 
+const arma::mat& UniversalFormat::getNodes()
+{
+    return nodes_;
+}
+
+const arma::umat& UniversalFormat::getLines()
+{
+    return lines_;
+}
+
+const arma::umat& UniversalFormat::getSurfaces()
+{
+    return surfaces_;
+}
+
 bool UniversalFormat::existNodes()
 {
     return bExistNodes;
@@ -531,4 +436,5 @@ bool UniversalFormat::existData()
     return bExistData;
 }
 
+} // namespace Oi
 

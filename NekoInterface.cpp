@@ -1,11 +1,12 @@
-#if defined(OI_USE_NEKO)
-
 #include <iostream>
 #include <neko.h>
+#include <vector>
 
-#include "UniversalFormat.h"
 #include "OiProxy.h"
 #include "OiUtil.h"
+
+using std::vector;
+//using namespace Oi;
 
 value init( value varr )
 {
@@ -15,8 +16,9 @@ value init( value varr )
         return val_false;
 
     vector<string> vFileNames;
+    int i = 0;
 
-    for (int i = 0; i < sz; ++i)
+    for (i = 0; i < sz; ++i)
     {
         if (val_is_string(val_array_ptr(varr)[i]))
             vFileNames.push_back( string(val_string(val_array_ptr(varr)[i])) );
@@ -25,18 +27,14 @@ value init( value varr )
     if (vFileNames.empty())
         return val_false;
     
-    // cration of of UniversalFormat object and initialization - parsing data. 
+    // cration of object and initialization - parsing data. 
     // search for goemetry: nodes, lines and surfaces and search for data.
-	UniversalFormat uff(vFileNames);
-
-    if ( !uff.existData())
-        return val_false;
-
-    if ( !uff.existNodes() )
-        return val_false;
-
-    if ( !uff.existLines() && !uff.existSurfaces() )
-        return val_false;
+    Oi::Proxy proxy;
+    for (i = 0; i < (int)vFileNames.size(); ++i)
+    {
+        if ( !proxy.init(vFileNames[i]) )
+            return val_false;
+    }
 
     return val_true;
 }
@@ -48,7 +46,7 @@ value getPSD()
 
 value getNodes()
 {
-      OiProxy proxy;
+      Oi::Proxy proxy("test");
 
       double** nodesarray = 0;
       int nnodes = 0;
@@ -92,7 +90,7 @@ static value getNodeLocation(value iNode)
 
 static value getLines()
 {
-    OiProxy proxy;
+    Oi::Proxy proxy("test");
     
     double** linesarray = 0;
     int nlines = 0;
@@ -169,7 +167,7 @@ value getSurfaces( value varr )
     if (strNames.empty())
         return alloc_array(0);
 
-    Proxy proxy;
+    Oi::Proxy proxy("test");
     double** surfacearray = 0;
     int nsurfaces = 0;
 
@@ -283,5 +281,3 @@ DEFINE_PRIM(say, 0);
 DEFINE_PRIM(init, 1);
 
 //DEFINE_PRIM_MULT(init);
-
-#endif

@@ -18,6 +18,20 @@
 #include "OiDatabase.h"
 #include "config.hpp"
 
+namespace Oi {
+
+/*
+ *Proxy::Proxy()
+ *{
+ *#if defined(OI_USE_MYSQLPP)
+ *    impl_ = new OiDatabase();
+ *#else
+ *    impl_ = OiGeometry::Instance();
+ *#endif
+ *}
+ *
+ */
+
 Proxy::Proxy(string name) : geoname_(name)
 {
 #if defined(OI_USE_MYSQLPP)
@@ -30,6 +44,11 @@ Proxy::Proxy(string name) : geoname_(name)
 Proxy::~Proxy()
 {
     delete impl_;
+}
+
+bool Proxy::init(const string name)
+{
+    return impl_->init(name);
 }
 
 void Proxy::getNodes(double** array, int& nnodes)
@@ -47,3 +66,4 @@ void Proxy::getSurfaces(double** array, int& nsurfaces)
     impl_->getSurfaces(array, nsurfaces);
 }
 
+} // namespace Oi

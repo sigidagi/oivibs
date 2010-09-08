@@ -17,9 +17,18 @@
 #ifndef _OIUTIL_H
 #define _OIUTIL_H
 
+#include <string>
+
+using std::string;
+
 namespace Oi
 {
     void free2D(double**, int);
+    
+    string stripToBaseName(const string& pathToFile);
+    string stripToFileName(const string& pathToFile);
+    string stripToExtension(const string& pathToFile);
+    string stripToPath(const string& pathToFile);
 }
 
 #endif

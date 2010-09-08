@@ -1,6 +1,7 @@
 #include "config.hpp"
 #include "OiGeometry.h"
 
+namespace Oi {
 
 //OiGeometry* OiGeometry::instance_ = 0;
 
@@ -20,6 +21,11 @@ OiGeometry& OiGeometry::Instance()
  *    return instance_;
  *}
  */
+
+bool OiGeometry::init(const string name)
+{
+    return false;
+}
 
 void OiGeometry::getNodes(double** array, int& nnodes)
 {
@@ -47,3 +53,5 @@ void OiGeometry::clearStatus()
     __strStatus.clear();
 }
 
+
+} // namespace Oi

@@ -20,6 +20,7 @@
 
 using namespace arma;
 
+namespace Oi {
 
 /*
  *OiData& OiData::Instance()
@@ -151,4 +152,4 @@ arma::Mat<double>& OiData::getData()
     return m_matData;
 }
 
-
+} // namespace Oi
