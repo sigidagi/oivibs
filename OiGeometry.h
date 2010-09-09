@@ -37,7 +37,7 @@ struct Surface
 	int node3;
 };
 
-class OiGeometry : ProxyBase
+class OiGeometry : public ProxyBase
 {
     private:
         OiGeometry(){};
@@ -54,10 +54,12 @@ class OiGeometry : ProxyBase
         vector<string> __strStatus;
 //        static OiGeometry* instance_;
         
-        friend class UniversalFormat;
+        friend class OiUniversalFormat;
 
     public:
         bool init(const string name); 
+        bool connect(const string name);
+        bool start();
         void getNodes(double** array, int& nnnodes);
         void getLines(double** array, int& nlines);
         void getSurfaces(double** array, int& nSurfaces);

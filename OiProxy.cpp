@@ -16,54 +16,53 @@
 
 #include "OiProxy.h"
 #include "OiDatabase.h"
+#include "OiGeometry.h"
 #include "config.hpp"
 
 namespace Oi {
 
-/*
- *Proxy::Proxy()
- *{
- *#if defined(OI_USE_MYSQLPP)
- *    impl_ = new OiDatabase();
- *#else
- *    impl_ = OiGeometry::Instance();
- *#endif
- *}
- *
- */
+    Proxy::Proxy() 
+    {
+        #if defined(OI_USE_MYSQLPP)
+        impl_ = OiDatabase::Instance();
+        #else
+        impl_ = OiGeometry::Instance();
+        #endif
+    }
 
-Proxy::Proxy(string name) : geoname_(name)
-{
-#if defined(OI_USE_MYSQLPP)
-    impl_ = new OiDatabase(geoname_);
-#else
-    impl_ = OiGeometry::Instance();
-#endif
-}
+    Proxy::~Proxy()
+    {
 
-Proxy::~Proxy()
-{
-    delete impl_;
-}
+    }
 
-bool Proxy::init(const string name)
-{
-    return impl_->init(name);
-}
+    bool Proxy::init(const string name)
+    {
+        return impl_->init(name);
+    }
 
-void Proxy::getNodes(double** array, int& nnodes)
-{
-    impl_->getNodes(array, nnodes);
-}
+    bool Proxy::connect(const string name)
+    {
+        return impl_->connect(name);
+    }
 
-void Proxy::getLines(double** array, int& nlines)
-{
-    impl_->getLines(array, nlines);
-}
+    bool Proxy::start()
+    {
+        return impl_->start();
+    }
 
-void Proxy::getSurfaces(double** array, int& nsurfaces)
-{
-    impl_->getSurfaces(array, nsurfaces);
-}
+    void Proxy::getNodes(double** array, int& nnodes)
+    {
+        impl_->getNodes(array, nnodes);
+    }
+
+    void Proxy::getLines(double** array, int& nlines)
+    {
+        impl_->getLines(array, nlines);
+    }
+
+    void Proxy::getSurfaces(double** array, int& nsurfaces)
+    {
+        impl_->getSurfaces(array, nsurfaces);
+    }
 
 } // namespace Oi

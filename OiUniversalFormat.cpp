@@ -1,6 +1,4 @@
-#include "UniversalFormat.h"
-#include "OiGeometry.h"
-#include "OiDatabase.h"
+#include "OiUniversalFormat.h"
 #include "OiUtil.h"
 
 #include <algorithm>
@@ -11,12 +9,12 @@ using namespace std;
 
 namespace Oi {
 
-UniversalFormat::UniversalFormat() : bExistNodes(false), bExistLines(false), bExistSurfaces(false), bExistData(false)
+OiUniversalFormat::OiUniversalFormat() : bExistNodes(false), bExistLines(false), bExistSurfaces(false), bExistData(false)
 {
     
 }
 
-void UniversalFormat::parse(const string file)
+void OiUniversalFormat::parse(const string file)
 {
 	if (file.empty())
 		return;
@@ -26,7 +24,7 @@ void UniversalFormat::parse(const string file)
     bool braw_data = false;
     if (strExtension == "txt")
     {
-        bool status = m_Data.getData().load(file, arma::raw_ascii);            
+        bool status = data_.load(file, arma::raw_ascii);            
         if (status == false)
         {
             // save into status and return 
@@ -86,12 +84,12 @@ void UniversalFormat::parse(const string file)
 
 }
 
-UniversalFormat::~UniversalFormat()
+OiUniversalFormat::~OiUniversalFormat()
 {
 
 }
 
-void UniversalFormat::parseNodes()
+void OiUniversalFormat::parseNodes()
 {
 	if (!bExistNodes)
 		return;
@@ -103,8 +101,9 @@ void UniversalFormat::parseNodes()
 	int nodeNumber, temp; 
 	string line;
 	stringstream ss;
-
-	while (!uffFile.eof())
+    double x, y, z;     
+	
+    while (!uffFile.eof())
 	{
 		getline(uffFile, line);
 		ss.str("");
@@ -115,22 +114,16 @@ void UniversalFormat::parseNodes()
 			break;
     
 		ss >> temp >> temp >> temp;
-        double x, y, z;     
-
-		Point3D location;
 		ss >> x >> y >> z;
-        location.x = x;
-        location.y = y;
-        location.z = z;
        
         nodes_ << nodeNumber << x << y << z << arma::endr;
 	}
     
 }
 
-void UniversalFormat::parseLines()
+void OiUniversalFormat::parseLines()
 {
-	if (!bExistLines /* || OiGeometry::Instance().m_vNodes.empty()*/ )
+	if (!bExistLines)
 		return;
 
     lines_.reset();    
@@ -170,11 +163,12 @@ void UniversalFormat::parseLines()
 	if ((int)vTempNodes.size() != nNumberOfEntries)
 		return;
 
-	vector<int>::iterator lastPos = std::remove(vTempNodes.begin(), vTempNodes.end(), 0);
-	if (lastPos == vTempNodes.end())
+	vector<int>::iterator it;
+    it = std::remove(vTempNodes.begin(), vTempNodes.end(), 0);
+	if (it == vTempNodes.end())
 		return;
 
-	vTempNodes.erase(lastPos, vTempNodes.end());
+	vTempNodes.erase(it, vTempNodes.end());
 
 	for (size_t i = 0; i < vTempNodes.size(); i+=2)
 	{
@@ -190,7 +184,7 @@ void UniversalFormat::parseLines()
 	//bExistLines = false;
 }
 
-void UniversalFormat::parseSurfaces()
+void OiUniversalFormat::parseSurfaces()
 {
 	if (!bExistSurfaces)
 		return;
@@ -213,10 +207,10 @@ void UniversalFormat::parseSurfaces()
 
 		ss >> FEDescriptor >> PhysicalPropNumber >> MaterialPropNumber >> Color >> NumberOfElementNodes;
 		
-		if ( FEDescriptor!=91 ) // Only thin shell triangular elements allowed
+		if ( FEDescriptor != 91 ) // Only thin shell triangular elements allowed
 			return;
 
-		if ( NumberOfElementNodes!=3 ) // There need to be three nodes
+		if ( NumberOfElementNodes != 3 ) // There need to be three nodes
 			return;
 
 		getline(uffFile, line);
@@ -227,19 +221,12 @@ void UniversalFormat::parseSurfaces()
         int node1, node2, node3;
 		ss >> node1 >>  node2 >> node3; 
         
-		//catch ( std::out_of_range outOfRange)
-		//{
-		//	std::cout << "\n\nExeption: " << outOfRange.what();
-		//	return;
-		//}
-    
         surfaces_ << node1 << node2 << node3 << arma::endr; 
         
 	}
-	//bExistSurfaces = false;
 }
 
-void UniversalFormat::parseData(const int pos, int column )
+void OiUniversalFormat::parseData(const int pos, int column )
 {
 	if (!bExistData)
 		return;
@@ -266,25 +253,28 @@ void UniversalFormat::parseData(const int pos, int column )
 	ss.str("");
 	ss.clear();
 
-    m_Data.vSamplingInterval.push_back(dSamplingInterval);
-    m_Data.vNumberOfSamples.push_back(nNumberOfPoints);
+    // save sampling intervals and number of points for each channel in a vectors
+    vSamplingInterval.push_back(dSamplingInterval);
+    vNumberOfSamples.push_back(nNumberOfPoints);
 
-	getline(uffFile, line);
-	getline(uffFile, line);
-	getline(uffFile, line);
-	getline(uffFile, line);
-
-    // first channel
-    if (column == 0)
-        // (rows, columns) - rows represent nummber of points in a channel, columns - 
-        // number of channels.
-        m_Data.getData().set_size( nNumberOfPoints, (int)m_vposData.size() );
-    else
+    samplingInterval_ = vSamplingInterval[0];
+    if (samplingInterval_ != dSamplingInterval)
     {
-        // truncate matrix to a smaller number of columns.
-        if ((int)m_Data.getData().n_cols > nNumberOfPoints)
-            m_Data.getData().set_size( nNumberOfPoints, (int)m_vposData.size() );
+        // ERROR alert that sampling interval differs in data channels!!
     }
+    
+    vector<int>::iterator it;
+    it = std::min_element(vNumberOfSamples.begin(), vNumberOfSamples.end());
+    if (it != vNumberOfSamples.end())
+        numberOfSamples_ = *it;
+      
+    // resize data channels without distroing values inside.   
+    data_.set_size( numberOfSamples_, (int)m_vposData.size() );
+	
+    getline(uffFile, line);
+	getline(uffFile, line);
+	getline(uffFile, line);
+	getline(uffFile, line);
 
 	int nCount = 0;
 
@@ -298,7 +288,7 @@ void UniversalFormat::parseData(const int pos, int column )
 
         do 
         {
-            m_Data.getData()(nCount, column) = dValue;
+            data_(nCount, column) = dValue;
             ++nCount;
         }
 		while (ss >> dValue);
@@ -306,10 +296,9 @@ void UniversalFormat::parseData(const int pos, int column )
 		ss.str("");
 		ss.clear();
 	}
-
 }
 
-void UniversalFormat::searchForSamplingT()
+void OiUniversalFormat::searchForSamplingT()
 {
 	// return stream to the beginning.
 	uffFile.seekg(0, ios::beg);
@@ -338,11 +327,11 @@ void UniversalFormat::searchForSamplingT()
     }
 
     if (dT != 0.0)
-        m_Data.vSamplingInterval.push_back(dT);       
+        vSamplingInterval.push_back(dT);       
 
 }
 
-void UniversalFormat::searchForData()
+void OiUniversalFormat::searchForData()
 {
 	// return stream to the beginning.
 	uffFile.seekg(0, ios::beg);
@@ -401,37 +390,60 @@ void UniversalFormat::searchForData()
     //std::cout << "\n\n";
 }
 
-const arma::mat& UniversalFormat::getNodes()
+const arma::mat& OiUniversalFormat::getNodes()
 {
     return nodes_;
 }
 
-const arma::umat& UniversalFormat::getLines()
+const arma::umat& OiUniversalFormat::getLines()
 {
     return lines_;
 }
 
-const arma::umat& UniversalFormat::getSurfaces()
+const arma::umat& OiUniversalFormat::getSurfaces()
 {
     return surfaces_;
 }
 
-bool UniversalFormat::existNodes()
+const arma::mat& OiUniversalFormat::getData()
+{
+    return data_;
+}
+
+double OiUniversalFormat::getSamplingT()
+{
+    return samplingInterval_;
+}
+
+int OiUniversalFormat::getNumberOfSamples()
+{
+    if (vNumberOfSamples.empty())
+        return 0;
+
+    vector<int>::iterator it;
+    it = std::min_element(vNumberOfSamples.begin(), vNumberOfSamples.end());
+    if (it != vNumberOfSamples.end())
+        return *it;
+    else
+        return 0;
+}
+
+bool OiUniversalFormat::existNodes()
 {
     return bExistNodes;
 }
 
-bool UniversalFormat::existLines()
+bool OiUniversalFormat::existLines()
 {
     return bExistLines;
 }
 
-bool UniversalFormat::existSurfaces()
+bool OiUniversalFormat::existSurfaces()
 {
     return bExistSurfaces;
 }
 
-bool UniversalFormat::existData()
+bool OiUniversalFormat::existData()
 {
     return bExistData;
 }

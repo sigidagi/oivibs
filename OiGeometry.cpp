@@ -27,6 +27,16 @@ bool OiGeometry::init(const string name)
     return false;
 }
 
+bool OiGeometry::connect(const string name)
+{
+    return false;
+}
+
+bool OiGeometry::start()
+{
+    return false;
+}
+
 void OiGeometry::getNodes(double** array, int& nnodes)
 {
  

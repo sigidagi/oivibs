@@ -1,10 +1,11 @@
 #ifndef _UNIVERSALFORMAT_H
 #define _UNIVERSALFORMAT_H
 
+#include "OiFormat.h"
 #include <vector>
 #include <fstream>
 #include <string>
-#include "OiData.h" 
+#include <armadillo>
 
 using std::vector;
 using std::string;
@@ -12,14 +13,15 @@ using std::streampos;
 
 namespace Oi {
 
-class UniversalFormat
+class OiUniversalFormat : public OiFormat
 {
 	// pivate data
 private:
 	std::ifstream uffFile;
     
-    OiData m_Data;
-
+    // channels are represented in columns 
+    arma::mat data_;
+    
     arma::mat nodes_;
     arma::umat lines_;
     arma::umat surfaces_;
@@ -31,9 +33,14 @@ private:
 	int posNodes, posLines, posSurface;
 	vector<int> m_vposData;
 
+    vector<double> vSamplingInterval;
+    vector<int> vNumberOfSamples;
+
+    double samplingInterval_;
+    int numberOfSamples_;
+ 
 	string m_strFile;
     vector<string> __strStatus;
-    vector<string> __vFiles;
 
 	// private methods
 private:
@@ -45,8 +52,8 @@ private:
 	void parseData(const int pos, int column);
 
 public:
-    UniversalFormat();
-	~UniversalFormat();
+    OiUniversalFormat();
+	~OiUniversalFormat();
 
     void parse(const string file);
     
@@ -58,6 +65,10 @@ public:
     const arma::mat& getNodes();
     const arma::umat& getLines();
     const arma::umat& getSurfaces();
+    const arma::mat& getData();
+
+    double getSamplingT();
+    int getNumberOfSamples();
 };
 
 } // namespace Oi

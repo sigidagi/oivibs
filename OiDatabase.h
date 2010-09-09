@@ -17,35 +17,42 @@
 #ifndef _OIDATABASE_H
 #define _OIDATABASE_H
 
-#include "UniversalFormat.h"
+#include "OiProcessing.h"
 #include "OiProxy.h"
 #include <string>
+#include <memory>
 #include <mysql++.h>
 
 using std::string;
+class OiFormat;
 
 namespace Oi {
 
 class OiDatabase : public ProxyBase
 {
-    public:
-        OiDatabase(const string name = "");
+    private:
+        OiDatabase(){};
+        OiDatabase(OiDatabase const&){};
+        OiDatabase& operator=(OiDatabase const&){ return *this;};
 
     public:
         mysqlpp::Connection& getConnection();
+       
         
-       bool saveNodes();
+        static OiDatabase* Instance();
+        bool saveNodes();
 
     // ProxyBase interface
     public:
 	    bool init(const string strFileName);
+        bool start();
         void getNodes(double** array, int& nnodes);
         void getLines(double** array, int& nlines);
         void getSurfaces(double** array, int& nSurfaces);
         bool isConnected();
     
     private:
-        bool connect(const string& dname);
+        bool connect(const string dname);
         bool createTable_Nodes();
         bool createTable_Lines();
         bool createTable_Surfaces();
@@ -57,11 +64,14 @@ class OiDatabase : public ProxyBase
 
     private:
         
+        static OiDatabase* instance_;
         string name_;
         bool bConnected_;
         mysqlpp::Connection connection_;
-        UniversalFormat uff_;
-
+        
+        std::auto_ptr<OiFormat> pFormat_;
+        OiProcessing proc_;
+        
 };
 
 } // namespace Oi

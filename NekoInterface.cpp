@@ -46,7 +46,8 @@ value getPSD()
 
 value getNodes()
 {
-      Oi::Proxy proxy("test");
+      Oi::Proxy proxy;
+      proxy.connect("test"); 
 
       double** nodesarray = 0;
       int nnodes = 0;
@@ -90,7 +91,9 @@ static value getNodeLocation(value iNode)
 
 static value getLines()
 {
-    Oi::Proxy proxy("test");
+    Oi::Proxy proxy;
+    proxy.connect("test");
+
     
     double** linesarray = 0;
     int nlines = 0;
@@ -167,7 +170,8 @@ value getSurfaces( value varr )
     if (strNames.empty())
         return alloc_array(0);
 
-    Oi::Proxy proxy("test");
+    Oi::Proxy proxy;
+    proxy.connect("test");
     double** surfacearray = 0;
     int nsurfaces = 0;
 

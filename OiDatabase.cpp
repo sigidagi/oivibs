@@ -22,14 +22,24 @@
 
 namespace Oi {
 
-OiDatabase::OiDatabase(const string dbname) : bConnected_(false), name_(dbname)
-{
-    if (dbname.empty())
-        return;
+OiDatabase* OiDatabase::instance_ = 0;
 
-    bConnected_ = connect(dbname);        
+OiDatabase* OiDatabase::Instance()
+{
+    if (!instance_)
+        instance_ = new OiDatabase;
+    
+    return instance_;
 }
 
+
+/*
+ *OiDatabase& OiDatabase::Instance()
+ *{
+ *    static OiDatabase thisOiDatabase;
+ *    return thisOiDatabase;
+ *}
+ */
 
 bool OiDatabase::isConnected()
 {
@@ -82,29 +92,35 @@ bool OiDatabase::init(const string pathAndFileName)
    
     bConnected_ = true;    
     
-    uff_.parse(pathAndFileName);
+    pFormat_->parse(pathAndFileName);
 
     // next to check if any data were found. If not return false.
-    if (!uff_.existNodes() || !uff_.existLines() || uff_.existSurfaces() || uff_.existData())
+    if (!pFormat_->existNodes() || !pFormat_->existLines() || pFormat_->existSurfaces() || pFormat_->existData())
         return false;
    
-    if (uff_.existNodes())
+    if (pFormat_->existNodes())
     {
-        saveNodes(uff_.getNodes());
+        saveNodes(pFormat_->getNodes());
     }
-    if (uff_.existLines())
+    if (pFormat_->existLines())
     {
-        saveLines(uff_.getLines());
+        saveLines(pFormat_->getLines());
     }
-    if (uff_.existSurfaces())
+    if (pFormat_->existSurfaces())
     {
-        saveSurfaces(uff_.getSurfaces());
+        saveSurfaces(pFormat_->getSurfaces());
     }
 
     return true;
 }
 
-bool OiDatabase::connect(const string& dbname)
+bool OiDatabase::start()
+{
+        
+    return true;
+}
+
+bool OiDatabase::connect(const string dbname)
 {
     if (dbname.empty() )
         return false;
