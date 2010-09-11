@@ -18,14 +18,14 @@
 #include <cmath>
 #include "OiProcessing.h"
 #include "gfft/gfft.h"
-#include "OiUniversalFormat.h"
+#include "OiUniversalFileFormat.h"
 
 //#include <acml.h>
 //#include <fftw3.h>
 
 namespace Oi {
 
-    void  OiProcessing::inverse( Mat<double>& x)
+    void  Processing::inverse( Mat<double>& x)
     {
         if (x.n_cols == 0 || x.n_rows == 0)
             return;
@@ -34,7 +34,7 @@ namespace Oi {
     }
 
     // 
-    void  OiProcessing::detrend( Mat<double>& x, int p)
+    void  Processing::detrend( Mat<double>& x, int p)
     {
         if (x.n_cols == 0 || x.n_rows == 0)
             return;
@@ -72,7 +72,7 @@ namespace Oi {
         return ham;
     }
 
-    void OiProcessing::createPSD(cube& psd, mat& chunk)
+    void Processing::createPSD(cube& psd, mat& chunk)
     {
         double a, b, c, d;
         int row, col, col2;
@@ -95,7 +95,7 @@ namespace Oi {
 
     }
 
-    bool OiProcessing::start(OiFormat* pFormat)
+    bool Processing::start(FileFormatInterface* pFormat)
     {
         const mat& refData = pFormat->getData();
         int nrows = refData.n_rows;
@@ -135,7 +135,7 @@ namespace Oi {
         int nslices = 0;
         int nn = 0;
         int row_pos = 0;
-        m_Pxx = zeros<cube>(ncols, ncols, segmentLength/2);
+        powerSpectrum_ = zeros<cube>(ncols, ncols, segmentLength/2);
         mat chunk(segmentLength, ncols);
 
         while (row_pos + segmentLength < nrows)
@@ -147,7 +147,7 @@ namespace Oi {
                 chunk.col(nn) = chunk.col(nn) % hamming;
                 gfft->fft(chunk.memptr() + nn*segmentLength );
            
-                createPSD(m_Pxx, chunk);    
+                createPSD(powerSpectrum_, chunk);    
             }
 
             ++nslices; 
@@ -157,7 +157,7 @@ namespace Oi {
         
 
         double T = pFormat->getSamplingT();
-        m_Freq = 1/(2.0*T) * linspace<colvec>(0,1, segmentLength/2); 
+        frequencies_ = 1/(2.0*T) * linspace<colvec>(0,1, segmentLength/2); 
 
         
         // Scale factor
@@ -167,18 +167,18 @@ namespace Oi {
         double win_meansq = arma::accu(hamming % hamming)/hamming.n_elem;
         double scale = win_meansq * nslices * (double)segmentLength/(2.0*T);
        
-        m_Pxx = m_Pxx / scale;
+        powerSpectrum_ = powerSpectrum_ / scale;
 
-        m_SVD.set_size(ncols, m_Pxx.n_slices);
+        singularValues_.set_size(ncols, powerSpectrum_.n_slices);
         colvec singvalues(ncols);
-        for (nn = 0; nn < (int)m_Pxx.n_slices; ++nn)
+        for (nn = 0; nn < (int)powerSpectrum_.n_slices; ++nn)
         {
-            arma::svd(singvalues, m_Pxx.slice(nn)); 
-            m_SVD.col(nn) = singvalues;
+            arma::svd(singvalues, powerSpectrum_.slice(nn)); 
+            singularValues_.col(nn) = singvalues;
         }
 
-        rowvec svd0(m_SVD.n_cols);
-        svd0 = m_SVD.row(0);
+        rowvec svd0(singularValues_.n_cols);
+        svd0 = singularValues_.row(0);
         svd0.save("SVD.txt", arma_ascii);
         
         return true;

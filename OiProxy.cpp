@@ -15,8 +15,8 @@
 // =====================================================================================
 
 #include "OiProxy.h"
-#include "OiDatabase.h"
-#include "OiGeometry.h"
+#include "OiDatabaseStorage.h"
+#include "OiLocalStorage.h"
 #include "config.hpp"
 
 namespace Oi {
@@ -24,9 +24,9 @@ namespace Oi {
     Proxy::Proxy() 
     {
         #if defined(OI_USE_MYSQLPP)
-        impl_ = OiDatabase::Instance();
+        impl_ = DatabaseStorage::Instance();
         #else
-        impl_ = OiGeometry::Instance();
+        impl_ = LocalStorage::Instance();
         #endif
     }
 
@@ -35,19 +35,14 @@ namespace Oi {
 
     }
 
-    bool Proxy::init(const string name)
+    bool Proxy::init(const string& name)
     {
         return impl_->init(name);
     }
 
-    bool Proxy::connect(const string name)
+    bool Proxy::connect(const string& name)
     {
         return impl_->connect(name);
-    }
-
-    bool Proxy::start()
-    {
-        return impl_->start();
     }
 
     void Proxy::getNodes(double** array, int& nnodes)

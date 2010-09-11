@@ -24,37 +24,35 @@ using std::string;
 
 namespace Oi {
 
-    class ProxyBase
+    class ProxyInterface
     {
         public:
-            virtual ~ProxyBase(){}
+            virtual ~ProxyInterface(){}
         
         // Interfaces
         public:
-            virtual bool init(const string name ) = 0;
-            virtual bool connect(const string name) = 0;
-            virtual bool start() = 0;
+            virtual bool init(const string& name ) = 0;
+            virtual bool connect(const string& name) = 0;
             virtual void getNodes(double**, int& ) = 0;
             virtual void getLines(double**, int& ) = 0;
             virtual void getSurfaces(double**, int& ) = 0;
     };
 
-    class Proxy : ProxyBase {
+    class Proxy : ProxyInterface {
         public:
             Proxy(); 
             ~Proxy ();
 
         // Interfaces
         public:
-            bool init(const string name);
-            bool connect(const string name);
-            bool start();
+            bool init(const string& name);
+            bool connect(const string& name);
             void getNodes(double**, int& nnnodes);
             void getLines(double**, int& nlines);
             void getSurfaces(double**, int& nSurfaces);
 
         private:
-            ProxyBase* impl_; 
+            ProxyInterface* impl_; 
     };
 
 } // namespace Oi

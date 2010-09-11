@@ -24,13 +24,15 @@ using std::string;
 
 namespace Oi {
 
-    class OiFormat
+    class FileFormatInterface
     {
         public:
-            virtual ~OiFormat(){}
+            virtual ~FileFormatInterface(){}
 
         public:
-            virtual void parse(const string file) = 0;
+            static FileFormatInterface* createFileFormat(const string& file);
+
+            virtual void parse(const string& file) = 0;
             
             virtual bool existNodes() = 0;
             virtual bool existLines() = 0;

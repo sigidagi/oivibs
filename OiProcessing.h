@@ -1,7 +1,7 @@
 #ifndef _OIPROCESSING_H
 #define _OILPROCESSING_H
 
-#include "OiFormat.h"
+#include "OiFileFormat.h"
 #include <armadillo>
 
 
@@ -40,11 +40,11 @@ namespace Oi
         b = dum; 
     }
 
-    class OiProcessing
+    class Processing
     {
         public:
             void createPSD(cube& psd, mat& chunk);
-            bool start(OiFormat* pFormat);
+            bool start(FileFormatInterface* pFileFormat);
 
         private:
             void detrend( Mat<double>& x, int p = 1);
@@ -53,9 +53,9 @@ namespace Oi
             void inverse( Mat<double>& x );
 
         private:
-            cube m_Pxx;
-            mat m_SVD;
-            colvec m_Freq;
+            cube powerSpectrum_;
+            mat singularValues_;
+            colvec frequencies_;
     };
 
 
