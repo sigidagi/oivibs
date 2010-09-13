@@ -22,7 +22,7 @@ namespace Oi {
         return instance_;
     }
 
-    bool LocalStorage::init(const string& name)
+    bool LocalStorage::init(const string& name, int processName)
     {
         return false;
     }

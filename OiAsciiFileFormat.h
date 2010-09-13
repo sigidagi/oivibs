@@ -4,6 +4,7 @@
 #include "OiFileFormat.h"
 #include <armadillo>
 #include <string>
+#include <fstream>
 
 using std::string;
 
@@ -12,6 +13,7 @@ namespace Oi {
     class AsciiFileFormat : public FileFormatInterface  
     {
         public:
+            AsciiFileFormat();
             ~AsciiFileFormat(){}
 
         public:
@@ -27,11 +29,12 @@ namespace Oi {
             virtual const arma::umat& getSurfaces();
             virtual const arma::mat& getData();
 
-            virtual double getSamplingT();
+            virtual double getSamplingInterval();
             virtual int getNumberOfSamples();
 
         private:
             
+            std::ifstream fileStream_;
             arma::mat nodes_;
             arma::umat lines_;
             arma::umat surfaces_;
@@ -39,6 +42,13 @@ namespace Oi {
 
             double samplingInterval_;
             int numberOfSamples_;
+
+            bool existData_;
+            bool existSamplingInterval_;
+
+        private:
+            bool searchSamplingInterval(const string& fileName);
+            
     };
 
 } // namespace Oi

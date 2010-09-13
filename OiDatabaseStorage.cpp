@@ -16,14 +16,40 @@
 
 #include "OiDatabaseStorage.h"
 #include "OiFileFormat.h"
+#include "OiProcessing.h"
 #include "OiUtil.h"
+
 #include <iostream>
 #include <stdexcept>
 
 
 namespace Oi {
 
-    DatabaseStorage* DatabaseStorage::instance_ = 0;
+    DatabaseStorage* DatabaseStorage::instance_ = NULL;
+    
+    DatabaseStorage::DatabaseStorage() : proc_(NULL), fileFormat_(NULL)
+    {
+
+    }
+
+    DatabaseStorage::~DatabaseStorage()
+    {
+        if (proc_)
+        {
+            delete proc_;
+            proc_ = NULL;
+        }
+        if (fileFormat_)
+        {
+            delete fileFormat_;
+            fileFormat_ = NULL;
+        }
+    }
+
+    DatabaseStorage& DatabaseStorage::operator=(DatabaseStorage const&)
+    {
+        return *this;
+    }
 
     DatabaseStorage* DatabaseStorage::Instance()
     {
@@ -32,15 +58,6 @@ namespace Oi {
         
         return instance_;
     }
-
-
-    /*
-     *DatabaseStorage& DatabaseStorage::Instance()
-     *{
-     *    static DatabaseStorage thisDatabaseStorage;
-     *    return thisDatabaseStorage;
-     *}
-     */
 
     bool DatabaseStorage::isConnected()
     {
@@ -61,7 +78,7 @@ namespace Oi {
      * into that database.
      *
      */
-    bool DatabaseStorage::init(const string& file)
+    bool DatabaseStorage::init(const string& file, int processName)
     {
         if (file.empty())
             return false;
@@ -95,7 +112,7 @@ namespace Oi {
         bConnected_ = true;    
       
 
-        //         
+        // 
         fileFormat_ = FileFormatInterface::createFileFormat(file);
         if (fileFormat_ == 0)
             return false;
@@ -120,12 +137,17 @@ namespace Oi {
         }
         if (fileFormat_->existData())
         {
-            if (proc_.start(fileFormat_))
+            
+            proc_ = ProcessingInterface::createProcess(processName);
+            if (proc_->start(fileFormat_))
                 saveData(fileFormat_->getData());
-                
+               
+            delete proc_;
+            proc_ = 0;
         }
         
         delete fileFormat_;
+        fileFormat_ = 0;
 
         return true;
     }
@@ -157,7 +179,7 @@ namespace Oi {
         return true;
     }
 
-    bool DatabaseStorage::createTable_Lines()
+    bool DatabaseStorage::createTableOfLines()
     {
         mysqlpp::Query query = connection_.query();
 
@@ -185,7 +207,7 @@ namespace Oi {
         return true;
     }
 
-    bool DatabaseStorage::createTable_Surfaces()
+    bool DatabaseStorage::createTableOfSurfaces()
     {
         mysqlpp::Query query = connection_.query();
         
@@ -214,7 +236,7 @@ namespace Oi {
         return true;
     }
 
-    bool DatabaseStorage::createTable_Nodes()
+    bool DatabaseStorage::createTableOfNodes()
     {
         mysqlpp::Query query = connection_.query();
 
@@ -246,7 +268,7 @@ namespace Oi {
     }
 
     // Function creates MySql tables according UFF file.
-    bool DatabaseStorage::createTable_Data()
+    bool DatabaseStorage::createTableOfData()
     {
         mysqlpp::Query query = connection_.query();
         
@@ -287,7 +309,7 @@ namespace Oi {
         if (nodes.n_elem == 0 || nodes.n_rows != 4)
             return;
         
-        createTable_Nodes();
+        createTableOfNodes();
 
         mysqlpp::Query query = getConnection().query();
         query  << "insert into %4:table values" <<
@@ -308,7 +330,7 @@ namespace Oi {
         if (lines.n_elem == 0 || lines.n_rows != 3)
             return;
 
-        createTable_Lines();
+        createTableOfLines();
 
         mysqlpp::Query query = getConnection().query();
         query  << "insert into %3:table values" <<
@@ -328,7 +350,7 @@ namespace Oi {
         if (surfaces.n_elem == 0 || surfaces.n_rows != 4)
             return;
 
-        createTable_Surfaces();
+        createTableOfSurfaces();
 
         mysqlpp::Query query = getConnection().query();
         query  << "insert into %4:table values" <<

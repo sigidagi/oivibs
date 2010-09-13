@@ -1,10 +1,76 @@
 #include "OiAsciiFileFormat.h"
+#include "OiUtil.h"
+#include <sstream>
+#include <unistd.h>
+
 
 namespace Oi {
+
+    AsciiFileFormat::AsciiFileFormat() : existSamplingInterval_(false), existData_(false)
+    {
+
+    }
 
     void AsciiFileFormat::parse(const string& file)
     {
 
+        string path = Oi::stripToPath(file);
+        chdir(path.c_str());
+
+        string fileName = Oi::stripToFileName(file);
+
+        bool status = data_.load(file, arma::raw_ascii);            
+        if (status == false)
+        {
+            if (searchSamplingInterval(fileName))
+                existSamplingInterval_ = true;        
+        }
+        else
+            existData_ = true;
+
+    }
+
+    bool AsciiFileFormat::searchSamplingInterval(const string& fileName)
+    {
+
+        fileStream_.open(fileName.c_str(), std::ios::in);
+        if (fileStream_.is_open())
+        { 
+            // return stream to the beginning.
+            fileStream_.seekg(0, std::ios::beg);
+
+            string line;
+            std::stringstream ss;
+            double dT = 0.0;
+
+            while (!fileStream_.eof())
+            {
+                getline(fileStream_, line);
+                if (fileStream_.eof())
+                    break;
+
+                ss << line;
+                if (line == "T\r" && !fileStream_.eof())
+                {
+                    getline(fileStream_, line);
+                    ss.str("");
+                    ss.clear();
+                    ss << line;
+                    ss >> dT;
+                    samplingInterval_ = dT;
+                     
+                    break;
+                }
+                
+            }
+
+            fileStream_.close();
+       
+            if (dT == 0.0)
+                return false;
+        }
+   
+        return true;
     }
 
     bool AsciiFileFormat::existNodes()
@@ -24,7 +90,7 @@ namespace Oi {
 
     bool AsciiFileFormat::existData()
     {
-        return false;
+        return existData_;
     }
 
     const arma::mat& AsciiFileFormat::getNodes()
@@ -47,7 +113,7 @@ namespace Oi {
         return data_;
     }
 
-    double AsciiFileFormat::getSamplingT()
+    double AsciiFileFormat::getSamplingInterval()
     {
         return samplingInterval_;
     }

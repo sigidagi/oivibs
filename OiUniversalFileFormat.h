@@ -30,10 +30,7 @@ namespace Oi {
         bool existSurfaces_;
         bool existData_;
         int nodePosition_, linePosition_, surfacePosition_;
-        vector<int> dataPositions_;
-
-        vector<double> vSamplingInterval;
-        vector<int> vNumberOfSamples;
+        vector<int> dataPositionList_;
 
         double samplingInterval_;
         int numberOfSamples_;
@@ -64,7 +61,7 @@ namespace Oi {
         const arma::umat& getSurfaces();
         const arma::mat& getData();
 
-        double getSamplingT();
+        double getSamplingInterval();
         int getNumberOfSamples();
     };
 

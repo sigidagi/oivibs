@@ -44,7 +44,7 @@ namespace Oi {
             virtual const arma::umat& getSurfaces() = 0;
             virtual const arma::mat& getData() = 0;
 
-            virtual double getSamplingT() = 0;
+            virtual double getSamplingInterval() = 0;
             virtual int getNumberOfSamples() = 0;
            
     };

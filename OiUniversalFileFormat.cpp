@@ -19,22 +19,6 @@ namespace Oi {
         if (file.empty())
             return;
 
-        string strExtension = Oi::stripToExtension(file);
-
-        bool rawData = false;
-        if (strExtension == "txt")
-        {
-            bool status = data_.load(file, arma::raw_ascii);            
-            if (status == false)
-            {
-                // save into status and return 
-                return;
-            }
-            existData_ = true;
-            rawData = true;
-            return;
-        }
-
         string path = Oi::stripToPath(file);
         chdir(path.c_str());
 
@@ -43,20 +27,8 @@ namespace Oi {
         fileStream_.open(fileName.c_str(), ios::in);
         if (fileStream_.is_open())
         {
-            if (strExtension == "cfg")
-            {
-                searchForSamplingT();
-            }
-            else if (strExtension == "uff")
-            {
-                // serches for nodes, lines, surfaces and data in UFF file.
-                searchForData();
-            }
-            else
-            {
-                // notify that program do not support such file extension.
-                 return;
-            }
+            // serches for nodes, lines, surfaces and data in UFF file.
+            searchForData();
 
             if (existNodes_)
             {
@@ -72,11 +44,8 @@ namespace Oi {
             }
             if (existData_)
             {
-                for (size_t t = 0; t < dataPositions_.size(); ++t)
-                    parseData(dataPositions_[t], t);
-                 
-                 
-              //  m_Data.getData().save(strBaseName + ".mat");     
+                for (size_t t = 0; t < dataPositionList_.size(); ++t)
+                    parseData(dataPositionList_[t], t);
             }
             
             fileStream_.close();
@@ -266,7 +235,7 @@ namespace Oi {
 
           
         // resize data channels without distroing values inside.   
-        data_.set_size( numberOfSamples_, (int)dataPositions_.size() );
+        data_.set_size( numberOfSamples_, (int)dataPositionList_.size() );
         
         getline(fileStream_, line);
         getline(fileStream_, line);
@@ -295,40 +264,6 @@ namespace Oi {
         }
     }
 
-    void UniversalFileFormat::searchForSamplingT()
-    {
-        // return stream to the beginning.
-        fileStream_.seekg(0, ios::beg);
-
-        string line;
-        stringstream ss;
-        double dT = 0.0;
-
-        while (!fileStream_.eof())
-        {
-            getline(fileStream_, line);
-            if (fileStream_.eof())
-                break;
-
-            ss << line;
-            if (line == "T\r" && !fileStream_.eof())
-            {
-                getline(fileStream_, line);
-                ss.str("");
-                ss.clear();
-                ss << line;
-                ss >> dT;
-                break;
-            }
-            
-        }
-
-/*
- *        if (dT != 0.0)
- *            vSamplingInterval.push_back(dT);       
- *
- */
-    }
 
     void UniversalFileFormat::searchForData()
     {
@@ -383,7 +318,7 @@ namespace Oi {
                 //std::cout << "\n";
                 //std::cout << "Data was found!\n";
                 existData_ = true;
-                dataPositions_.push_back(fileStream_.tellg());
+                dataPositionList_.push_back(fileStream_.tellg());
             }
         }
         //std::cout << "\n\n";
@@ -409,7 +344,7 @@ namespace Oi {
         return data_;
     }
 
-    double UniversalFileFormat::getSamplingT()
+    double UniversalFileFormat::getSamplingInterval()
     {
         return samplingInterval_;
     }
