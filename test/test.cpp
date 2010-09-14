@@ -8,126 +8,20 @@
 #include <dlfcn.h>
 #include <neko_vm.h>
 
-#include "../gfft/gfft.h"
 
 using namespace std;
-using namespace arma;
 
 int main(int argc, char* argv[])
 {
-    
-    chdir("../");
-    void* hndl = dlopen("libOiVibrations.so", RTLD_LAZY);
+    // don't forget to set LD_LIBRARY_PATH to directory where OiVibrations.ndll libary resides
+    // LD_LIBRARY_PATH=/home/john/sharedlibs
+    // export LD_LIBRARY_PATH
+    void* hndl = dlopen("OiVibrations.ndll", RTLD_LAZY);
     if (hndl == NULL)
     {
         cerr << dlerror() << endl;
         exit(-1);
     }
-
-    // ------------------- ACML ------------------------------
-    int tt = 1<<10;
-    colvec time = linspace<colvec>(0, tt-1, tt) / tt;
-    colvec in= 0.7*sin(2*M_PI*50*time) + sin(2*M_PI*120*time);
-    in = in + 2*randn(tt);
-
-    
-    int nfft = tt/2;
-    
-
-/*
- *    cx_colvec out(nfft);
- *
- *    typedef void (*fnc_fftw_ptr)(colvec&, cx_colvec&);
- *    fnc_fftw_ptr pfftw = (fnc_fftw_ptr)(dlsym(hndl, "fftw"));
- *    if (pfftw == NULL)
- *    {
- *        dlclose(hndl);
- *        exit(-1);
- *    }
- *
- *    pfftw(in, out); 
- *    colvec f = 512*linspace<colvec>(0, 1, 513);
- *
- *    f.save("f.dat", raw_ascii);
- *    in.save("signal.dat", raw_ascii);
- *    //
- */
-    // ----------------- end ACML -------------------------------
-    //
-/*
- *   
- *    printf("\n");
- *    printf("ACML example: FFT of a real sequence using dzfft\n");
- *    printf("------------------------------------------------\n");
- *    printf("\n");
- *
- *
- *    typedef void (*fnc_ffta_ptr)(double*, long);
- *    fnc_ffta_ptr pffta = (fnc_ffta_ptr)(dlsym(hndl, "four1"));
- *
- *    if (pffta == NULL)
- *    {
- *        dlclose(hndl);
- *        exit(-1);
- *    }
- *  
- *    int nelem = (in.n_elem)/2;
- *
- *
- *    pffta(in.memptr(), nelem);
- *    cx_colvec out(nelem);
- *    
- *    long pos = 0;
- *    for ( int it = (in.n_elem-1); it > -1; it-=2)
- *    {
- *         real(out(pos)) = in(it-1);
- *         imag(out(pos)) = in(it);
- *         ++pos;
- *    }
- *
- *    colvec outa(nelem);
- *    outa = arma::abs( out % arma::conj(out) );
- *    outa.save("sig1.dat", raw_ascii);
- *
- */
-
-    
-    // ------------------------- GFFT example -----------------------
-
-
-// range of the needed GFFT classes
-    const unsigned Min = 1;
-    const unsigned Max = 27;
-
-// initialization of the object factory
-    Loki::Factory<AbstractFFT<Tp>,unsigned int> gfft_factory;
-    FactoryInit<GFFTList<GFFT,Min,Max>::Result>::apply(gfft_factory);
-
-
-// runtime definition of the data length
-    int p = 9;
-
-// create an instance of the GFFT
-    AbstractFFT<Tp>* gfft = gfft_factory.CreateObject(p);
-
-// compute FFT
-    gfft->fft(in.memptr());
-
-    cx_colvec out(nfft);
-    
-    long pos = nfft-1;
-    for ( int it = 0; it < nfft; ++it)
-    {
-         real(out(pos)) = in(2*it);
-         imag(out(pos)) = in(2*it+1);
-         --pos;
-    }
-
-    colvec outa(nfft);
-    outa = arma::pow( arma::abs(out), 2)/tt;
-    outa.save("gfft.dat", raw_ascii);
- 
-    // --------------------------- end GFFT -----------------------
 
     cout << "\n";
 	if (argc < 2)
@@ -136,7 +30,6 @@ int main(int argc, char* argv[])
 		cout << "Requires one command argument - Universal file name : FileName.uff \n";
 		return false;
 	}
-
 
 	// If first argument is full path plus file name, go to that directory and extract only file name.
 	vector<string> vstrFiles;

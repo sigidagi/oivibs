@@ -2,37 +2,54 @@
 #include <neko.h>
 #include <vector>
 
-#include "OiProxy.h"
-#include "OiUtil.h"
+#include "../OiProxy.h"
+//#include "../OiUtil.h"
 
 using std::vector;
-//using namespace Oi;
 
-value init( value varr )
+void free2D(double** p2Darray, int length)
+{
+    for (int i = 0; i < length; ++i)
+        delete [] p2Darray[i];
+
+    delete [] p2Darray;
+    p2Darray = 0;
+}
+
+//using namespace Oi;
+vector<string> convert2string(value varr)
 {
     int sz = val_array_size(varr);
+    vector<string> vFileNames;
 
     if (sz == 0)
-        return val_false;
+        return vFileNames;
 
-    vector<string> vFileNames;
-    int i = 0;
-
-    for (i = 0; i < sz; ++i)
+    
+    for (int i = 0; i < sz; ++i)
     {
         if (val_is_string(val_array_ptr(varr)[i]))
             vFileNames.push_back( string(val_string(val_array_ptr(varr)[i])) );
     }
 
-    if (vFileNames.empty())
+    return vFileNames;
+}
+
+
+value init( value varr )
+{
+    
+    vector<string> fileList = convert2string(varr);
+
+    if (fileList.empty())
         return val_false;
     
     // cration of object and initialization - parsing data. 
     // search for goemetry: nodes, lines and surfaces and search for data.
     Oi::Proxy proxy;
-    for (i = 0; i < (int)vFileNames.size(); ++i)
+    for (size_t i = 0; i < fileList.size(); ++i)
     {
-        if ( !proxy.init(vFileNames[i]) )
+        if ( !proxy.init(fileList[i]) )
             return val_false;
     }
 
@@ -44,34 +61,46 @@ value getPSD()
     return val_null;
 }
 
-value getNodes()
+value getNodes( value varr )
 {
-      Oi::Proxy proxy;
-      proxy.connect("test"); 
-
-      double** nodesarray = 0;
-      int nnodes = 0;
-
-      proxy.getNodes(nodesarray, nnodes);      
-      if (nodesarray == 0 || nnodes == 0)
+      vector<string> fileList = convert2string(varr); 
+      if (fileList.empty())
           return alloc_array(0);
 
-      value arr = alloc_array(nnodes);
-      for (int i = 0; i < nnodes; ++i)
+      Oi::Proxy proxy;
+
+      for (size_t i = 0; i < fileList.size(); ++i)
       {
-        value o1  = alloc_object(NULL);
+          if (!proxy.connect(fileList[i]))
+              continue;
+          
+          double** nodesarray = 0;
+          int nnodes = 0;
 
-        alloc_field(o1, val_id("x"), alloc_float(nodesarray[i][0]));
-        alloc_field(o1, val_id("y"), alloc_float(nodesarray[i][1]));
-        alloc_field(o1, val_id("z"), alloc_float(nodesarray[i][2]));
- 
+          proxy.getNodes(nodesarray, nnodes);
+          if (nodesarray == 0 || nnodes == 0)
+              continue;
 
-        val_array_ptr(arr)[i] = alloc_object(o1);
+          value arr = alloc_array(nnodes);
+          for (int i = 0; i < nnodes; ++i)
+          {
+            value o1  = alloc_object(NULL);
+
+            alloc_field(o1, val_id("x"), alloc_float(nodesarray[i][0]));
+            alloc_field(o1, val_id("y"), alloc_float(nodesarray[i][1]));
+            alloc_field(o1, val_id("z"), alloc_float(nodesarray[i][2]));
+     
+
+            val_array_ptr(arr)[i] = alloc_object(o1);
+          }
+        
+          // free allocated memory.
+          free2D(nodesarray, nnodes);     
+          return arr;
+             
       }
     
-      // free allocated memory.
-      Oi::free2D(nodesarray, nnodes);     
-      return arr;
+      return alloc_array(0);
 }
 
 static value getNumberOfNodes()
@@ -89,123 +118,106 @@ static value getNodeLocation(value iNode)
 	return o;
 }
 
-static value getLines()
+static value getLines(value varr)
 {
-    Oi::Proxy proxy;
-    proxy.connect("test");
 
-    
-    double** linesarray = 0;
-    int nlines = 0;
-
-    proxy.getLines(linesarray, nlines);
-    if (linesarray == 0 || nlines == 0)
+    vector<string> fileList = convert2string(varr);
+    if (fileList.empty())
         return alloc_array(0);
 
-    value arr = alloc_array(nlines*2);
-
-    for (int idx = 0; idx < nlines; ++idx)
-    {
-        value o1  = alloc_object(NULL);
-        alloc_field(o1, val_id("x"), alloc_float(linesarray[idx][0]));
-        alloc_field(o1, val_id("y"), alloc_float(linesarray[idx][1]));
-        alloc_field(o1, val_id("z"), alloc_float(linesarray[idx][2]));
-        
-        value  o2 = alloc_object(NULL);
-        alloc_field(o2, val_id("x"), alloc_float(linesarray[idx][3]));
-        alloc_field(o2, val_id("y"), alloc_float(linesarray[idx][4]));
-        alloc_field(o2, val_id("z"), alloc_float(linesarray[idx][5]));
-
-        val_array_ptr(arr)[2*idx] = alloc_object(o1);
-        val_array_ptr(arr)[2*idx+1] = alloc_object(o2);
-    }
-
-    Oi::free2D(linesarray, nlines);
-    return arr;
-}
-
-vector<string> convert2string(value varr)
-{
-    int sz = val_array_size(varr);
-    vector<string> vFileNames;
-
-    if (sz == 0)
-        return vFileNames;
-
     
-    for (int i = 0; i < sz; ++i)
+    Oi::Proxy proxy;
+    for (size_t i = 0; i < fileList.size(); ++i)
     {
-        if (val_is_string(val_array_ptr(varr)[i]))
-            vFileNames.push_back( string(val_string(val_array_ptr(varr)[i])) );
-    }
-
-    if (vFileNames.empty())
-        return vFileNames;
-
-    for (size_t i = 0; i < vFileNames.size(); ++i)
-    {
-        string file = vFileNames[i];
-        string strDName;
-        string::size_type idx = file.find('.');
-        if (idx != string::npos)
-        {
-            strDName = file.substr(0, idx);
-        }
-        else 
-            strDName = file;
-
-        idx = strDName.rfind('/');
-        if ( idx != string::npos)
-            strDName = strDName.substr(idx+1, string::npos);
         
-        vFileNames[i] = strDName;
-    }
+        if (!proxy.connect(fileList[i]))
+            continue;
 
-    return vFileNames;
+        double** linesarray = 0;
+        int nlines = 0;
+
+        proxy.getLines(linesarray, nlines);
+        if (linesarray == 0 || nlines == 0)
+            continue;
+
+        value arr = alloc_array(nlines*2);
+
+        for (int idx = 0; idx < nlines; ++idx)
+        {
+            value o1  = alloc_object(NULL);
+            alloc_field(o1, val_id("x"), alloc_float(linesarray[idx][0]));
+            alloc_field(o1, val_id("y"), alloc_float(linesarray[idx][1]));
+            alloc_field(o1, val_id("z"), alloc_float(linesarray[idx][2]));
+            
+            value  o2 = alloc_object(NULL);
+            alloc_field(o2, val_id("x"), alloc_float(linesarray[idx][3]));
+            alloc_field(o2, val_id("y"), alloc_float(linesarray[idx][4]));
+            alloc_field(o2, val_id("z"), alloc_float(linesarray[idx][5]));
+
+            val_array_ptr(arr)[2*idx] = alloc_object(o1);
+            val_array_ptr(arr)[2*idx+1] = alloc_object(o2);
+        }
+
+        free2D(linesarray, nlines);
+        return arr;
+
+    }
+    
+    return alloc_array(0);
 }
+
 
 value getSurfaces( value varr )
 {
-    vector<string> strNames = convert2string( varr );
-    if (strNames.empty())
+    vector<string> fileNames = convert2string( varr );
+    if (fileNames.empty())
         return alloc_array(0);
+
 
     Oi::Proxy proxy;
-    proxy.connect("test");
-    double** surfacearray = 0;
-    int nsurfaces = 0;
-
-    proxy.getSurfaces(surfacearray, nsurfaces);
-    if ( surfacearray == 0 )
-        return alloc_array(0);
-    
-    value arr = alloc_array(nsurfaces*3);
-    
-    for (int idx = 0; idx < nsurfaces; ++idx)
+    for (size_t i = 0; i < fileNames.size(); ++i)
     {
-        value  o1 = alloc_object(NULL);
-        alloc_field(o1, val_id("x"), alloc_float(surfacearray[idx][0]));
-        alloc_field(o1, val_id("y"), alloc_float(surfacearray[idx][1]));
-        alloc_field(o1, val_id("z"), alloc_float(surfacearray[idx][2]));
+        if (!proxy.connect(fileNames[i]))
+            continue;
 
-        value  o2 = alloc_object(NULL);
-        alloc_field(o2, val_id("x"), alloc_float(surfacearray[idx][3]));
-        alloc_field(o2, val_id("y"), alloc_float(surfacearray[idx][4]));
-        alloc_field(o2, val_id("z"), alloc_float(surfacearray[idx][5]));
+        double** surfacearray = 0;
+        int nsurfaces = 0;
 
-        value  o3 = alloc_object(NULL);
-        alloc_field(o3, val_id("x"), alloc_float(surfacearray[idx][6]));
-        alloc_field(o3, val_id("y"), alloc_float(surfacearray[idx][7]));
-        alloc_field(o3, val_id("z"), alloc_float(surfacearray[idx][8]));
+        proxy.getSurfaces(surfacearray, nsurfaces);
+        if ( surfacearray == 0 || nsurfaces == 0)
+            continue;
+        
+        value arr = alloc_array(nsurfaces*3);
+        
+        for (int idx = 0; idx < nsurfaces; ++idx)
+        {
+            value  o1 = alloc_object(NULL);
+            alloc_field(o1, val_id("x"), alloc_float(surfacearray[idx][0]));
+            alloc_field(o1, val_id("y"), alloc_float(surfacearray[idx][1]));
+            alloc_field(o1, val_id("z"), alloc_float(surfacearray[idx][2]));
+
+            value  o2 = alloc_object(NULL);
+            alloc_field(o2, val_id("x"), alloc_float(surfacearray[idx][3]));
+            alloc_field(o2, val_id("y"), alloc_float(surfacearray[idx][4]));
+            alloc_field(o2, val_id("z"), alloc_float(surfacearray[idx][5]));
+
+            value  o3 = alloc_object(NULL);
+            alloc_field(o3, val_id("x"), alloc_float(surfacearray[idx][6]));
+            alloc_field(o3, val_id("y"), alloc_float(surfacearray[idx][7]));
+            alloc_field(o3, val_id("z"), alloc_float(surfacearray[idx][8]));
 
 
-        val_array_ptr(arr)[3*idx] = alloc_object(o1);
-        val_array_ptr(arr)[3*idx+1] = alloc_object(o2);
-        val_array_ptr(arr)[3*idx+2] = alloc_object(o3);
+            val_array_ptr(arr)[3*idx] = alloc_object(o1);
+            val_array_ptr(arr)[3*idx+1] = alloc_object(o2);
+            val_array_ptr(arr)[3*idx+2] = alloc_object(o3);
+        }
+       
+        free2D(surfacearray, nsurfaces);
+        return arr;
+
     }
-   
-    Oi::free2D(surfacearray, nsurfaces);
-    return arr;
+    
+    return alloc_array(0);
 }
 
 static value getNumberOfLines()
@@ -272,10 +284,10 @@ static value say()
     return alloc_string(str.c_str());
 }
 
-DEFINE_PRIM(getNodes, 0);
+DEFINE_PRIM(getNodes, 1);
 DEFINE_PRIM(getNumberOfNodes,0);
 DEFINE_PRIM(getNumberOfLines, 0);
-DEFINE_PRIM(getLines, 0);
+DEFINE_PRIM(getLines, 1);
 DEFINE_PRIM(getSurfaces, 1);
 DEFINE_PRIM(getPSD, 0);
 

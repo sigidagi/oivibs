@@ -24,6 +24,17 @@
 
 namespace Oi 
 {
+
+    FddProcessing::FddProcessing()
+    {
+
+    }
+
+    FddProcessing::~FddProcessing()
+    {
+
+    }
+
     void  FddProcessing::inverse( Mat<double>& x)
     {
         if (x.n_cols == 0 || x.n_rows == 0)

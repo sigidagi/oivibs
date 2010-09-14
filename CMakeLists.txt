@@ -1,4 +1,4 @@
-#
+
 # (C) 2010 NICTA
 
 CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
@@ -26,10 +26,10 @@ MESSAGE(STATUS "*** The OiVibrations run-time library component will be an alias
 MESSAGE(STATUS "*** OI_LIBS = ${OI_LIBS}")
 MESSAGE(STATUS "*** ")
 
-FIND_PACKAGE(Boost)
+FIND_PACKAGE(Boost QUIET)
 FIND_PACKAGE(Neko)
 FIND_PACKAGE(Mysql++)
-FIND_PACKAGE(Armadillo)
+FIND_PACKAGE(Armadillo REQUIRED)
 
 IF(MYSQLPP_FOUND)
     INCLUDE_DIRECTORIES(${MYSQLPP_INCLUDE_DIR})   
@@ -41,7 +41,6 @@ ENDIF(MYSQLPP_FOUND)
 
 
 IF(Boost_FOUND)
-  
   MESSAGE(STATUS "Boost_MAJOR_VERSION = ${Boost_MAJOR_VERSION}")
   MESSAGE(STATUS "Boost_MINOR_VERSION = ${Boost_MINOR_VERSION}")
   
@@ -65,29 +64,18 @@ IF(NEKO_FOUND)
     SET(OI_USE_NEKO true)
 ENDIF(NEKO_FOUND)
 
-
-# This is due to the non-standard packaging of Boost libraries on Debian and Ubuntu systems,
-# where certain individual Boost libraries are packaged separately.
-
-#IF(OI_USE_BOOST STREQUAL true)
-  #SET(CMAKE_REQUIRED_INCLUDES ${CMAKE_REQUIRED_INCLUDES} ${Boost_INCLUDE_DIR})
-  #CHECK_INCLUDE_FILE_CXX("boost/date_time/posix_time/posix_time.hpp" OI_USE_BOOST_DATE)
-#ENDIF(OI_USE_BOOST STREQUAL true)
-
-
 IF(OI_USE_BOOST STREQUAL true)
   INCLUDE_DIRECTORIES(include ${Boost_INCLUDE_DIR})
 ELSE(OI_USE_BOOST STREQUAL true)
   INCLUDE_DIRECTORIES(include)
 ENDIF(OI_USE_BOOST STREQUAL true)
 
-
 MESSAGE(STATUS "Generating 'config.hpp'")
 CONFIGURE_FILE(config.hpp.cmake config.hpp)
 
 
 ## For any library that is not in a default location,
-## embed its path into the Armadillo runtime library.
+## embed its path into the OiVibrations runtime library.
 ## Examples of default locations are "/lib", "/usr/lib",
 ## or as specified in "/etc/ld.so.conf".
 ##
@@ -101,8 +89,22 @@ SOURCE_GROUP("Source files" FILES ${folder_source})
 SOURCE_GROUP("Header files" FILES ${folder_header})
 
 ADD_LIBRARY( OiVibrations SHARED ${folder_source} )
-#TARGET_LINK_LIBRARIES( OiVibrations ${ARMA_LIBS} )
 TARGET_LINK_LIBRARIES( OiVibrations mysqlpp armadillo )
+
+IF(NEKO_FOUND)
+    ADD_LIBRARY( Vibrations SHARED ${folder_source} neko/NekoInterface.cpp )
+    SET_TARGET_PROPERTIES( Vibrations
+        PROPERTIES 
+            LIBRARY_OUTPUT_DIRECTORY ./neko
+            SUFFIX .ndll 
+            PREFIX Oi )
+     
+    TARGET_LINK_LIBRARIES( Vibrations mysqlpp armadillo )
+    
+    ADD_SUBDIRECTORY(test)
+
+ENDIF(NEKO_FOUND)
+
 
 #SET_TARGET_PROPERTIES(OiVibartions PROPERTIES VERSION ${ARMA_MAJOR}.${ARMA_MINOR}.${ARMA_PATCH} SOVERSION 0)
 
