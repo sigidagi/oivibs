@@ -27,7 +27,7 @@ namespace Oi {
 
     DatabaseStorage* DatabaseStorage::instance_ = NULL;
     
-    DatabaseStorage::DatabaseStorage() : proc_(NULL), fileFormat_(NULL)
+    DatabaseStorage::DatabaseStorage() : fileFormat_(NULL), proc_(NULL)
     {
 
     }
@@ -109,9 +109,6 @@ namespace Oi {
             return false;
         }
        
-        bConnected_ = true;    
-      
-
         // 
         fileFormat_ = FileFormatInterface::createFileFormat(file);
         if (fileFormat_ == 0)
@@ -119,13 +116,10 @@ namespace Oi {
 
         fileFormat_->parse(file);
 
-        // next to check if any data were found. If not return false.
-        if (!fileFormat_->existNodes() || !fileFormat_->existLines() || fileFormat_->existSurfaces() || fileFormat_->existData())
-            return false;
-       
         if (fileFormat_->existNodes())
         {
-            saveNodes(fileFormat_->getNodes());
+            const arma::mat& nodes = fileFormat_->getNodes(); 
+            saveNodes(nodes);
         }
         if (fileFormat_->existLines())
         {
@@ -145,16 +139,28 @@ namespace Oi {
             delete proc_;
             proc_ = 0;
         }
-        
+ 
+        /*
+         *
+         *if (!fileFormat_->existNodes() && !fileFormat_->existLines() && !fileFormat_->existSurfaces() && !fileFormat_->existData())
+         *{
+         *    delete fileFormat_;
+         *    fileFormat_ = 0;
+         *    return false;
+         *}
+         */
+       
         delete fileFormat_;
         fileFormat_ = 0;
 
         return true;
     }
 
-    bool DatabaseStorage::connect(const string& dbname)
+    bool DatabaseStorage::connect(const string& file)
     {
-        if (dbname.empty() )
+
+        string dbname = Oi::stripToBaseName(file);
+        if (dbname.empty())
             return false;
 
         const char *server = 0, *user = "root", *pass = "testas";
@@ -176,6 +182,8 @@ namespace Oi {
             return false;
 
         bConnected_ = true;
+        dbname_ = dbname;
+
         return true;
     }
 
@@ -372,22 +380,22 @@ namespace Oi {
     
     // Implementation of ProxyInterface interface
 
-    void DatabaseStorage::getNodes(double** array, int& nnodes)
+    double** DatabaseStorage::getNodes(int& size)
     {
-        if (!connect("test"))
-            return;    
+        if (!connect(dbname_))
+            return NULL;    
 
         mysqlpp::Query query = connection_.query("select * from geonodes");
         mysqlpp::StoreQueryResult res = query.store();
        
-        nnodes = (int)res.num_rows(); 
-        if (nnodes == 0)
-            return;
+        size = (int)res.num_rows(); 
+        if (size == 0)
+            return NULL;
         
         // allocation of memory of 2D array
         // Dealocation of memory should be carried out by CLIENT! 
-        array = new double*[nnodes];
-        for (int n = 0; n < nnodes; ++n)
+        double** array = new double*[size];
+        for (int n = 0; n < size; ++n)
             array[n] = new double[3];
 
         // assign values
@@ -397,14 +405,15 @@ namespace Oi {
             array[i][1] = (res[i]["y"]);
             array[i][2] = (res[i]["z"]);
         }
-       
+        
+        return array;
     }
 
-    void DatabaseStorage::getLines(double** array, int& nlines)
+    double** DatabaseStorage::getLines(int& size)
     {
-        bool bRet = connect("test");
+        bool bRet = connect(dbname_);
         if (bRet == false)
-            return;
+            return NULL;
 
         mysqlpp::Query query_nodes = connection_.query("select * from geonodes");
         mysqlpp::StoreQueryResult resNodes = query_nodes.store(); 
@@ -414,19 +423,19 @@ namespace Oi {
         
         
         if (!resLines || !resNodes)
-            return;
+            return NULL;
 
-        nlines = (int)resLines.num_rows();
+        size = (int)resLines.num_rows();
 
         // allocation memeory
         //
-        array = new double*[nlines];
-        for (int n = 0; n < nlines; ++n)
+        double** array = new double*[size];
+        for (int n = 0; n < size; ++n)
             array[n] = new double[6];
 
         int node1, node2;
         
-        for (int idx = 0; idx < nlines; ++idx)
+        for (int idx = 0; idx < size; ++idx)
         {
             node1 = resLines[idx]["node1"];
             array[idx][0] = resNodes[node1-1]["x"];
@@ -438,55 +447,57 @@ namespace Oi {
             array[idx][4] = resNodes[node2-1]["y"];
             array[idx][5] = resNodes[node2-1]["z"];
         }
-        
+       
+        return array;
     }
 
-    void DatabaseStorage::getSurfaces(double** surfacearray, int& nsurfaces)
+    double** DatabaseStorage::getSurfaces(int& size)
     {
-            bool bRet = connect("test");
+            bool bRet = connect(dbname_);
             if (bRet == false)
-                return;
+                return NULL;
 
         
             mysqlpp::Query query = connection_.query("select * from surfaces");
             mysqlpp::StoreQueryResult resSurfaces = query.store();
             if (!resSurfaces)
-                return;
+                return NULL;
 
             query.reset();
             query = connection_.query("select * from geonodes");
             mysqlpp::StoreQueryResult resNodes = query.store(); 
             if (!resNodes)
-                return;
+                return NULL;
 
             
-            nsurfaces = (int)resSurfaces.num_rows();
+            size = (int)resSurfaces.num_rows();
 
             // memory allocation
-            surfacearray = new double*[nsurfaces];
-            for (int n = 0; n < nsurfaces; ++n)
-                surfacearray[n] = new double[9];
+            double** array = new double*[size];
+            for (int n = 0; n < size; ++n)
+                array[n] = new double[9];
 
             int node1, node2, node3;
            
-           for (int idx = 0; idx < nsurfaces; ++idx)
+           for (int idx = 0; idx < size; ++idx)
             {
                 node1 = resSurfaces[idx]["node1"];
-                surfacearray[idx][0] = resNodes[node1-1]["x"];
-                surfacearray[idx][1] = resNodes[node1-1]["y"];
-                surfacearray[idx][2] = resNodes[node1-1]["z"];
+                array[idx][0] = resNodes[node1-1]["x"];
+                array[idx][1] = resNodes[node1-1]["y"];
+                array[idx][2] = resNodes[node1-1]["z"];
      
                 node2 = resSurfaces[idx]["node2"];
-                surfacearray[idx][3] = resNodes[node2-1]["x"];
-                surfacearray[idx][4] = resNodes[node2-1]["y"];
-                surfacearray[idx][5] = resNodes[node2-1]["z"];
+                array[idx][3] = resNodes[node2-1]["x"];
+                array[idx][4] = resNodes[node2-1]["y"];
+                array[idx][5] = resNodes[node2-1]["z"];
                 
                 node3 = resSurfaces[idx]["node3"];
-                surfacearray[idx][6] = resNodes[node3-1]["x"];
-                surfacearray[idx][7] = resNodes[node3-1]["y"];
-                surfacearray[idx][8] = resNodes[node3-1]["z"];
+                array[idx][6] = resNodes[node3-1]["x"];
+                array[idx][7] = resNodes[node3-1]["y"];
+                array[idx][8] = resNodes[node3-1]["z"];
             }
             
+            return array;
     }
 
 } // namespace Oi

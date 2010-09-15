@@ -71,7 +71,8 @@ namespace Oi {
         string line;
         stringstream ss;
         double x, y, z;     
-        
+
+        int count = 1;
         while (!fileStream_.eof())
         {
             getline(fileStream_, line);
@@ -85,7 +86,14 @@ namespace Oi {
             ss >> temp >> temp >> temp;
             ss >> x >> y >> z;
            
-            nodes_ << nodeNumber << x << y << z << arma::endr;
+            // reshape preserves elements in a matrix. 
+            nodes_.reshape(4, count);
+            nodes_(0, count-1) = nodeNumber;
+            nodes_(1, count-1) = x;
+            nodes_(2, count-1) = y;
+            nodes_(3, count-1) = z;
+            
+            ++count;
         }
         
     }
@@ -102,7 +110,7 @@ namespace Oi {
         int temp, nNumberOfEntries, nTraceLineNumber, nColor;
         string line;
         stringstream ss;
-        vector<int> vTempNodes;
+        vector<int> nodeList;
 
         getline(fileStream_, line);
         ss << line;
@@ -123,25 +131,28 @@ namespace Oi {
                 if (temp == -1)
                     break;
 
-                vTempNodes.push_back(temp);		
+                nodeList.push_back(temp);		
             }
             if (temp == -1)
                 break;
         }
 
-        if ((int)vTempNodes.size() != nNumberOfEntries)
+        if ((int)nodeList.size() != nNumberOfEntries)
             return;
 
         vector<int>::iterator it;
-        it = std::remove(vTempNodes.begin(), vTempNodes.end(), 0);
-        if (it == vTempNodes.end())
+        it = std::remove(nodeList.begin(), nodeList.end(), 0);
+        if (it == nodeList.end())
             return;
 
-        vTempNodes.erase(it, vTempNodes.end());
-
-        for (size_t i = 0; i < vTempNodes.size(); i+=2)
+        nodeList.erase(it, nodeList.end());
+    
+        lines_.set_size(3, (int)(nodeList.size()/2)); 
+        for (size_t i = 0; i < nodeList.size(); i+=2)
         {
-            lines_ << (i/2+1) << vTempNodes[i] << vTempNodes[i+1] << arma::endr;
+            lines_(0, i/2) = (i/2+1);
+            lines_(1, i/2) = nodeList[i];
+            lines_(2, i/2) = nodeList[i+1];
         }
         
         //catch ( std::out_of_range outOfRange )
@@ -166,6 +177,7 @@ namespace Oi {
         stringstream ss;
         int SurfaceNumber, FEDescriptor, PhysicalPropNumber, MaterialPropNumber, Color, NumberOfElementNodes;
 
+        int count = 1;
         while (!fileStream_.eof())
         {
             getline(fileStream_, line);
@@ -190,8 +202,13 @@ namespace Oi {
             int node1, node2, node3;
             ss >> node1 >>  node2 >> node3; 
             
-            surfaces_ << node1 << node2 << node3 << arma::endr; 
-            
+            surfaces_.reshape(4, count);
+            surfaces_(0, count-1) = count;
+            surfaces_(1, count-1) = node1;
+            surfaces_(2, count-1) = node2;
+            surfaces_(3, count-1) = node3;
+           
+            ++count;
         }
     }
 

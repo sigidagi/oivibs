@@ -61,13 +61,16 @@ int main(int argc, char* argv[])
     value v = ((fnc_init_ptr)init(arr))(arr); 
 
     if( val_is_bool(v) )
+    {
         printf("Init success : %s",val_bool(v)?"true":"false");
+        printf("\n");
+    }
     else
        exit(-1); 
  
-    typedef value (*fnc_ptr_0)();
-    fnc_ptr_0 lines = (fnc_ptr_0)(dlsym(hndl, "getLines__0"));
-    value vlines = ((fnc_ptr_0)lines())();
+    typedef value (*fnc_ptr_0)(value);
+    fnc_ptr_0 lines = (fnc_ptr_0)(dlsym(hndl, "getLines__1"));
+    value vlines = ((fnc_ptr_0)lines(arr))(arr);
     float x, y, z;
 
     if (val_is_array(vlines))
@@ -86,12 +89,14 @@ int main(int argc, char* argv[])
         }
     }
 
-    fnc_ptr_0 nodes = (fnc_ptr_0)dlsym(hndl, "getNumberOfNodes__0");
-    value vnodes = ((fnc_ptr_0)nodes())();
-    if (val_is_int(vnodes))
-    {
-        printf("number of nodes: %i\n", val_int(vnodes));
-    }
+    /*
+     *fnc_ptr_0 nodes = (fnc_ptr_0)dlsym(hndl, "getNumberOfNodes__0");
+     *value vnodes = ((fnc_ptr_0)nodes())();
+     *if (val_is_int(vnodes))
+     *{
+     *    printf("number of nodes: %i\n", val_int(vnodes));
+     *}
+     */
 
     neko_global_free();
     dlclose(hndl);

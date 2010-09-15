@@ -6,7 +6,7 @@
 
 namespace Oi {
 
-    AsciiFileFormat::AsciiFileFormat() : existSamplingInterval_(false), existData_(false)
+    AsciiFileFormat::AsciiFileFormat() : existData_(false), existSamplingInterval_(false)
     {
 
     }

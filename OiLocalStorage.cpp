@@ -32,19 +32,19 @@ namespace Oi {
         return false;
     }
 
-    void LocalStorage::getNodes(double** array, int& nnodes)
+    double** LocalStorage::getNodes(int& size)
     {
-     
+        return NULL; 
     }
 
-    void LocalStorage::getLines(double** array, int& nlines)
+    double** LocalStorage::getLines(int& size)
     {
-
+        return NULL;
     }
 
-    void LocalStorage::getSurfaces(double** array, int& nsurfaces)
+    double** LocalStorage::getSurfaces(int& size)
     {
-
+        return NULL;
     }
 
 } // namespace Oi

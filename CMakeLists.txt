@@ -17,6 +17,8 @@ SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "./cmake/Modules/")
 
 PROJECT(OiVibrations CXX)
 
+SET(CMAKE_CXX_FLAGS "-g -Wall")
+
 SET(OI_USE_NEKO false)
 SET(OI_USE_MYSQLPP false)
 SET(OI_USE_BOOST  false)

@@ -24,9 +24,9 @@ class LocalStorage : public ProxyInterface
     public:
         bool init(const string& name, int processName = 0); 
         bool connect(const string& name);
-        void getNodes(double** array, int& nnnodes);
-        void getLines(double** array, int& nlines);
-        void getSurfaces(double** array, int& nSurfaces);
+        double** getNodes(int& size);
+        double** getLines(int& size);
+        double** getSurfaces(int& size);
 
         LocalStorage* Instance(); 
 };

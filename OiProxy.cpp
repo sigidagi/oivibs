@@ -45,19 +45,19 @@ namespace Oi {
         return impl_->connect(name);
     }
 
-    void Proxy::getNodes(double** array, int& nnodes)
+    double** Proxy::getNodes(int& size)
     {
-        impl_->getNodes(array, nnodes);
+        return impl_->getNodes(size);
     }
 
-    void Proxy::getLines(double** array, int& nlines)
+    double** Proxy::getLines(int& size)
     {
-        impl_->getLines(array, nlines);
+        return impl_->getLines(size);
     }
 
-    void Proxy::getSurfaces(double** array, int& nsurfaces)
+    double** Proxy::getSurfaces(int& size)
     {
-        impl_->getSurfaces(array, nsurfaces);
+        return impl_->getSurfaces(size);
     }
 
 } // namespace Oi

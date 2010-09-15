@@ -74,10 +74,8 @@ value getNodes( value varr )
           if (!proxy.connect(fileList[i]))
               continue;
           
-          double** nodesarray = 0;
           int nnodes = 0;
-
-          proxy.getNodes(nodesarray, nnodes);
+          double** nodesarray = proxy.getNodes(nnodes);
           if (nodesarray == 0 || nnodes == 0)
               continue;
 
@@ -133,10 +131,9 @@ static value getLines(value varr)
         if (!proxy.connect(fileList[i]))
             continue;
 
-        double** linesarray = 0;
         int nlines = 0;
 
-        proxy.getLines(linesarray, nlines);
+        double** linesarray = proxy.getLines(nlines);
         if (linesarray == 0 || nlines == 0)
             continue;
 
@@ -180,10 +177,8 @@ value getSurfaces( value varr )
         if (!proxy.connect(fileNames[i]))
             continue;
 
-        double** surfacearray = 0;
         int nsurfaces = 0;
-
-        proxy.getSurfaces(surfacearray, nsurfaces);
+        double** surfacearray = proxy.getSurfaces(nsurfaces);
         if ( surfacearray == 0 || nsurfaces == 0)
             continue;
         

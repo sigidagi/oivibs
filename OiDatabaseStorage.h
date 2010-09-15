@@ -46,9 +46,9 @@ namespace Oi {
         public:
             bool init(const string& file, int processName = 0);
             bool connect(const string& dataName);
-            void getNodes(double** array, int& size);
-            void getLines(double** array, int& size);
-            void getSurfaces(double** array, int& size);
+            double** getNodes(int& size);
+            double** getLines(int& size);
+            double** getSurfaces(int& size);
             bool isConnected();
         
         private:
@@ -65,7 +65,7 @@ namespace Oi {
         private:
             static DatabaseStorage* instance_;
             
-            string name_;
+            string dbname_;
             bool bConnected_;
             mysqlpp::Connection connection_;
             
