@@ -35,7 +35,7 @@ namespace Oi
             bool start(FileFormatInterface* fileFormat);
 
         private:
-            void createPSD(cube& psd, mat& chunk);
+            void createPSD(cx_cube& psd, mat& chunk);
             void detrend( Mat<double>& x, int p = 1);
             colvec hamming(int m);
             
@@ -43,7 +43,7 @@ namespace Oi
             void inverse( Mat<double>& x );
 
         private:
-            cube powerSpectrum_;
+            cx_cube powerSpectrum_;
             mat singularValues_;
             colvec frequencies_;
 

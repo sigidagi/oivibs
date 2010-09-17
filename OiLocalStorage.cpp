@@ -47,4 +47,29 @@ namespace Oi {
         return NULL;
     }
 
+
+    // 
+    // ---------  StorageInterface ---------------
+    void LocalStorage::saveNodes(const arma::mat& nodes)
+    {
+
+    }
+
+    void LocalStorage::saveLines(const arma::umat& lines)
+    {
+
+    }
+
+    void LocalStorage::saveSurfaces(const arma::umat& surfaces)
+    {
+
+    }
+
+    void LocalStorage::saveData(const arma::mat& data)
+    {
+
+    }
+
+
+
 } // namespace Oi

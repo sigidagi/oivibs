@@ -30,7 +30,7 @@ namespace Oi {
     class FileFormatInterface;
     class ProcessingInterface;
 
-    class DatabaseStorage : public ProxyInterface
+    class DatabaseStorage : public ProxyInterface, public StorageInterface
     {
         private:
             DatabaseStorage();
@@ -42,7 +42,7 @@ namespace Oi {
             mysqlpp::Connection& getConnection();
             static DatabaseStorage* Instance();
 
-        // ProxyInterface interface
+        // ProxyInterface 
         public:
             bool init(const string& file, int processName = 0);
             bool connect(const string& dataName);
@@ -50,17 +50,20 @@ namespace Oi {
             double** getLines(int& size);
             double** getSurfaces(int& size);
             bool isConnected();
-        
+
+        // StorageInterface 
+        public:
+            void saveNodes(const arma::mat& nodes);
+            void saveLines(const arma::umat& lines);
+            void saveSurfaces(const arma::umat& surfaces);
+            void saveData(const arma::mat& data);
+
+           
         private:
             bool createTableOfNodes();
             bool createTableOfLines();
             bool createTableOfSurfaces();
             bool createTableOfData();
-
-            void saveNodes(const arma::mat& nodes);
-            void saveLines(const arma::umat& lines);
-            void saveSurfaces(const arma::umat& surfaces);
-            void saveData(const arma::mat& data);
 
         private:
             static DatabaseStorage* instance_;

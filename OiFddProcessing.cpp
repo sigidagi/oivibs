@@ -82,23 +82,23 @@ namespace Oi
         return ham;
     }
 
-    void FddProcessing::createPSD(cube& psd, mat& chunk)
+    void FddProcessing::createPSD(cx_cube& psd, mat& chunk)
     {
-        double a, b, c, d;
-        int row, col, col2;
-        for (row = 0; row < (int)chunk.n_rows/2; ++row)
+        std::complex<double> value1;
+        std::complex<double> value2;
+        size_t row, col, col2;
+        
+        for (row = 0; row < chunk.n_rows/2; ++row)
         {
-            for (col = 0; col < (int)chunk.n_cols; ++col)
+            for (col = 0; col < chunk.n_cols; ++col)
             {
-                 a = chunk(2*row, col);
-                 b = chunk(2*row+1, col);
-
-                 for (col2 = 0; col2 < (int)chunk.n_cols; ++col2)
+                 //          
+                 value1 = complex<double>(chunk(2*row, col), chunk(2*row+1, col));                      
+                
+                 for (col2 = 0; col2 < chunk.n_cols; ++col2)
                  {
-                     c = chunk(2*row, col2);
-                     d = chunk(2*row+1, col2);
-
-                     psd(col, col2, row) += sqrt(pow((a*c - b*d),2) + pow((b*c + a*d),2));
+                     value2 = complex<double>(chunk(2*row, col2), chunk(2*row+1, col2));
+                     psd(col, col2, row) += value1*std::conj(value2);
                  }
             }
         }
@@ -109,7 +109,7 @@ namespace Oi
     {
         const mat& refData = fileFormat->getData();
         int nrows = refData.n_rows;
-        int ncols = refData.n_cols;
+        unsigned int ncols = refData.n_cols;
         if (nrows == 0 || ncols == 0)
             return false;
 
@@ -119,7 +119,6 @@ namespace Oi
         // lenght of data before FFT; 
         int segmentLength = 2*(1 << P);
         int overlap = std::floor(segmentLength*2/3);
-
 
 
     // range of the needed GFFT classes
@@ -142,29 +141,34 @@ namespace Oi
     //  segmentLength represent cube depth where PSD values are stored.
         colvec hamming = Oi::hamming(segmentLength);
        
-        int nslices = 0;
-        int nn = 0;
+        unsigned int j;
         int row_pos = 0;
-        powerSpectrum_ = zeros<cube>(ncols, ncols, segmentLength/2);
+        powerSpectrum_ = zeros<cx_cube>(ncols, ncols, segmentLength/2+1);
         mat chunk(segmentLength, ncols);
+        int step = segmentLength - overlap;
+        unsigned int nslices = 0;
 
-        while (row_pos + segmentLength < nrows)
+        while ((row_pos + segmentLength) < nrows)
         {
             chunk = refData.rows(row_pos, row_pos + segmentLength-1);
             detrend(chunk);
-            for (nn = 0; nn < ncols; ++nn)
+            for (j = 0; j < ncols; ++j)
             {
-                chunk.col(nn) = chunk.col(nn) % hamming;
-                gfft->fft(chunk.memptr() + nn*segmentLength );
+                chunk.col(j) = chunk.col(j) % hamming;
+                gfft->fft(chunk.memptr() + j*segmentLength );
            
                 createPSD(powerSpectrum_, chunk);    
             }
-
-            ++nslices; 
-            std::cout << nslices << "\n";
-            row_pos += segmentLength - overlap; 
+            ++nslices;
+            row_pos += step; 
         }
-        
+       
+        cx_colvec Psd(powerSpectrum_.n_slices);
+        for (j = 0; j < powerSpectrum_.n_slices; ++j)
+            Psd(j) = powerSpectrum_(0,0,j);
+    
+        colvec myPSD = arma::real(Psd);
+        myPSD.save("myPsd.txt", arma_ascii);
 
         double T = fileFormat->getSamplingInterval();
         frequencies_ = 1/(2.0*T) * linspace<colvec>(0,1, segmentLength/2); 
@@ -181,7 +185,7 @@ namespace Oi
 
         singularValues_.set_size(ncols, powerSpectrum_.n_slices);
         colvec singvalues(ncols);
-        for (nn = 0; nn < (int)powerSpectrum_.n_slices; ++nn)
+        for (size_t nn = 0; nn < powerSpectrum_.n_slices; ++nn)
         {
             arma::svd(singvalues, powerSpectrum_.slice(nn)); 
             singularValues_.col(nn) = singvalues;

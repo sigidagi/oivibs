@@ -1,6 +1,7 @@
 #ifndef _UNIVERSALFORMAT_H
 #define _UNIVERSALFORMAT_H
 
+#include "OiStorage.h"
 #include "OiFileFormat.h"
 #include <vector>
 #include <fstream>
@@ -46,7 +47,7 @@ namespace Oi {
         void parseData(const int pos, int column);
 
     public:
-        UniversalFileFormat();
+        UniversalFileFormat(StorageInterface* storage);
         ~UniversalFileFormat();
 
         void parse(const string& file);

@@ -9,7 +9,8 @@ using namespace std;
 
 namespace Oi {
 
-    UniversalFileFormat::UniversalFileFormat() : existNodes_(false), existLines_(false), existSurfaces_(false), existData_(false)
+    UniversalFileFormat::UniversalFileFormat(StorageInterface* storage) 
+            : FileFormatInterface(storage), existNodes_(false), existLines_(false), existSurfaces_(false), existData_(false)
     {
         
     }
@@ -33,19 +34,24 @@ namespace Oi {
             if (existNodes_)
             {
                 parseNodes();
+                storage_->saveNodes(nodes_);
             }
             if (existLines_)
             {
                 parseLines();
+                storage_->saveLines(lines_);
             }
             if (existSurfaces_)
             {
                 parseSurfaces();
+                storage_->saveSurfaces(surfaces_);
             }
             if (existData_)
             {
                 for (size_t t = 0; t < dataPositionList_.size(); ++t)
                     parseData(dataPositionList_[t], t);
+                 
+                 storage_->saveData(data_);
             }
             
             fileStream_.close();

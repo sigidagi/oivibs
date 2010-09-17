@@ -17,6 +17,7 @@
 #ifndef _OIPROXY_H
 #define _OIPROXY_H
 
+#include "OiStorage.h"
 #include <string>
 
 using std::string;
@@ -44,10 +45,6 @@ namespace Oi {
     class ProxyInterface
     {
         public:
-            virtual ~ProxyInterface(){}
-        
-        // Interfaces
-        public:
             virtual bool init(const string& name, int processName = 0) = 0;
             virtual bool connect(const string& name) = 0;
             virtual double** getNodes(int& ) = 0;
@@ -55,7 +52,9 @@ namespace Oi {
             virtual double** getSurfaces(int& ) = 0;
     };
 
-    class Proxy : ProxyInterface {
+
+    class Proxy : public ProxyInterface
+    {
         public:
             Proxy(); 
             ~Proxy ();

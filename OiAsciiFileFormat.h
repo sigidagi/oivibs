@@ -9,11 +9,13 @@
 using std::string;
 
 namespace Oi {
+    
+    class StorageInterface;
 
     class AsciiFileFormat : public FileFormatInterface  
     {
         public:
-            AsciiFileFormat();
+            AsciiFileFormat(StorageInterface* storage);
             ~AsciiFileFormat(){}
 
         public:

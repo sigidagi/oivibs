@@ -23,14 +23,17 @@
 using std::string;
 
 namespace Oi {
+    
+    class StorageInterface;
 
     class FileFormatInterface
     {
         public:
+            FileFormatInterface(StorageInterface* storage);
             virtual ~FileFormatInterface(){}
 
         public:
-            static FileFormatInterface* createFileFormat(const string& file);
+            static FileFormatInterface* createFileFormat(StorageInterface* owner, const string& file);
 
             virtual void parse(const string& file) = 0;
             
@@ -46,7 +49,13 @@ namespace Oi {
 
             virtual double getSamplingInterval() = 0;
             virtual int getNumberOfSamples() = 0;
-           
+            
+            StorageInterface* getStorage();
+            void setStorage(StorageInterface* storage);
+
+        protected:
+            StorageInterface* storage_;
+            
     };
 
 } // namespace Oi

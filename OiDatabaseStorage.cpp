@@ -110,48 +110,18 @@ namespace Oi {
         }
        
         // 
-        fileFormat_ = FileFormatInterface::createFileFormat(file);
+        fileFormat_ = FileFormatInterface::createFileFormat(this, file);
         if (fileFormat_ == 0)
             return false;
-
+    
         fileFormat_->parse(file);
 
-        if (fileFormat_->existNodes())
-        {
-            const arma::mat& nodes = fileFormat_->getNodes(); 
-            saveNodes(nodes);
-        }
-        if (fileFormat_->existLines())
-        {
-            saveLines(fileFormat_->getLines());
-        }
-        if (fileFormat_->existSurfaces())
-        {
-            saveSurfaces(fileFormat_->getSurfaces());
-        }
-        if (fileFormat_->existData())
-        {
             
-            proc_ = ProcessingInterface::createProcess(processName);
-            if (proc_->start(fileFormat_))
-                saveData(fileFormat_->getData());
-               
-            delete proc_;
-            proc_ = 0;
+        proc_ = ProcessingInterface::createProcess(processName);
+        if (proc_->start(fileFormat_))
+        {
+               // save processed data, singular values, singular vectors and etc.
         }
- 
-        /*
-         *
-         *if (!fileFormat_->existNodes() && !fileFormat_->existLines() && !fileFormat_->existSurfaces() && !fileFormat_->existData())
-         *{
-         *    delete fileFormat_;
-         *    fileFormat_ = 0;
-         *    return false;
-         *}
-         */
-       
-        delete fileFormat_;
-        fileFormat_ = 0;
 
         return true;
     }
@@ -378,10 +348,32 @@ namespace Oi {
 
     }
     
-    // Implementation of ProxyInterface interface
+    // Implementation of StorageInterface interface
 
     double** DatabaseStorage::getNodes(int& size)
     {
+        // first check if nodes are stored in variable 
+        if (fileFormat_)
+        {
+            const arma::mat& nodes = fileFormat_->getNodes();
+            if (nodes.n_elem != 0 && nodes.n_rows == 4)
+            {
+                double** array = new double*[size];
+                for (int n = 0; n < size; ++n)
+                    array[n] = new double[3];
+
+                // assign values
+                for (size_t i = 0; i < nodes.n_cols; ++i)
+                {
+                    array[i][0] = nodes(1, i);
+                    array[i][1] = nodes(2, i);
+                    array[i][2] = nodes(3, i);
+                }
+                
+                return array;
+            }
+        }
+
         if (!connect(dbname_))
             return NULL;    
 

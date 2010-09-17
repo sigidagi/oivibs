@@ -56,9 +56,9 @@ int main(int argc, char* argv[])
         val_array_ptr(arr)[i] = alloc_string(vstrFiles[i].c_str());
 
     
-    typedef value (*fnc_init_ptr)(value);
-    fnc_init_ptr init = (fnc_init_ptr)(dlsym(hndl, "init__1"));
-    value v = ((fnc_init_ptr)init(arr))(arr); 
+    typedef value (*functionType)(value);
+    functionType init = (functionType)(dlsym(hndl, "init__1"));
+    value v = ((functionType)init(arr))(arr); 
 
     if( val_is_bool(v) )
     {
@@ -68,9 +68,8 @@ int main(int argc, char* argv[])
     else
        exit(-1); 
  
-    typedef value (*fnc_ptr_0)(value);
-    fnc_ptr_0 lines = (fnc_ptr_0)(dlsym(hndl, "getLines__1"));
-    value vlines = ((fnc_ptr_0)lines(arr))(arr);
+    functionType lines = (functionType)(dlsym(hndl, "getLines__1"));
+    value vlines = ((functionType)lines(arr))(arr);
     float x, y, z;
 
     if (val_is_array(vlines))
@@ -90,8 +89,8 @@ int main(int argc, char* argv[])
     }
 
     /*
-     *fnc_ptr_0 nodes = (fnc_ptr_0)dlsym(hndl, "getNumberOfNodes__0");
-     *value vnodes = ((fnc_ptr_0)nodes())();
+     *functionType nodes = (functionType)dlsym(hndl, "getNumberOfNodes__0");
+     *value vnodes = ((functionType)nodes())();
      *if (val_is_int(vnodes))
      *{
      *    printf("number of nodes: %i\n", val_int(vnodes));
