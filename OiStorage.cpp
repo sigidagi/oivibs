@@ -1,11 +1,11 @@
 // =====================================================================================
 // 
-//       Filename:  OiSsiProcessing.cpp
+//       Filename:  OiStorage.cpp
 // 
 //    Description:  
 // 
 //        Version:  1.0
-//        Created:  2010-09-13 12:48:02
+//        Created:  2010-09-17 15:45:15
 //       Revision:  none
 //       Compiler:  g++
 // 
@@ -14,26 +14,18 @@
 // 
 // =====================================================================================
 
-#include "OiSsiProcessing.h"
+#include "OiStorage.h"
 
-namespace Oi {
-
-    SsiProcessing::SsiProcessing(StorageInterface* owner) : ProcessingInterface(owner)
+namespace Oi 
+{
+    FileFormatInterface* StorageInterface::getFileFormat()
     {
-
+        return fileFormat_;
     }
-
-    SsiProcessing::~SsiProcessing()
+   
+    ProcessingInterface* StorageInterface::getProcess()
     {
-
-    }
-
-    bool SsiProcessing::start()
-    {
-        // not implemented jet.
-        return false;
+        return proc_; 
     }
 
 } // namespace Oi
-
-

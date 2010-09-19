@@ -11,16 +11,23 @@ FileFormatInterface::FileFormatInterface(StorageInterface* storage) : storage_(s
 
 }
 
-FileFormatInterface* FileFormatInterface::createFileFormat(StorageInterface* owner, const string& file)
+auto_ptr<FileFormatInterface> FileFormatInterface::createFileFormat(StorageInterface* owner, const string& file)
 {
         string extension = Oi::stripToExtension(file);
 
         if (extension == "uff")
-            return new UniversalFileFormat(owner);
+        {
+            return auto_ptr<FileFormatInterface>(new UniversalFileFormat(owner));
+        }
         else if (extension == "txt")
-            return new AsciiFileFormat(owner);
+        {
+            return auto_ptr<FileFormatInterface>(new AsciiFileFormat(owner));
+        }
         else
-            return 0;
+        {
+            auto_ptr<FileFormatInterface> pt;
+            return pt;
+        }
 }
 
 StorageInterface* FileFormatInterface::getStorage()

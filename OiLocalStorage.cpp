@@ -70,6 +70,15 @@ namespace Oi {
 
     }
 
+    void saveSingularValues(const arma::mat& values)
+    {
+
+    }
+
+    void saveSingularVectors(const arma::cx_mat& vectors)
+    {
+
+    }
 
 
 } // namespace Oi

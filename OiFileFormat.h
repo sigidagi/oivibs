@@ -33,7 +33,7 @@ namespace Oi {
             virtual ~FileFormatInterface(){}
 
         public:
-            static FileFormatInterface* createFileFormat(StorageInterface* owner, const string& file);
+            static auto_ptr<FileFormatInterface> createFileFormat(StorageInterface* owner, const string& file);
 
             virtual void parse(const string& file) = 0;
             
@@ -56,6 +56,14 @@ namespace Oi {
         protected:
             StorageInterface* storage_;
             
+            // channels are represented in columns 
+            arma::mat data_;
+            arma::mat nodes_;
+            arma::umat lines_;
+            arma::umat surfaces_;
+
+            double samplingInterval_;
+            int numberOfSamples_;
     };
 
 } // namespace Oi

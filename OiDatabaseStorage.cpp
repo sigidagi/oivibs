@@ -27,23 +27,13 @@ namespace Oi {
 
     DatabaseStorage* DatabaseStorage::instance_ = NULL;
     
-    DatabaseStorage::DatabaseStorage() : fileFormat_(NULL), proc_(NULL)
-    {
+    DatabaseStorage::DatabaseStorage()     {
 
     }
 
     DatabaseStorage::~DatabaseStorage()
     {
-        if (proc_)
-        {
-            delete proc_;
-            proc_ = NULL;
-        }
-        if (fileFormat_)
-        {
-            delete fileFormat_;
-            fileFormat_ = NULL;
-        }
+
     }
 
     DatabaseStorage& DatabaseStorage::operator=(DatabaseStorage const&)
@@ -108,17 +98,13 @@ namespace Oi {
             std::cerr << "Error selecting DB: " << connection_.error() << std::endl;
             return false;
         }
-       
+      
         // 
         fileFormat_ = FileFormatInterface::createFileFormat(this, file);
-        if (fileFormat_ == 0)
-            return false;
-    
         fileFormat_->parse(file);
 
-            
-        proc_ = ProcessingInterface::createProcess(processName);
-        if (proc_->start(fileFormat_))
+        proc_ = ProcessingInterface::createProcess(this, processName);
+        if (proc_->start())
         {
                // save processed data, singular values, singular vectors and etc.
         }
@@ -345,15 +331,27 @@ namespace Oi {
 
     void DatabaseStorage::saveData(const arma::mat& data)
     {
-
+        // not jet implemented!
     }
     
-    // Implementation of StorageInterface interface
+    void DatabaseStorage::saveSingularValues(const arma::mat& values)
+    {
+        // not jet implemented!
+    }
+
+    void DatabaseStorage::saveSingularVectors(const arma::cx_mat& vectors)
+    {
+        // not jet implemented!
+    }
+
+
+
+    // Implementation of ProxyInterface interface
 
     double** DatabaseStorage::getNodes(int& size)
     {
         // first check if nodes are stored in variable 
-        if (fileFormat_)
+        if (fileFormat_.get() != NULL)
         {
             const arma::mat& nodes = fileFormat_->getNodes();
             if (nodes.n_elem != 0 && nodes.n_rows == 4)

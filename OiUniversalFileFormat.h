@@ -20,12 +20,6 @@ namespace Oi {
     private:
         std::ifstream fileStream_;
         
-        // channels are represented in columns 
-        arma::mat data_;
-        arma::mat nodes_;
-        arma::umat lines_;
-        arma::umat surfaces_;
-
         bool existNodes_;
         bool existLines_;
         bool existSurfaces_;

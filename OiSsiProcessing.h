@@ -24,8 +24,12 @@ namespace Oi
     
     class SsiProcessing : public ProcessingInterface 
     {
+        public:
+            SsiProcessing(StorageInterface* owner);
+            ~SsiProcessing();
+
          public:
-            bool start(FileFormatInterface* fileFormat);
+            bool start();
 
     };
 

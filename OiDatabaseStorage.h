@@ -27,9 +27,6 @@ using std::string;
 
 namespace Oi {
     
-    class FileFormatInterface;
-    class ProcessingInterface;
-
     class DatabaseStorage : public ProxyInterface, public StorageInterface
     {
         private:
@@ -57,7 +54,8 @@ namespace Oi {
             void saveLines(const arma::umat& lines);
             void saveSurfaces(const arma::umat& surfaces);
             void saveData(const arma::mat& data);
-
+            void saveSingularValues(const arma::mat& values);
+            void saveSingularVectors(const arma::cx_mat& vectors);
            
         private:
             bool createTableOfNodes();
@@ -67,14 +65,11 @@ namespace Oi {
 
         private:
             static DatabaseStorage* instance_;
-            
             string dbname_;
             bool bConnected_;
             mysqlpp::Connection connection_;
             
-            FileFormatInterface* fileFormat_;
-            ProcessingInterface* proc_;
-            
+           
     };
 
 } // namespace Oi

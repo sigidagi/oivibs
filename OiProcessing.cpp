@@ -15,26 +15,32 @@
 // =====================================================================================
 
 #include "OiProcessing.h"
+#include "OiStorage.h" 
 #include "OiFddProcessing.h"
 #include "OiSsiProcessing.h"
 #include "OiUtil.h"
 
 namespace Oi {
 
-    ProcessingInterface* ProcessingInterface::createProcess(int processName)
+    ProcessingInterface::ProcessingInterface(StorageInterface* owner) : storage_(owner)
+    {
+
+    }
+    
+    auto_ptr<ProcessingInterface> ProcessingInterface::createProcess(StorageInterface* owner, int processName)
     {
         if (processName == FDD)
         {
-            return new FddProcessing;
+            return auto_ptr<ProcessingInterface>(new FddProcessing(owner));
         }
         else if (processName == SSI)
         {
-            return new SsiProcessing;
+            return auto_ptr<ProcessingInterface>(new SsiProcessing(owner));
         }
         // default process.
         else
         {
-            return new FddProcessing;
+            return auto_ptr<ProcessingInterface>(new FddProcessing(owner));
         }
     }
     

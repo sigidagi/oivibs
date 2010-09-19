@@ -29,11 +29,14 @@ namespace Oi
     class FddProcessing : public ProcessingInterface 
     {
          public:
-            FddProcessing ();
+            FddProcessing (StorageInterface* owner);
             ~FddProcessing();
     
-            bool start(FileFormatInterface* fileFormat);
-
+            bool start();
+            
+            const arma::mat& getSingularValues();
+            const arma::cx_mat& getSingularVectors();
+        
         private:
             void createPSD(cx_cube& psd, mat& chunk);
             void detrend( Mat<double>& x, int p = 1);
@@ -45,6 +48,7 @@ namespace Oi
         private:
             cx_cube powerSpectrum_;
             mat singularValues_;
+            cx_mat singularVectors_;
             colvec frequencies_;
 
     };

@@ -37,20 +37,8 @@ namespace Oi {
         private:
             
             std::ifstream fileStream_;
-            arma::mat nodes_;
-            arma::umat lines_;
-            arma::umat surfaces_;
-            arma::mat data_;
-
-            double samplingInterval_;
-            int numberOfSamples_;
 
             bool existData_;
-            bool existSamplingInterval_;
-
-        private:
-            bool searchSamplingInterval(const string& fileName);
-            
     };
 
 } // namespace Oi

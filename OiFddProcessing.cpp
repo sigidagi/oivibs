@@ -25,7 +25,7 @@
 namespace Oi 
 {
 
-    FddProcessing::FddProcessing()
+    FddProcessing::FddProcessing(StorageInterface* owner) : ProcessingInterface(owner)
     {
 
     }
@@ -105,9 +105,12 @@ namespace Oi
 
     }
 
-    bool FddProcessing::start(FileFormatInterface* fileFormat)
+    bool FddProcessing::start()
     {
-        const mat& refData = fileFormat->getData();
+        if (storage_ == NULL)
+            return false;
+
+        const mat& refData = storage_->getFileFormat()->getData();
         int nrows = refData.n_rows;
         unsigned int ncols = refData.n_cols;
         if (nrows == 0 || ncols == 0)
@@ -170,7 +173,7 @@ namespace Oi
         colvec myPSD = arma::real(Psd);
         myPSD.save("myPsd.txt", arma_ascii);
 
-        double T = fileFormat->getSamplingInterval();
+        double T = storage_->getFileFormat()->getSamplingInterval();
         frequencies_ = 1/(2.0*T) * linspace<colvec>(0,1, segmentLength/2); 
 
         
@@ -191,12 +194,27 @@ namespace Oi
             singularValues_.col(nn) = singvalues;
         }
 
-        rowvec svd0(singularValues_.n_cols);
-        svd0 = singularValues_.row(0);
-        svd0.save("SVD.txt", arma_ascii);
-        
+         
+
+        /*
+         *rowvec svd0(singularValues_.n_cols);
+         *svd0 = singularValues_.row(0);
+         *svd0.save("SVD.txt", arma_ascii);
+         *
+         */
         return true;
 
+    }
+
+
+    const arma::mat& FddProcessing::getSingularValues()
+    {
+        return singularValues_;
+    }
+
+    const arma::cx_mat& FddProcessing::getSingularVectors()
+    {
+        return singularVectors_;
     }
 
 } // namespace Oi

@@ -37,7 +37,9 @@ class LocalStorage : public ProxyInterface, public StorageInterface
         void saveSurfaces(const arma::umat& surfaces);
         void saveData(const arma::mat& data);
 
-   
+        virtual void saveSingularValues(const arma::mat& values);
+        virtual void saveSingularVectors(const arma::cx_mat& vectors);
+ 
         LocalStorage* Instance(); 
 };
 
