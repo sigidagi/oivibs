@@ -18,6 +18,7 @@
 #define _OIUTIL_H
 
 #include <string>
+#include <boost/shared_ptr.hpp>
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
@@ -68,6 +69,30 @@ namespace Oi
     string stripToFileName(const string& pathToFile);
     string stripToExtension(const string& pathToFile);
     string stripToPath(const string& pathToFile);
+
+    template<typename In, typename Out, typename Pred>
+    Out copy_if(In first, In last, Out res, Pred Pr)
+    {
+      while (first != last)
+      {
+        if (Pr(*first))
+          *res++ = *first;
+        ++first;
+      }
+      return res;
+    }
+ 
+    template<typename In>
+    bool equal_elements(In next, In last)
+    {
+        while (next != last-1)
+        {
+            if (*next != *(++next))
+                return false;
+        }
+        return true;
+    }
+
 }
 
 #endif

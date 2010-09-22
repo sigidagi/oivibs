@@ -24,20 +24,20 @@ namespace Oi {
             virtual bool existNodes();
             virtual bool existLines();
             virtual bool existSurfaces();
-            virtual bool existData();
+            virtual bool existRecords();
 
-            virtual const arma::mat& getNodes();
-            virtual const arma::umat& getLines();
-            virtual const arma::umat& getSurfaces();
-            virtual const arma::mat& getData();
+            virtual arma::mat& getNodes();
+            virtual arma::umat& getLines();
+            virtual arma::umat& getSurfaces();
+            virtual arma::mat& getRecords();
 
             virtual double getSamplingInterval();
             virtual int getNumberOfSamples();
 
         private:
-            
             std::ifstream fileStream_;
-
+            
+           
             bool existData_;
     };
 

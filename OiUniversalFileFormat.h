@@ -1,45 +1,87 @@
 #ifndef _UNIVERSALFORMAT_H
 #define _UNIVERSALFORMAT_H
 
-#include "OiStorage.h"
 #include "OiFileFormat.h"
 #include <vector>
 #include <fstream>
 #include <string>
 #include <armadillo>
+#include <boost/shared_ptr.hpp>
 
+using boost::shared_ptr;
 using std::vector;
 using std::string;
 using std::streampos;
 
 namespace Oi {
 
+    // forward declaration.
+    class StorageInterface;
+
     class UniversalFileFormat : public FileFormatInterface
     {
         // pivate data
     private:
-        std::ifstream fileStream_;
+        class Info 
+        {
+            public:
+                Info(FileFormatInterface* self, const string& file) : self_(self), file_(file) {}
+                virtual void parse() = 0;
+                void setPosition(int pos) { position_ = pos; }
+            protected:
+                FileFormatInterface* self_;
+                string file_;
+                int position_;
+        };
+
+        class NodeInfo : public Info
+        {
+            public:
+                NodeInfo(FileFormatInterface* self, const string& file);
+                void parse();
+        };
+
+        class LineInfo : public Info
+        {
+            public:
+                LineInfo(FileFormatInterface* self, const string& file);
+                void parse();
+        };
+
+        class SurfaceInfo : public Info
+        {
+            public:
+                SurfaceInfo(FileFormatInterface* self, const string& file);
+                void parse();
+        };
+
+        class RecordInfo: public Info
+        {
+            public:
+                RecordInfo(FileFormatInterface* self, const string& file, int recordnumber);
+                void parse();
+                double getSamplingInterval();
+                int getNumberOfSamples();
+            private:
+                int recordnumber_;
+                double samplingInterval_;
+                int numberOfSamples_;
+        };
+
+        vector< shared_ptr<Info> > info_;
+
+        template<typename T>
+        bool existInfo()
+        {
+            vector< shared_ptr<Info> >::iterator it;
+            for (it = info_.begin(); it != info_.end(); ++it)
+            {
+                if(boost::dynamic_pointer_cast<T>(*it))
+                    return true;
+            }
+            return false;
+        }
         
-        bool existNodes_;
-        bool existLines_;
-        bool existSurfaces_;
-        bool existData_;
-        int nodePosition_, linePosition_, surfacePosition_;
-        vector<int> dataPositionList_;
-
-        double samplingInterval_;
-        int numberOfSamples_;
-     
-
-        // private methods
-    private:
-        void searchForSamplingT();
-        void searchForData();
-        void parseNodes();
-        void parseLines();
-        void parseSurfaces();
-        void parseData(const int pos, int column);
-
     public:
         UniversalFileFormat(StorageInterface* storage);
         ~UniversalFileFormat();
@@ -49,17 +91,15 @@ namespace Oi {
         bool existNodes();
         bool existLines();
         bool existSurfaces();
-        bool existData();
+        bool existRecords();
 
-        const arma::mat& getNodes();
-        const arma::umat& getLines();
-        const arma::umat& getSurfaces();
-        const arma::mat& getData();
-
-        double getSamplingInterval();
-        int getNumberOfSamples();
+        arma::mat& getNodes();
+        arma::umat& getLines();
+        arma::umat& getSurfaces();
+        arma::mat& getRecords();
     };
 
+    
 } // namespace Oi
 
 #endif

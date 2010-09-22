@@ -30,6 +30,16 @@ auto_ptr<FileFormatInterface> FileFormatInterface::createFileFormat(StorageInter
         }
 }
 
+double FileFormatInterface::getSamplingInterval()
+{
+    return samplingInterval_;
+}
+
+int FileFormatInterface::getNumberOfSamples()
+{
+    return numberOfSamples_;
+}
+
 StorageInterface* FileFormatInterface::getStorage()
 {
     return storage_;

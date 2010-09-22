@@ -19,7 +19,9 @@
 
 #include <armadillo>
 #include <string>
+#include <memory>
 
+using std::auto_ptr;
 using std::string;
 
 namespace Oi {
@@ -40,28 +42,29 @@ namespace Oi {
             virtual bool existNodes() = 0;
             virtual bool existLines() = 0;
             virtual bool existSurfaces() = 0;
-            virtual bool existData() = 0;
+            virtual bool existRecords() = 0;
 
-            virtual const arma::mat& getNodes() = 0;
-            virtual const arma::umat& getLines() = 0;
-            virtual const arma::umat& getSurfaces() = 0;
-            virtual const arma::mat& getData() = 0;
+            virtual arma::mat& getNodes() = 0;
+            virtual arma::umat& getLines() = 0;
+            virtual arma::umat& getSurfaces() = 0;
+            virtual arma::mat& getRecords() = 0;
 
-            virtual double getSamplingInterval() = 0;
-            virtual int getNumberOfSamples() = 0;
+            double getSamplingInterval();
+            int getNumberOfSamples();
             
             StorageInterface* getStorage();
             void setStorage(StorageInterface* storage);
 
         protected:
             StorageInterface* storage_;
-            
-            // channels are represented in columns 
-            arma::mat data_;
+            string file_; 
+        
             arma::mat nodes_;
             arma::umat lines_;
             arma::umat surfaces_;
-
+            arma::mat records_;
+            
+            
             double samplingInterval_;
             int numberOfSamples_;
     };

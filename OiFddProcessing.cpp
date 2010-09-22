@@ -14,6 +14,7 @@
 // 
 // =====================================================================================
 
+#include "OiStorage.h"
 #include "OiFddProcessing.h"
 #include "OiFileFormat.h"
 #include "OiUniversalFileFormat.h"
@@ -110,7 +111,7 @@ namespace Oi
         if (storage_ == NULL)
             return false;
 
-        const mat& refData = storage_->getFileFormat()->getData();
+        const mat& refData = storage_->getFileFormat()->getRecords();
         int nrows = refData.n_rows;
         unsigned int ncols = refData.n_cols;
         if (nrows == 0 || ncols == 0)

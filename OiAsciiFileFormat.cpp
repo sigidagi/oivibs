@@ -20,7 +20,7 @@ namespace Oi {
 
         string fileName = Oi::stripToFileName(file);
 
-        bool status = data_.load(file, arma::raw_ascii);            
+        bool status = records_.load(file, arma::raw_ascii);            
         if (status == true)
         {
             existData_ = true;
@@ -88,29 +88,29 @@ namespace Oi {
         return false;
     }
 
-    bool AsciiFileFormat::existData()
+    bool AsciiFileFormat::existRecords()
     {
         return existData_;
     }
 
-    const arma::mat& AsciiFileFormat::getNodes()
+    arma::mat& AsciiFileFormat::getNodes()
     {
         return nodes_;
     }
 
-    const arma::umat& AsciiFileFormat::getLines()
+    arma::umat& AsciiFileFormat::getLines()
     {
         return lines_;
     }
 
-    const arma::umat& AsciiFileFormat::getSurfaces()
+    arma::umat& AsciiFileFormat::getSurfaces()
     {
         return surfaces_;
     }
 
-    const arma::mat& AsciiFileFormat::getData()
+    arma::mat& AsciiFileFormat::getRecords()
     {
-        return data_;
+        return records_;
     }
 
     double AsciiFileFormat::getSamplingInterval()
