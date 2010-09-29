@@ -24,7 +24,10 @@
 #define M_PI 3.14159265358979323846
 #endif
 
+#define TO_STREAM(stream,variable) (stream) <<#variable
+
 using std::string;
+using std::pair;
 
 
 
@@ -55,20 +58,42 @@ namespace Oi
     };  
 
 
-    template<class T>
-    inline void swap(T& a, T& b) 
-    { 
-        T dum = a; 
-        a = b; 
-        b = dum; 
-    }
-
     void free2D(double**, int);
     
     string stripToBaseName(const string& pathToFile);
     string stripToFileName(const string& pathToFile);
     string stripToExtension(const string& pathToFile);
     string stripToPath(const string& pathToFile);
+
+    
+
+    /*
+     *template<typename eT>
+     *string matType(const arma::Mat<eT>& m)
+     *{
+     *    if (arma::is_float<eT>::value == true)
+     *        return string("FLOAT");
+     *    else if (arma::is_double<eT>::value == true)
+     *        return string("DUOBLE");
+     *    else if (arma::is_integer<eT>::value == true)
+     *        return string("INT");
+     *    else
+     *        return string("");
+     *    
+     *}
+     */
+
+    template<class T> 
+    struct sort_index
+    {
+        sort_index(const T arr) : arr_(arr) {}
+        bool operator()(const size_t a, const size_t b) const
+        { 
+            return arr_[a] < arr_[b]; 
+        }
+        const T arr_;
+    };
+
 
     template<typename In, typename Out, typename Pred>
     Out copy_if(In first, In last, Out res, Pred Pr)

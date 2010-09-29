@@ -1,84 +1,16 @@
-#include "config.hpp"
 #include "OiLocalStorage.h"
 
 namespace Oi {
-
-    LocalStorage* LocalStorage::instance_ = 0;
-
-    /*
-     *LocalStorage& LocalStorage::Instance()
-     *{
-     *    static LocalStorage thisLocalStorage;
-     *    return thisLocalStorage;
-     *}
-     */
-
-
-    LocalStorage* LocalStorage::Instance()
-    {
-        if (!instance_)
-            instance_ = new LocalStorage;
-        
-        return instance_;
-    }
-
-    bool LocalStorage::init(const string& name, int processName)
-    {
-        return false;
-    }
-
-    bool LocalStorage::connect(const string& name)
-    {
-        return false;
-    }
-
-    double** LocalStorage::getNodes(int& size)
-    {
-        return NULL; 
-    }
-
-    double** LocalStorage::getLines(int& size)
-    {
-        return NULL;
-    }
-
-    double** LocalStorage::getSurfaces(int& size)
-    {
-        return NULL;
-    }
-
-
-    // 
+    
     // ---------  StorageInterface ---------------
-    void LocalStorage::saveNodes(const arma::mat& nodes)
+    void LocalStorage::save(const string& name)
     {
-
+        // NOT implemented jet!
     }
 
-    void LocalStorage::saveLines(const arma::umat& lines)
+    void LocalStorage::load(const string& name)
     {
-
+        // NOT implemented jet!
     }
-
-    void LocalStorage::saveSurfaces(const arma::umat& surfaces)
-    {
-
-    }
-
-    void LocalStorage::saveData(const arma::mat& data)
-    {
-
-    }
-
-    void saveSingularValues(const arma::mat& values)
-    {
-
-    }
-
-    void saveSingularVectors(const arma::cx_mat& vectors)
-    {
-
-    }
-
 
 } // namespace Oi

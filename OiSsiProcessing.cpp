@@ -15,10 +15,11 @@
 // =====================================================================================
 
 #include "OiSsiProcessing.h"
+#include "OiRoot.h"
 
 namespace Oi {
 
-    SsiProcessing::SsiProcessing(StorageInterface* owner) : ProcessingInterface(owner)
+    SsiProcessing::SsiProcessing(Root* owner) : ProcessingInterface(owner)
     {
 
     }

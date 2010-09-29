@@ -1,11 +1,11 @@
 // =====================================================================================
 // 
-//       Filename:  OiSsiProcessing.h
+//       Filename:  OiPersist.h
 // 
 //    Description:  
 // 
 //        Version:  1.0
-//        Created:  2010-09-13 12:44:48
+//        Created:  2010-09-29 18:00:35
 //       Revision:  none
 //       Compiler:  g++
 // 
@@ -13,26 +13,26 @@
 //        Company:  sigidagis
 // 
 // =====================================================================================
-#ifndef _OISSIPROCESSING_H
-#define _OISSIPROCESSING_H
 
-#include "OiProcessing.h"
 
-namespace Oi 
+#ifndef  OIPERSIST_INC
+#define  OIPERSIST_INC
+
+#include	<string>
+
+using std::string;
+
+namespace Oi
 {
-    class Root;
-    
-    class SsiProcessing : public ProcessingInterface 
+    class PersistInterface
     {
         public:
-            SsiProcessing(Root* owner);
-            ~SsiProcessing();
-
-         public:
-            bool start();
-
+            virtual ~PersistInterface(){}
+        public:
+            virtual void save(const string& name) = 0;
+            virtual void load(const string& name) = 0;
     };
 
 } // namespace Oi
 
-#endif
+#endif   // ----- #ifndef OIPERSIST_INC  -----

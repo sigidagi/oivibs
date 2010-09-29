@@ -15,17 +15,21 @@
 // =====================================================================================
 
 #include "OiStorage.h"
+#include "OiFileFormat.h"
+#include "OiProcessing.h"
+
 
 namespace Oi 
 {
-    FileFormatInterface* StorageInterface::getFileFormat()
+    StorageInterface::StorageInterface() 
     {
-        return fileFormat_;
+
     }
-   
-    ProcessingInterface* StorageInterface::getProcess()
+
+    StorageInterface::~StorageInterface()
     {
-        return proc_; 
+
     }
+
 
 } // namespace Oi

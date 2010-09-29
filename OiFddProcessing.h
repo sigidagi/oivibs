@@ -24,19 +24,22 @@ using namespace arma;
 
 namespace Oi 
 {
-    class FileFormatInterface;
+    class Root;
 
     class FddProcessing : public ProcessingInterface 
     {
          public:
-            FddProcessing (StorageInterface* owner);
+            FddProcessing (Root* owner);
             ~FddProcessing();
-    
-            bool start();
             
             const arma::mat& getSingularValues();
             const arma::cx_mat& getSingularVectors();
-        
+            
+        // ProcessingInterface
+         public:
+            bool start();
+            
+        // private methods 
         private:
             void createPSD(cx_cube& psd, mat& chunk);
             void detrend( Mat<double>& x, int p = 1);
@@ -45,6 +48,7 @@ namespace Oi
             // pseudo inverse using SVD
             void inverse( Mat<double>& x );
 
+        // private member variables.
         private:
             cx_cube powerSpectrum_;
             mat singularValues_;

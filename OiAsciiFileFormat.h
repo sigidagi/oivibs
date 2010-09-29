@@ -15,7 +15,7 @@ namespace Oi {
     class AsciiFileFormat : public FileFormatInterface  
     {
         public:
-            AsciiFileFormat(StorageInterface* storage);
+            AsciiFileFormat(Root* owner);
             ~AsciiFileFormat(){}
 
         public:

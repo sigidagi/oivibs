@@ -8,6 +8,7 @@
 #include <armadillo>
 #include <boost/shared_ptr.hpp>
 
+using std::pair;
 using boost::shared_ptr;
 using std::vector;
 using std::string;
@@ -16,7 +17,7 @@ using std::streampos;
 namespace Oi {
 
     // forward declaration.
-    class StorageInterface;
+    class Root;
 
     class UniversalFileFormat : public FileFormatInterface
     {
@@ -70,6 +71,7 @@ namespace Oi {
 
         vector< shared_ptr<Info> > info_;
 
+    private:
         template<typename T>
         bool existInfo()
         {
@@ -83,9 +85,10 @@ namespace Oi {
         }
         
     public:
-        UniversalFileFormat(StorageInterface* storage);
+        UniversalFileFormat(Root* owner);
         ~UniversalFileFormat();
 
+        // FileFormatInterface
         void parse(const string& file);
 
         bool existNodes();
@@ -97,6 +100,9 @@ namespace Oi {
         arma::umat& getLines();
         arma::umat& getSurfaces();
         arma::mat& getRecords();
+
+        void save(const string& repoName);
+        void load(const string& repoName);
     };
 
     

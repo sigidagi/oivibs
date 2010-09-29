@@ -17,58 +17,54 @@
 #ifndef _OIDATABASE_H
 #define _OIDATABASE_H
 
-#include "OiProxy.h"
-#include <string>
-#include <memory>
-#include <mysql++.h>
-#include <armadillo>
+#include    "OiProxy.h"
+#include    <string>
+#include    <memory>
+#include    <mysql++.h>
+#include    <armadillo>
 
 using std::string;
 
 namespace Oi {
     
-    class DatabaseStorage : public ProxyInterface, public StorageInterface
+    class DatabaseStorage : public StorageInterface
     {
-        private:
+        public:
             DatabaseStorage();
-            ~DatabaseStorage();
-            DatabaseStorage(DatabaseStorage const&);
-            DatabaseStorage& operator=(DatabaseStorage const&);
 
-        public:
             mysqlpp::Connection& getConnection();
-            static DatabaseStorage* Instance();
-
-        // ProxyInterface 
-        public:
-            bool init(const string& file, int processName = 0);
-            bool connect(const string& dataName);
-            double** getNodes(int& size);
-            double** getLines(int& size);
-            double** getSurfaces(int& size);
-            bool isConnected();
-
-        // StorageInterface 
-        public:
-            void saveNodes(const arma::mat& nodes);
-            void saveLines(const arma::umat& lines);
-            void saveSurfaces(const arma::umat& surfaces);
-            void saveData(const arma::mat& data);
-            void saveSingularValues(const arma::mat& values);
-            void saveSingularVectors(const arma::cx_mat& vectors);
-           
-        private:
-            bool createTableOfNodes();
-            bool createTableOfLines();
-            bool createTableOfSurfaces();
-            bool createTableOfData();
+            template<typename eT>
+            void saveMatrix(const arma::Mat<eT>& data, const string& name);
 
         private:
-            static DatabaseStorage* instance_;
-            string dbname_;
+            bool init(const string& name);
+            bool createTable(const string& name);
+            bool existTable(const string& name);
+            bool connectToDatabase();
+
+            string tableName_;
             bool bConnected_;
             mysqlpp::Connection connection_;
-            
+ 
+        // StorageInterface 
+        public:
+        //    bool init(const string& repoName);
+
+            template<class T>
+            void write(const string& repoName, const string& name, const T& variable)
+            {
+                if (!connectToDatabase() || !existTable(repoName))
+                    return;
+
+                                
+
+            }
+            template<class T>
+            void read(const string& repoName, const string& name, T& variable)
+            {
+
+            }
+           
            
     };
 

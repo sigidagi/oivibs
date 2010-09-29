@@ -1,19 +1,22 @@
 #include "OiUniversalFileFormat.h"
 #include "OiUtil.h"
-#include "OiStorage.h"
+#include "OiRoot.h"
 
 #include <algorithm>
 #include <sstream>
 #include <unistd.h>
 #include <boost/bind.hpp>
+#include <boost/tuple/tuple.hpp>
 
 using namespace std;
+using boost::tuple;
+using boost::make_tuple;
 
 namespace Oi {
 
     typedef UniversalFileFormat UFF;
     
-    UniversalFileFormat::UniversalFileFormat(StorageInterface* storage) : FileFormatInterface(storage)
+    UniversalFileFormat::UniversalFileFormat(Root* owner) : FileFormatInterface(owner)
     {
         
     }
@@ -26,7 +29,10 @@ namespace Oi {
     void UniversalFileFormat::parse(const string& file)
     {
         if (file.empty())
+        {
+            cerr << "UniversalFileFormat::parse -- file: " << file << " is empty!\n";
             return;
+        }
 
         string path = Oi::stripToPath(file);
         chdir(path.c_str());
@@ -46,7 +52,6 @@ namespace Oi {
             info_.clear(); 
             string line;
 
-            
             while (!fileStream.eof())
             {
                 getline(fileStream, line);
@@ -99,8 +104,15 @@ namespace Oi {
         }
 
         if (info_.empty())
+        {
+            cerr << "UniversalFileFormat::parse --\n";
+            cerr << "No information found in file: " << file << "\n";
             return;
+        }
 
+        // save base file name, later it will be used for persistency. 
+        file_ = Oi::stripToBaseName(file);
+    
         if (!rInfo.empty())
         {
             // check if sampling interval is the same for every record.
@@ -115,7 +127,8 @@ namespace Oi {
             // if 
             if (!equal_elements(samplingT.begin(), samplingT.end()))
             {
-                // ERROR log will be implemented later. 
+                cerr << "UniversalFileFormat::parse --\n";
+                cerr << "Sampling intervals differ in data records!\n";
                 // one solution for such error would be delete those records ...... 
                 return;
             }
@@ -145,7 +158,9 @@ namespace Oi {
 
         // parse every information (UFF::Info) found in a file and save into the storage class  
         std::for_each(info_.begin(), info_.end(), boost::bind(&UFF::Info::parse, _1)); 
-
+       
+        // save parsed elements: nodes, lines, records to the storage.
+        save(Oi::stripToBaseName(file));
                 
     }
 
@@ -159,15 +174,21 @@ namespace Oi {
         std::ifstream fileStream;
         fileStream.open(file_.c_str(), ios::in);
         if (!fileStream.is_open())
+        {
+            cerr << "UniversalFileFormat::NodeInfo::parse --\n";
+            cerr << "Can NOT open file: " << file_ << "\n";
             return;
-
+        }
         self_->getNodes().reset();
         fileStream.seekg(position_, ios::beg);
 
         int nodeNumber, temp; 
         string line;
         stringstream ss;
-        double x, y, z;     
+    
+        double x, y, z;
+        vector<int> nodeNumberList;
+        arma::mat nodes;
 
         int count = 1;
         while (!fileStream.eof())
@@ -180,24 +201,51 @@ namespace Oi {
             if (nodeNumber == -1)
                 break;
         
+            nodeNumberList.push_back(nodeNumber);
             ss >> temp >> temp >> temp;
             ss >> x >> y >> z;
-           
-            // reshape preserves elements in a matrix. 
-            self_->getNodes().reshape(4, count);
-            self_->getNodes()(0, count-1) = nodeNumber;
-            self_->getNodes()(1, count-1) = x;
-            self_->getNodes()(2, count-1) = y;
-            self_->getNodes()(3, count-1) = z;
-            
-            ++count;
-        }
+        
+            nodes.reshape(3, count);
+            nodes(0, count-1) = x;
+            nodes(1, count-1) = y;
+            nodes(2, count-1) = z;
 
+            ++count;
+
+            // reshape preserves elements in a matrix. 
+            /*
+             *self_->getNodes().reshape(4, count);
+             *self_->getNodes()(0, count-1) = nodeNumber;
+             *self_->getNodes()(1, count-1) = x;
+             *self_->getNodes()(2, count-1) = y;
+             *self_->getNodes()(3, count-1) = z;
+             *
+             */
+             // ++count;
+        }
+       
         fileStream.close();
         
-        // save nodes into the storage. it could be database or local file.
-        self_->getStorage()->saveNodes(self_->getNodes());
-
+        // in some case nodes in a file can be presented not in ascending order.
+        // following procedure rearange matrix that first node starts in first column,
+        // second - in second column.
+        vector<int>::const_iterator it;
+        self_->getNodes().reshape(3, nodeNumberList.size());
+        // now fill up 
+        for (size_t i = 0; i < nodeNumberList.size(); ++i)
+        {
+            it = std::find(nodeNumberList.begin(), nodeNumberList.end(), i+1);
+            if (it == nodeNumberList.end())
+            {
+                cerr << "UFF::NodeInfo::parse --\n";
+                cerr << "Inconsistency in Node numbering!\n";
+            }
+            
+            self_->getNodes()(0, i) = nodes(0, *it);
+            self_->getNodes()(1, i) = nodes(1, *it);
+            self_->getNodes()(2, i) = nodes(2, *it);
+        }
+        
     }
 
     UniversalFileFormat::LineInfo::LineInfo(FileFormatInterface* self, const string& file) : Info(self, file)
@@ -208,9 +256,14 @@ namespace Oi {
     void UniversalFileFormat::LineInfo::parse()
     {
         std::ifstream fileStream;
+        
         fileStream.open(file_.c_str(), ios::in);
         if (!fileStream.is_open())
+        {
+            cerr << "UniversalFileFormat::LineInfo::parse --\n";
+            cerr << "Can NOT open file: " << file_ << "\n";  
             return;
+        }
 
         self_->getLines().reset();    
         fileStream.seekg(position_, ios::beg);
@@ -265,10 +318,6 @@ namespace Oi {
        
         fileStream.close();
 
-        // save lines into the storage. it could be database or local file.
-        self_->getStorage()->saveLines(self_->getLines());
-
-
         //catch ( std::out_of_range outOfRange )
         //{
         //	std::cout << "\n\nExeption: " << outOfRange.what();
@@ -289,7 +338,11 @@ namespace Oi {
         std::ifstream fileStream;
         fileStream.open(file_.c_str(), ios::in);
         if (!fileStream.is_open())
+        {
+            cerr << "UniversalFileFormat::SurfaceInfo::parse --\n";
+            cerr << "Can NOT open file: " << file_ << "\n";
             return;
+        }
 
         self_->getSurfaces().reset();   
         fileStream.seekg(position_, ios::beg);
@@ -333,11 +386,6 @@ namespace Oi {
         }
 
         fileStream.close();
-
-        // save lines into the storage. it could be database or local file.
-        self_->getStorage()->saveSurfaces(self_->getSurfaces());
-
-
     }
     
     
@@ -401,15 +449,19 @@ namespace Oi {
         }
 
         fileStream.close();
+    }
+    
+    void UniversalFileFormat::save(const string& repoName)
+    {
+        if (existNodes())
+            root_->getStorage()->write(repoName, "nodes_", nodes_); 
+    }
 
-        if ( (int)self_->getRecords().n_cols == recordnumber_)
-        {
-            // save lines into the storage. it could be database or local file.
-            self_->getStorage()->saveSurfaces(self_->getSurfaces());
-        }
+    void UniversalFileFormat::load(const string& repoName)
+    {
 
     }
-  
+
     double UniversalFileFormat::RecordInfo::getSamplingInterval()
     {
         return samplingInterval_;

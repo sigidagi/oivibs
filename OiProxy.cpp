@@ -15,19 +15,14 @@
 // =====================================================================================
 
 #include "OiProxy.h"
-#include "OiDatabaseStorage.h"
-#include "OiLocalStorage.h"
+#include "OiRoot.h"
 #include "config.hpp"
 
 namespace Oi {
 
     Proxy::Proxy() 
     {
-        #if defined(OI_USE_MYSQLPP)
-        impl_ = DatabaseStorage::Instance();
-        #else
-        impl_ = LocalStorage::Instance();
-        #endif
+        impl_ = Root::Instance();
     }
 
     Proxy::~Proxy()

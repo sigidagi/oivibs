@@ -13,34 +13,15 @@ using std::string;
 
 namespace Oi {
 
-class LocalStorage : public ProxyInterface, public StorageInterface
+class LocalStorage : public StorageInterface
 {
     private:
-        LocalStorage(){};
-        LocalStorage(LocalStorage const&){};
-        LocalStorage& operator=(LocalStorage const&){ return *this;};
-
-        static LocalStorage* instance_;
-    
-    // ProxyInterface
-    public:
-        bool init(const string& name, int processName = 0); 
-        bool connect(const string& name);
-        double** getNodes(int& size);
-        double** getLines(int& size);
-        double** getSurfaces(int& size);
-    
+ 
     // StorageInterface
     public: 
-        void saveNodes(const arma::mat& nodes);
-        void saveLines(const arma::umat& lines);
-        void saveSurfaces(const arma::umat& surfaces);
-        void saveData(const arma::mat& data);
+          void save(const string& name);
+          void load(const string& name);
 
-        virtual void saveSingularValues(const arma::mat& values);
-        virtual void saveSingularVectors(const arma::cx_mat& vectors);
- 
-        LocalStorage* Instance(); 
 };
 
 

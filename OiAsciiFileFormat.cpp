@@ -1,4 +1,4 @@
-#include "OiStorage.h"
+#include "OiRoot.h"
 #include "OiAsciiFileFormat.h"
 #include "OiUtil.h"
 #include <sstream>
@@ -7,8 +7,8 @@
 
 namespace Oi {
 
-    AsciiFileFormat::AsciiFileFormat(StorageInterface* storage) 
-            : FileFormatInterface(storage), existData_(false)
+    AsciiFileFormat::AsciiFileFormat(Root* owner) 
+            : FileFormatInterface(owner), existData_(false)
     {
 
     }

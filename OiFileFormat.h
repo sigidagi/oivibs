@@ -17,25 +17,27 @@
 #ifndef _OIFORMAT_H
 #define _OIFORMAT_H
 
-#include <armadillo>
-#include <string>
-#include <memory>
 
-using std::auto_ptr;
+#include	"OiPersist.h"
+#include    <armadillo>
+#include    <string>
+#include    <boost/shared_ptr.hpp>
+
+using boost::shared_ptr;
 using std::string;
 
 namespace Oi {
     
-    class StorageInterface;
+    class Root;
 
-    class FileFormatInterface
+    class FileFormatInterface : public PersistInterface
     {
         public:
-            FileFormatInterface(StorageInterface* storage);
+            FileFormatInterface(Root* owner);
             virtual ~FileFormatInterface(){}
 
         public:
-            static auto_ptr<FileFormatInterface> createFileFormat(StorageInterface* owner, const string& file);
+            static shared_ptr<FileFormatInterface> createFileFormat(Root* owner, const string& file);
 
             virtual void parse(const string& file) = 0;
             
@@ -49,21 +51,20 @@ namespace Oi {
             virtual arma::umat& getSurfaces() = 0;
             virtual arma::mat& getRecords() = 0;
 
+            void save(const string& name);
+            void load(const string& name);
+
             double getSamplingInterval();
             int getNumberOfSamples();
             
-            StorageInterface* getStorage();
-            void setStorage(StorageInterface* storage);
-
         protected:
-            StorageInterface* storage_;
+            Root* root_;
             string file_; 
         
             arma::mat nodes_;
             arma::umat lines_;
             arma::umat surfaces_;
             arma::mat records_;
-            
             
             double samplingInterval_;
             int numberOfSamples_;

@@ -17,45 +17,28 @@
 #ifndef _OISTORAGE_H
 #define _OISTORAGE_H
 
-#include <armadillo>
-#include <memory>
+#include	<string>
 
-using std::auto_ptr;
+using std::string;
 
 namespace Oi
 {
-    class FileFormatInterface;
-    class ProcessingInterface;
-
     class StorageInterface
     {
         public:
-            StorageInterface() : fileFormat_(NULL), proc_(NULL)
-            {
-
-            }
-
-            virtual ~StorageInterface(){}
+            StorageInterface(); 
+            virtual ~StorageInterface();
         
         // Interfaces
         public:
-            virtual void saveNodes(const arma::mat& nodes) = 0;
-            virtual void saveLines(const arma::umat& lines) = 0;
-            virtual void saveSurfaces(const arma::umat& surfaces) = 0;
-            virtual void saveData(const arma::mat& data) = 0;
-        
-            virtual void saveSingularValues(const arma::mat& values);
-            virtual void saveSingularVectors(const arma::cx_mat& vectors);
-            
-            FileFormatInterface* getFileFormat();
-            ProcessingInterface* getProcess();
+             virtual bool init(const string& repoName) = 0;
 
-        protected:
-            auto_ptr<FileFormatInterface> fileFormat_;
-            auto_ptr<ProcessingInterface> proc_;
+             template<class T>
+             void write(const string& repoName, const string& name, const T& variable){}
+             template<class T>
+             void read(const string& repoName, const string& name, T& variable){}
     };
 
-}
-
+} // namespace Oi
 
 #endif 
