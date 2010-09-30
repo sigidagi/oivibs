@@ -18,11 +18,9 @@
 #ifndef  _OIROOT_H
 #define  _OIROOT_H
 
-
 #include	"OiPersist.h"
-#include	"OiStorage.h"
 #include	"OiProxy.h"
-#include <boost/shared_ptr.hpp>
+#include    <boost/shared_ptr.hpp>
 
 using boost::shared_ptr;
 
@@ -31,6 +29,7 @@ namespace Oi
     // forward declaration.
     class FileFormatInterface;
     class ProcessingInterface;
+    class StorageInterface;
 
     class Root : public ProxyInterface, public PersistInterface 
     {

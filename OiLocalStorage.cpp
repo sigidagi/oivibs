@@ -3,14 +3,11 @@
 namespace Oi {
     
     // ---------  StorageInterface ---------------
-    void LocalStorage::save(const string& name)
+    bool LocalStorage::init(const string& name)
     {
         // NOT implemented jet!
+        return false;
     }
 
-    void LocalStorage::load(const string& name)
-    {
-        // NOT implemented jet!
-    }
 
 } // namespace Oi

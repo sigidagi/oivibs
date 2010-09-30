@@ -16,6 +16,11 @@
 
 
 #include	"OiRoot.h"
+#include	"OiDatabaseStorage.h"
+#include	"OiLocalStorage.h"
+#include	"OiFileFormat.h"
+#include	"OiProcessing.h"
+#include	"OiUtil.h"
 
 namespace Oi
 {
@@ -24,11 +29,10 @@ namespace Oi
     Root::Root()
     {
         #if defined(OI_USE_MYSQLPP)
-        storage_ = shared_ptr<StorageInterface>(new DatabaseStorage());
+        storage_ = shared_ptr<StorageInterface>(new DatabaseStorage);
         #else
-        storage_ = shared_ptr<StorageInterface>(new LocalStorage());
+        storage_ = shared_ptr<StorageInterface>(new LocalStorage);
         #endif
-
     }
 
     Root::~Root()
@@ -83,14 +87,14 @@ namespace Oi
         // Root is responsible for initialization of Storage
         string repoName = Oi::stripToBaseName(file);
         if (repoName.empty())
-            return;
+            return false;
 
         storage_->init(repoName);
 
         return true;
     }
 
-    bool Root::connect(const string file)
+    bool Root::connect(const string& file)
     {
         // NOT implemented jet!
         return false;
@@ -119,6 +123,9 @@ namespace Oi
             
             return array;
         }
+
+        return NULL;
+    }
 
     double** Root::getLines(int& size)
     {

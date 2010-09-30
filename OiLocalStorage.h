@@ -13,16 +13,16 @@ using std::string;
 
 namespace Oi {
 
-class LocalStorage : public StorageInterface
-{
-    private:
- 
-    // StorageInterface
-    public: 
-          void save(const string& name);
-          void load(const string& name);
+    class LocalStorage : public StorageInterface
+    {
+        public:
+            LocalStorage(){}
+     
+        // StorageInterface
+        public: 
+             bool init(const string& repoName);
 
-};
+    };
 
 
 } // namespace Oi

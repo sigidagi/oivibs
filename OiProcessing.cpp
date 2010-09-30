@@ -48,6 +48,16 @@ namespace Oi {
             return auto_ptr<ProcessingInterface>(new FddProcessing(owner));
         }
     }
+   
+    void ProcessingInterface::save(const string& name)
+    {
+
+    }
     
+    void ProcessingInterface::load(const string& name)
+    {
+
+    }
+
 } // namespace Oi
 

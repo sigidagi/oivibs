@@ -22,11 +22,13 @@
 #include    <memory>
 #include    <mysql++.h>
 #include    <armadillo>
+#include    <sstream>
+#include	<armadillo>
 
 using std::string;
 
 namespace Oi {
-    
+
     class DatabaseStorage : public StorageInterface
     {
         public:
@@ -37,7 +39,6 @@ namespace Oi {
             void saveMatrix(const arma::Mat<eT>& data, const string& name);
 
         private:
-            bool init(const string& name);
             bool createTable(const string& name);
             bool existTable(const string& name);
             bool connectToDatabase();
@@ -48,16 +49,25 @@ namespace Oi {
  
         // StorageInterface 
         public:
-        //    bool init(const string& repoName);
+            bool init(const string& repoName);
 
-            template<class T>
-            void write(const string& repoName, const string& name, const T& variable)
+            template<typename eT>
+            void write(const string& repoName, const string& name, const arma::Mat<eT>& variable)
             {
-                if (!connectToDatabase() || !existTable(repoName))
-                    return;
-
-                                
-
+/*
+ *                if (!connectToDatabase() || !existTable(repoName))
+ *                    return;
+ *
+ *                //if (arma::is_arma_type<T>::value == true)
+ *                    
+ *                std::stringstream ss;
+ *                typename arma::Mat<eT>::iterator it;
+ *                for (it == variable.begin(); it != variable.end(); ++it)
+ *                {
+ *
+ *                }
+ *
+ */
             }
             template<class T>
             void read(const string& repoName, const string& name, T& variable)
