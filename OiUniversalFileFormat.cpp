@@ -205,23 +205,13 @@ namespace Oi {
             ss >> temp >> temp >> temp;
             ss >> x >> y >> z;
         
-            nodes.reshape(3, count);
-            nodes(0, count-1) = x;
-            nodes(1, count-1) = y;
-            nodes(2, count-1) = z;
+            // reshape preserves elements in a matrix. 
+            nodes.reshape(count, 3);
+            nodes(count-1, x) = x;
+            nodes(count-1, y) = y;
+            nodes(count-1, z) = z;
 
             ++count;
-
-            // reshape preserves elements in a matrix. 
-            /*
-             *self_->getNodes().reshape(4, count);
-             *self_->getNodes()(0, count-1) = nodeNumber;
-             *self_->getNodes()(1, count-1) = x;
-             *self_->getNodes()(2, count-1) = y;
-             *self_->getNodes()(3, count-1) = z;
-             *
-             */
-             // ++count;
         }
        
         fileStream.close();
@@ -230,10 +220,11 @@ namespace Oi {
         // following procedure rearange matrix that first node starts in first column,
         // second - in second column.
         vector<int>::const_iterator it;
-        self_->getNodes().reshape(3, nodeNumberList.size());
-        // now fill up 
+        self_->getNodes().reshape(nodeNumberList.size(), 3);
+        // now fill up matrix (variable UniversalFileFormat::nodes__) 
         for (size_t i = 0; i < nodeNumberList.size(); ++i)
         {
+            // node numbers starts from 1.
             it = std::find(nodeNumberList.begin(), nodeNumberList.end(), i+1);
             if (it == nodeNumberList.end())
             {
@@ -241,9 +232,9 @@ namespace Oi {
                 cerr << "Inconsistency in Node numbering!\n";
             }
             
-            self_->getNodes()(0, i) = nodes(0, *it);
-            self_->getNodes()(1, i) = nodes(1, *it);
-            self_->getNodes()(2, i) = nodes(2, *it);
+            self_->getNodes()(i,0) = nodes(*it-1, 0);
+            self_->getNodes()(i,1) = nodes(*it-1, 1);
+            self_->getNodes()(i,2) = nodes(*it-1, 2);
         }
         
     }
@@ -298,6 +289,8 @@ namespace Oi {
                 break;
         }
 
+        fileStream.close();
+        
         if ((int)nodeList.size() != nNumberOfEntries)
             return;
 
@@ -308,24 +301,13 @@ namespace Oi {
 
         nodeList.erase(it, nodeList.end());
     
-        self_->getLines().set_size(3, (int)(nodeList.size()/2)); 
+        self_->getLines().set_size((int)(nodeList.size()/2), 2); 
         for (size_t i = 0; i < nodeList.size(); i+=2)
         {
-            self_->getLines()(0, i/2) = (i/2+1);
-            self_->getLines()(1, i/2) = nodeList[i];
-            self_->getLines()(2, i/2) = nodeList[i+1];
+            self_->getLines()(i/2, 0) = nodeList[i];
+            self_->getLines()(i/2, 1) = nodeList[i+1];
         }
        
-        fileStream.close();
-
-        //catch ( std::out_of_range outOfRange )
-        //{
-        //	std::cout << "\n\nExeption: " << outOfRange.what();
-        //	return;
-        //}
-
-        //existLineInfos_ = false;
-
     }
     
     UniversalFileFormat::SurfaceInfo::SurfaceInfo(FileFormatInterface* self, const string& file) : Info(self, file)
@@ -376,11 +358,10 @@ namespace Oi {
             int node1, node2, node3;
             ss >> node1 >>  node2 >> node3; 
             
-            self_->getSurfaces().reshape(4, count);
-            self_->getSurfaces()(0, count-1) = count;
-            self_->getSurfaces()(1, count-1) = node1;
-            self_->getSurfaces()(2, count-1) = node2;
-            self_->getSurfaces()(3, count-1) = node3;
+            self_->getSurfaces().reshape(count,3);
+            self_->getSurfaces()(count-1, 0) = node1;
+            self_->getSurfaces()(count-1, 1) = node2;
+            self_->getSurfaces()(count-1, 2) = node3;
            
             ++count;
         }

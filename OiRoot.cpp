@@ -74,7 +74,7 @@ namespace Oi
 
     bool Root::init(const string& file, int processName)
     {
-         // 
+        // 
         fileFormat_ = FileFormatInterface::createFileFormat(this, file);
         fileFormat_->parse(file);
 
@@ -96,8 +96,13 @@ namespace Oi
 
     bool Root::connect(const string& file)
     {
-        // NOT implemented jet!
-        return false;
+        string repoName = Oi::stripToBaseName(file);
+        if (!storage_->existRepository(repoName))
+            return false;
+
+        repositoryName_ = file;
+
+        return true;
     }
     
     double** Root::getNodes(int& size)
@@ -105,38 +110,62 @@ namespace Oi
         if (fileFormat_.get() == NULL)
             return NULL;
 
-         // first check if nodes are stored in variable 
-        const arma::mat& nodes = fileFormat_->getNodes();
-        if (nodes.n_elem != 0 && nodes.n_rows == 4)
+        // first check if nodes are stored in variable 
+        // if variable is empty try to load from repository 
+        if (!fileFormat_->existNodes())
         {
-            double** array = new double*[size];
-            for (int n = 0; n < size; ++n)
-                array[n] = new double[3];
-
-            // assign values
-            for (size_t i = 0; i < nodes.n_cols; ++i)
-            {
-                array[i][0] = nodes(1, i);
-                array[i][1] = nodes(2, i);
-                array[i][2] = nodes(3, i);
-            }
-            
-            return array;
+            fileFormat_->load(repositoryName_);
+            if (!fileFormat_->existNodes())
+                return NULL;
         }
 
-        return NULL;
+        // if we reached this point - nodes exist and can allocate matrix for user.
+        arma::mat& nodes = fileFormat_->getNodes();
+        size = (int)nodes.n_rows;
+        
+        return allocate2D(nodes); 
     }
 
-    double** Root::getLines(int& size)
+    unsigned int** Root::getLines(int& size)
     {
-        // NOT implemented jet.
-        return NULL;
+         if (fileFormat_.get() == NULL)
+            return NULL;
+
+        // first check if lines are stored in variable 
+        // if variable is empty try to load from repository 
+        if (!fileFormat_->existLines())
+        {
+            fileFormat_->load(repositoryName_);
+            if (!fileFormat_->existLines())
+                return NULL;
+        }
+
+        // if we reached this point - nodes exist and can allocate matrix for user.
+        arma::umat& lines = fileFormat_->getLines();
+        size = (int)lines.n_rows;
+        
+        return allocate2D(lines); 
     }
     
-    double** Root::getSurfaces(int& size)
+    unsigned int** Root::getSurfaces(int& size)
     {
-        // NOT impolemented jet!
-        return NULL;
+          if (fileFormat_.get() == NULL)
+            return NULL;
+
+        // first check if nodes are stored in variable 
+        // if variable is empty try to load from repository 
+        if (!fileFormat_->existSurfaces())
+        {
+            fileFormat_->load(repositoryName_);
+            if (!fileFormat_->existSurfaces())
+                return NULL;
+        }
+
+        // if we reached this point - nodes exist and can allocate matrix for user.
+        arma::umat& surfaces = fileFormat_->getSurfaces();
+        size = (int)surfaces.n_rows;
+        
+        return allocate2D(surfaces); 
     }
 
     shared_ptr<FileFormatInterface> Root::getFileFormat() 

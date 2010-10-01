@@ -39,8 +39,7 @@ namespace Oi {
             void saveMatrix(const arma::Mat<eT>& data, const string& name);
 
         private:
-            bool createTable(const string& name);
-            bool existTable(const string& name);
+            bool createRepository(const string& name);
             bool connectToDatabase();
 
             string tableName_;
@@ -50,7 +49,8 @@ namespace Oi {
         // StorageInterface 
         public:
             bool init(const string& repoName);
-
+            bool existRepository(const string& name);
+            
             template<typename eT>
             void write(const string& repoName, const string& name, const arma::Mat<eT>& variable)
             {

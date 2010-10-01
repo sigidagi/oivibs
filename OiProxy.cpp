@@ -45,12 +45,12 @@ namespace Oi {
         return impl_->getNodes(size);
     }
 
-    double** Proxy::getLines(int& size)
+    unsigned int** Proxy::getLines(int& size)
     {
         return impl_->getLines(size);
     }
 
-    double** Proxy::getSurfaces(int& size)
+    unsigned int** Proxy::getSurfaces(int& size)
     {
         return impl_->getSurfaces(size);
     }

@@ -32,6 +32,7 @@ namespace Oi
         // Interfaces
         public:
              virtual bool init(const string& repoName) = 0;
+             virtual bool existRepository(const string& repoName) = 0;
 
              template<class T>
              void write(const string& repoName, const string& name, const T& variable){}

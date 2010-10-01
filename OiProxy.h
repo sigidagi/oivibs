@@ -48,8 +48,8 @@ namespace Oi {
             virtual bool init(const string& name, int processName = 0) = 0;
             virtual bool connect(const string& name) = 0;
             virtual double** getNodes(int& ) = 0;
-            virtual double** getLines(int& ) = 0;
-            virtual double** getSurfaces(int& ) = 0;
+            virtual unsigned int** getLines(int& ) = 0;
+            virtual unsigned int** getSurfaces(int& ) = 0;
     };
 
 
@@ -64,8 +64,8 @@ namespace Oi {
             bool init(const string& name, int processName = 0);
             bool connect(const string& name);
             double** getNodes(int& size);
-            double** getLines(int& size);
-            double** getSurfaces(int& size);
+            unsigned int** getLines(int& size);
+            unsigned int** getSurfaces(int& size);
 
         private:
             ProxyInterface* impl_; 

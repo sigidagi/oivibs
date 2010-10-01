@@ -21,6 +21,7 @@ namespace Oi {
         // StorageInterface
         public: 
              bool init(const string& repoName);
+             bool existRepository(const string& repoName); 
 
     };
 

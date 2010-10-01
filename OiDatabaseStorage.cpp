@@ -80,7 +80,7 @@ namespace Oi {
                 std::cerr << "Error creating database: " << connection_.error() << std::endl; 
                 return false;
             }
-            if(!createTable(tableName))
+            if(!createRepository(tableName))
             {
                 std::cerr << "Error creating table: " <<  tableName << "\n";
                 return false;
@@ -95,8 +95,8 @@ namespace Oi {
        
         // if connection to database is established - check if exist table with "baseName" name.
 
-        if (!existTable(tableName))
-            createTable(tableName);
+        if (!existRepository(tableName))
+            createRepository(tableName);
         
         return true;
     }
@@ -126,7 +126,7 @@ namespace Oi {
         return true;
     }
 
-    bool DatabaseStorage::existTable(const string& tableName)
+    bool DatabaseStorage::existRepository(const string& tableName)
     {
         mysqlpp::Query query = connection_.query();
         try 
@@ -153,7 +153,7 @@ namespace Oi {
         return true;
     }
     
-    bool DatabaseStorage::createTable(const string& name)
+    bool DatabaseStorage::createRepository(const string& name)
     {
         mysqlpp::Query query = connection_.query();
         
@@ -234,7 +234,7 @@ namespace Oi {
             return;
         }
        
-        if (!existTable(tableName_))
+        if (!existRepository(tableName_))
             return;
 
         // Create blob from matrix 
