@@ -34,11 +34,11 @@ namespace Oi {
     
     auto_ptr<ProcessingInterface> ProcessingInterface::createProcess(Root* owner, int processName)
     {
-        if (processName == FDD)
+        if (processName == Process::FDD)
         {
             return auto_ptr<ProcessingInterface>(new FddProcessing(owner));
         }
-        else if (processName == SSI)
+        else if (processName == Process::SSI)
         {
             return auto_ptr<ProcessingInterface>(new SsiProcessing(owner));
         }
@@ -49,12 +49,12 @@ namespace Oi {
         }
     }
    
-    void ProcessingInterface::save(const string& name)
+    void ProcessingInterface::save()
     {
 
     }
     
-    void ProcessingInterface::load(const string& name)
+    void ProcessingInterface::load()
     {
 
     }

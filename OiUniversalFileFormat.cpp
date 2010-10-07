@@ -1,4 +1,5 @@
 #include "OiUniversalFileFormat.h"
+#include "OiStorage.h"
 #include "OiUtil.h"
 #include "OiRoot.h"
 
@@ -37,13 +38,14 @@ namespace Oi {
         string path = Oi::stripToPath(file);
         chdir(path.c_str());
 
-        string fileName = Oi::stripToFileName(file);
+        // save file name, later it will be used for persistency. 
+        file_ = Oi::stripToFileName(file);
     
         std::ifstream fileStream;
         vector< shared_ptr<UFF::RecordInfo> > rInfo;
         int recordnumber = 0; 
 
-        fileStream.open(fileName.c_str(), ios::in);
+        fileStream.open(file_.c_str(), ios::in);
         if (fileStream.is_open())
         {
             // serches for nodes, lines, surfaces and data in UFF file.
@@ -110,8 +112,6 @@ namespace Oi {
             return;
         }
 
-        // save base file name, later it will be used for persistency. 
-        file_ = Oi::stripToBaseName(file);
     
         if (!rInfo.empty())
         {
@@ -160,7 +160,7 @@ namespace Oi {
         std::for_each(info_.begin(), info_.end(), boost::bind(&UFF::Info::parse, _1)); 
        
         // save parsed elements: nodes, lines, records to the storage.
-        save(Oi::stripToBaseName(file));
+        this->save();
                 
     }
 
@@ -207,9 +207,9 @@ namespace Oi {
         
             // reshape preserves elements in a matrix. 
             nodes.reshape(count, 3);
-            nodes(count-1, x) = x;
-            nodes(count-1, y) = y;
-            nodes(count-1, z) = z;
+            nodes(count-1, 0) = x;
+            nodes(count-1, 1) = y;
+            nodes(count-1, 2) = z;
 
             ++count;
         }
@@ -431,17 +431,24 @@ namespace Oi {
 
         fileStream.close();
     }
-    
-    void UniversalFileFormat::save(const string& repoName)
-    {
-        if (existNodes())
-            root_->getStorage()->write(repoName, "nodes_", nodes_); 
-    }
-
-    void UniversalFileFormat::load(const string& repoName)
-    {
-
-    }
+ 
+/*
+ *    void UniversalFileFormat::save()
+ *    {
+ *        if (existNodes())
+ *        {
+ *            std::stringstream ss;
+ *            pushToStream(ss, file_, nodes_); 
+ *
+ *            root_->getStorage()->write(ss); 
+ *        }
+ *    }
+ *
+ *    void UniversalFileFormat::load()
+ *    {
+ *
+ *    }
+ */
 
     double UniversalFileFormat::RecordInfo::getSamplingInterval()
     {

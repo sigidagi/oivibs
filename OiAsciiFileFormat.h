@@ -19,24 +19,23 @@ namespace Oi {
             ~AsciiFileFormat(){}
 
         public:
-            virtual void parse(const string& file);
+            void parse(const string& file);
             
-            virtual bool existNodes();
-            virtual bool existLines();
-            virtual bool existSurfaces();
-            virtual bool existRecords();
+            bool existNodes();
+            bool existLines();
+            bool existSurfaces();
+            bool existRecords();
 
-            virtual arma::mat& getNodes();
-            virtual arma::umat& getLines();
-            virtual arma::umat& getSurfaces();
-            virtual arma::mat& getRecords();
+            arma::mat& getNodes();
+            arma::umat& getLines();
+            arma::umat& getSurfaces();
+            arma::mat& getRecords();
 
-            virtual double getSamplingInterval();
-            virtual int getNumberOfSamples();
-
+            double getSamplingInterval();
+            int getNumberOfSamples();
+    
         private:
             std::ifstream fileStream_;
-            
            
             bool existData_;
     };

@@ -14,7 +14,7 @@
 // 
 // =====================================================================================
 
-
+#include    "config.hpp"
 #include	"OiRoot.h"
 #include	"OiDatabaseStorage.h"
 #include	"OiLocalStorage.h"
@@ -24,6 +24,7 @@
 
 namespace Oi
 {
+
     Root* Root::instance_ = NULL;
     
     Root::Root()
@@ -58,22 +59,29 @@ namespace Oi
         return storage_;
     }
     
-    void Root::save(const string& name)
+    void Root::save()
     {
-        fileFormat_->save(name);
-        proc_->save(name);
+        fileFormat_->save();
+        proc_->save();
     }
 
-    void Root::load(const string& name)
+    void Root::load()
     {
-        fileFormat_->load(name);
-        proc_->load(name);
+        fileFormat_->load();
+        proc_->load();
     }
     
     // Implementation of ProxyInterface interface
 
     bool Root::init(const string& file, int processName)
     {
+        
+        // Root is responsible for initialization of Storage
+        string repoName = Oi::stripToBaseName(file);
+        if (repoName.empty())
+            return false;
+        // 
+        storage_->init(repoName);
         // 
         fileFormat_ = FileFormatInterface::createFileFormat(this, file);
         fileFormat_->parse(file);
@@ -84,12 +92,6 @@ namespace Oi
                // save processed data, singular values, singular vectors and etc.
         }
         
-        // Root is responsible for initialization of Storage
-        string repoName = Oi::stripToBaseName(file);
-        if (repoName.empty())
-            return false;
-
-        storage_->init(repoName);
 
         return true;
     }
@@ -114,7 +116,7 @@ namespace Oi
         // if variable is empty try to load from repository 
         if (!fileFormat_->existNodes())
         {
-            fileFormat_->load(repositoryName_);
+            fileFormat_->load();
             if (!fileFormat_->existNodes())
                 return NULL;
         }
@@ -135,7 +137,7 @@ namespace Oi
         // if variable is empty try to load from repository 
         if (!fileFormat_->existLines())
         {
-            fileFormat_->load(repositoryName_);
+            fileFormat_->load();
             if (!fileFormat_->existLines())
                 return NULL;
         }
@@ -156,7 +158,7 @@ namespace Oi
         // if variable is empty try to load from repository 
         if (!fileFormat_->existSurfaces())
         {
-            fileFormat_->load(repositoryName_);
+            fileFormat_->load();
             if (!fileFormat_->existSurfaces())
                 return NULL;
         }

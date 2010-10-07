@@ -19,12 +19,12 @@
 
 #include <string>
 #include <boost/shared_ptr.hpp>
+#include <armadillo>
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
 #endif
 
-#define TO_STREAM(stream,variable) (stream) <<#variable
 
 using std::string;
 using std::pair;
@@ -49,13 +49,16 @@ namespace Oi
  *          b = move(dum); 
  *      }
  */
-
-    enum ProcessName
+    
+    struct Process
     {
-        FDD, // frequency domain decomposition
-        SSI  // stochastic subspace identification
-             // other posisible methods..
-    };  
+        enum Name 
+        {
+            FDD, // frequency domain decomposition
+            SSI  // stochastic subspace identification
+                 // other posisible methods..
+        };  
+    };
 
 
     void free2D(double**, int);
@@ -82,6 +85,26 @@ namespace Oi
      *    
      *}
      */
+
+    template<typename T>
+    T** allocate2D(arma::Mat<T> a)
+    {
+        if (a.n_elem == 0 || a.n_rows == 0) 
+            return NULL;
+
+        T** array = new T*[a.n_rows];
+        for (size_t n = 0; n < a.n_rows; ++n)
+            array[n] = new T[a.n_cols];
+
+        // assign values
+        for (size_t i = 0; i < a.n_rows; ++i)
+        {
+            for (size_t j = 0; j < a.n_cols; ++j)
+                array[i][j] = a(i,j);
+        }
+        
+        return array;
+    }
 
     template<class T> 
     struct sort_index

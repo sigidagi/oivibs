@@ -28,55 +28,28 @@
 using std::string;
 
 namespace Oi {
-
+ 
     class DatabaseStorage : public StorageInterface
     {
         public:
             DatabaseStorage();
 
-            mysqlpp::Connection& getConnection();
-            template<typename eT>
-            void saveMatrix(const arma::Mat<eT>& data, const string& name);
-
         private:
-            bool createRepository(const string& name);
-            bool connectToDatabase();
+            bool createTable();
+            bool existTable();
+            bool connectToDatabase(mysqlpp::Connection& con);
 
             string tableName_;
-            bool bConnected_;
-            mysqlpp::Connection connection_;
  
         // StorageInterface 
         public:
             bool init(const string& repoName);
             bool existRepository(const string& name);
-            
-            template<typename eT>
-            void write(const string& repoName, const string& name, const arma::Mat<eT>& variable)
-            {
-/*
- *                if (!connectToDatabase() || !existTable(repoName))
- *                    return;
- *
- *                //if (arma::is_arma_type<T>::value == true)
- *                    
- *                std::stringstream ss;
- *                typename arma::Mat<eT>::iterator it;
- *                for (it == variable.begin(); it != variable.end(); ++it)
- *                {
- *
- *                }
- *
- */
-            }
-            template<class T>
-            void read(const string& repoName, const string& name, T& variable)
-            {
-
-            }
-           
-           
-    };
+             
+            void write(std::stringstream& ss);
+            void read(std::stringstream& ss); 
+     };
+     
 
 } // namespace Oi
 

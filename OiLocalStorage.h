@@ -23,6 +23,15 @@ namespace Oi {
              bool init(const string& repoName);
              bool existRepository(const string& repoName); 
 
+             void write(std::stringstream& ss)
+             {
+
+             }
+             void read(std::stringstream& ss)
+             {
+
+             }
+
     };
 
 

@@ -40,12 +40,32 @@ namespace Oi
         return numberOfSamples_;
     }
 
-    void FileFormatInterface::save(const string& name)
+    void FileFormatInterface::save()
     {
-
+        std::stringstream ss;
+        string fileName = file_;
+        if (existNodes())
+        {
+            pushToStream(ss, fileName, "nodes_", nodes_);
+            root_->getStorage()->write(ss);                        
+        }
+        if (existLines())
+        {
+            ss.str("");
+            ss.clear();
+            pushToStream(ss, file_, "lines_", lines_);
+            root_->getStorage()->write(ss);
+        }
+        if (existSurfaces())
+        {
+            ss.str("");
+            ss.clear();
+            pushToStream(ss, file_, "surfaces_", surfaces_);
+            root_->getStorage()->write(ss);
+        }
     }
 
-    void FileFormatInterface::load(const string& name)
+    void FileFormatInterface::load()
     {
 
     }

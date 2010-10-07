@@ -7,6 +7,7 @@ libOiVibrations.so
 OiVibrations.ndll
 *.swp
 config.hpp
+temp.cpp
 #
 tags
 oitest

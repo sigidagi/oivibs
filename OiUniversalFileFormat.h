@@ -101,8 +101,10 @@ namespace Oi {
         arma::umat& getSurfaces();
         arma::mat& getRecords();
 
-        void save(const string& repoName);
-        void load(const string& repoName);
+        /*
+         *void save();
+         *void load();
+         */
     };
 
     

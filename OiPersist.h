@@ -29,8 +29,8 @@ namespace Oi
         public:
             virtual ~PersistInterface(){}
         public:
-            virtual void save(const string& name) = 0;
-            virtual void load(const string& name) = 0;
+            virtual void save() = 0;
+            virtual void load() = 0;
     };
 
 } // namespace Oi

@@ -21,8 +21,8 @@ namespace Oi
             static auto_ptr<ProcessingInterface> createProcess(Root* owner, int processName);
             virtual bool start() = 0;
 
-            void save(const string& name);
-            void load(const string& name);
+            void save();
+            void load();
 
         protected:
             Root* root_;

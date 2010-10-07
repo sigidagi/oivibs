@@ -20,7 +20,6 @@
 
 #include	"OiPersist.h"
 #include	"OiProxy.h"
-#include    <armadillo>
 #include    <boost/shared_ptr.hpp>
 
 using boost::shared_ptr;
@@ -47,27 +46,6 @@ namespace Oi
                 shared_ptr<FileFormatInterface> fileFormat_;
                 shared_ptr<ProcessingInterface> proc_;
             
-            private:
-                template<typename T>
-                T** allocate2D(arma::Mat<T> a)
-                {
-                    if (a.n_elem == 0 || a.n_rows == 0) 
-                        return NULL;
-
-                    T** array = new T*[a.n_rows];
-                    for (size_t n = 0; n < a.n_rows; ++n)
-                        array[n] = new T[a.n_cols];
-
-                    // assign values
-                    for (size_t i = 0; i < a.n_rows; ++i)
-                    {
-                        for (size_t j = 0; j < a.n_cols; ++j)
-                            array[i][j] = a(i,j);
-                    }
-                    
-                    return array;
-                }
-        
             // ProxyInterface 
             public:
                 bool init(const string& file, int processName = 0);
@@ -78,8 +56,8 @@ namespace Oi
             
             // PersistInterface 
             public:
-                void save(const string& name);
-                void load(const string& name);
+                void save();
+                void load();
             
             public:
                 static Root* Instance();

@@ -21,6 +21,7 @@
 #include	"OiPersist.h"
 #include    <armadillo>
 #include    <string>
+#include	<vector>
 #include    <boost/shared_ptr.hpp>
 
 using boost::shared_ptr;
@@ -50,15 +51,17 @@ namespace Oi {
             virtual arma::umat& getLines() = 0;
             virtual arma::umat& getSurfaces() = 0;
             virtual arma::mat& getRecords() = 0;
-
-            void save(const string& name);
-            void load(const string& name);
+            
+            // PersistInterface
+            void save();
+            void load();
 
             double getSamplingInterval();
             int getNumberOfSamples();
             
         protected:
             Root* root_;
+            
             string file_; 
         
             arma::mat nodes_;
@@ -66,6 +69,8 @@ namespace Oi {
             arma::umat surfaces_;
             arma::mat records_;
             
+            std::vector<string> variableNames; 
+
             double samplingInterval_;
             int numberOfSamples_;
     };
