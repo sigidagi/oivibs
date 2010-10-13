@@ -210,6 +210,7 @@ namespace Oi
 
     void DatabaseStorage::read(std::stringstream& ss)
     {
+        
         // NOT implemented
     }
     

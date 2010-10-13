@@ -206,25 +206,28 @@ namespace Oi {
             ss >> x >> y >> z;
         
             // reshape preserves elements in a matrix. 
-            nodes.reshape(count, 3);
-            nodes(count-1, 0) = x;
-            nodes(count-1, 1) = y;
-            nodes(count-1, 2) = z;
-
+            // NOTE: only if matrix is expended columnwise! 
+            nodes.reshape(3, count);
+            nodes(0, count-1) = x;
+            nodes(1, count-1) = y;
+            nodes(2, count-1) = z;
+            
             ++count;
         }
-       
+
         fileStream.close();
         
         // in some case nodes in a file can be presented not in ascending order.
         // following procedure rearange matrix that first node starts in first column,
         // second - in second column.
         vector<int>::const_iterator it;
+        vector<int>::const_iterator beg = nodeNumberList.begin();
         self_->getNodes().reshape(nodeNumberList.size(), 3);
         // now fill up matrix (variable UniversalFileFormat::nodes__) 
         for (size_t i = 0; i < nodeNumberList.size(); ++i)
         {
             // node numbers starts from 1.
+            
             it = std::find(nodeNumberList.begin(), nodeNumberList.end(), i+1);
             if (it == nodeNumberList.end())
             {
@@ -232,9 +235,11 @@ namespace Oi {
                 cerr << "Inconsistency in Node numbering!\n";
             }
             
-            self_->getNodes()(i,0) = nodes(*it-1, 0);
-            self_->getNodes()(i,1) = nodes(*it-1, 1);
-            self_->getNodes()(i,2) = nodes(*it-1, 2);
+            std::cout << (int)(it - nodeNumberList.begin()) << std::endl;
+
+            self_->getNodes()(i,0) = nodes(0, it-beg);
+            self_->getNodes()(i,1) = nodes(1, it-beg);
+            self_->getNodes()(i,2) = nodes(2, it-beg);
         }
         
     }

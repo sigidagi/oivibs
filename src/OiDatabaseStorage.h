@@ -39,7 +39,6 @@ namespace Oi {
             bool existTable();
             bool connectToDatabase(mysqlpp::Connection& con);
 
-            string tableName_;
  
         // StorageInterface 
         public:

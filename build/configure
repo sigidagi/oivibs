@@ -19,6 +19,6 @@ check_cmake
 test "$ABORT" = yes && exit -1
 
 rm -f CMakeCache.txt
-cmake -DCMAKE_INSTALL_PREFIX=. .
+cmake -DCMAKE_INSTALL_PREFIX=../ ../
 
 
