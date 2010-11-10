@@ -14,7 +14,7 @@ SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/build/cmake/Modu
 
 #INCLUDE(FindBoost)
 
-PROJECT(OiVibs CXX)
+PROJECT(OiVibrations CXX)
 
 SET(CMAKE_CXX_FLAGS "-g -Wall ")
 #SET(CMAKE_CXX_FLAGS "-std=c++0x")

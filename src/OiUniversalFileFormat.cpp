@@ -8,6 +8,9 @@
 #include <unistd.h>
 #include <boost/bind.hpp>
 #include <boost/tuple/tuple.hpp>
+#include <boost/foreach.hpp>
+
+#define foreach BOOST_FOREACH 
 
 using namespace std;
 using boost::tuple;
@@ -42,7 +45,6 @@ namespace Oi {
         file_ = Oi::stripToFileName(file);
     
         std::ifstream fileStream;
-        vector< shared_ptr<UFF::RecordInfo> > rInfo;
         int recordnumber = 0; 
 
         fileStream.open(file_.c_str(), ios::in);
@@ -93,12 +95,11 @@ namespace Oi {
                 // Info
                 else if (line == "58")
                 {
-                    recordnumber = (int)rInfo.size() + 1; 
                     shared_ptr<UFF::RecordInfo> recordinfo(new UFF::RecordInfo(this, file, recordnumber));
+                    ++recordnumber;
                     
                     recordinfo->setPosition(fileStream.tellg());
                     info_.push_back(recordinfo);
-                    rInfo.push_back(recordinfo);
                 }
             }
 
@@ -113,6 +114,19 @@ namespace Oi {
         }
 
     
+        // parse every information (UFF::Info) found in a file and save into the storage class  
+        std::for_each(info_.begin(), info_.end(), boost::bind(&UFF::Info::parse, _1)); 
+ 
+        vector< shared_ptr<UFF::RecordInfo> > rInfo;
+        foreach( shared_ptr<UFF::Info> pinfo, info_)
+        {
+            if (boost::dynamic_pointer_cast<UFF::RecordInfo>(pinfo))
+            {
+                rInfo.push_back(boost::dynamic_pointer_cast<UFF::RecordInfo>(pinfo));
+            }
+        }
+
+
         if (!rInfo.empty())
         {
             // check if sampling interval is the same for every record.
@@ -136,29 +150,27 @@ namespace Oi {
             // as all element in container are equal - just take first one.
             samplingInterval_ = samplingT[0];
             
-            // create vector which will contain number of samples for each record.
-            vector<int> recordLenght;
-            recordLenght.resize(rInfo.size());
-           
-            // loops through RecordInfo container and extract values. These values are saved in another container. 
-            std::transform(rInfo.begin(), 
-                           rInfo.end(), 
-                           recordLenght.begin(), 
-                           boost::bind(&UFF::RecordInfo::getNumberOfSamples, _1));
-
-            
-            // only minimal value of record length (number of samples) will be 
-            // used in every record.
-            numberOfSamples_ = *std::min_element(recordLenght.begin(), recordLenght.end());
-
-            // initiliaze matrix storage for later use.
-            records_.set_size(numberOfSamples_, recordnumber); 
+/*
+ *            // create vector which will contain number of samples for each record.
+ *            vector<int> recordLenght;
+ *            recordLenght.resize(rInfo.size());
+ *           
+ *            // loops through RecordInfo container and extract values. These values are saved in another container. 
+ *            std::transform(rInfo.begin(), 
+ *                           rInfo.end(), 
+ *                           recordLenght.begin(), 
+ *                           boost::bind(&UFF::RecordInfo::getNumberOfSamples, _1));
+ *
+ *            
+ *            // only minimal value of record length (number of samples) will be 
+ *            // used in every record.
+ *            numberOfSamples_ = *std::min_element(recordLenght.begin(), recordLenght.end());
+ *
+ *            records_.set_size(numberOfSamples_, recordnumber); 
+ */
                
         }
-
-        // parse every information (UFF::Info) found in a file and save into the storage class  
-        std::for_each(info_.begin(), info_.end(), boost::bind(&UFF::Info::parse, _1)); 
-       
+      
         // save parsed elements: nodes, lines, records to the storage.
         this->save();
                 
@@ -206,7 +218,7 @@ namespace Oi {
             ss >> x >> y >> z;
         
             // reshape preserves elements in a matrix. 
-            // NOTE: only if matrix is expended columnwise! 
+            // NOTE: only if matrix is extended columnwise! 
             nodes.reshape(3, count);
             nodes(0, count-1) = x;
             nodes(1, count-1) = y;
@@ -363,21 +375,23 @@ namespace Oi {
             int node1, node2, node3;
             ss >> node1 >>  node2 >> node3; 
             
-            self_->getSurfaces().reshape(count,3);
-            self_->getSurfaces()(count-1, 0) = node1;
-            self_->getSurfaces()(count-1, 1) = node2;
-            self_->getSurfaces()(count-1, 2) = node3;
+            self_->getSurfaces().reshape(3, count);
+            self_->getSurfaces()(0, count-1) = node1;
+            self_->getSurfaces()(1, count-1) = node2;
+            self_->getSurfaces()(2, count-1) = node3;
            
             ++count;
         }
 
         fileStream.close();
+        
+        self_->getSurfaces() = arma::trans(self_->getSurfaces());
     }
     
     
     UniversalFileFormat::RecordInfo::RecordInfo(FileFormatInterface* self, const string& file, int recordnumber) : Info(self, file)
     {
-
+        recordnumber_ =  recordnumber;
     }
 
     void UniversalFileFormat::RecordInfo::parse()
@@ -414,6 +428,7 @@ namespace Oi {
         getline(fileStream, line);
 
         int count = 0;
+        self_->getRecords().reshape(numberOfSamples_, recordnumber_ + 1);
 
         while (!fileStream.eof())
         {
@@ -422,7 +437,7 @@ namespace Oi {
             ss >> value;
             if (value == -1.0 || count == numberOfSamples_ )
                 break;
-
+            
             do 
             {
                 self_->getRecords()(count, recordnumber_) = value;

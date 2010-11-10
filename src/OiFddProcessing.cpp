@@ -22,6 +22,7 @@
 #include <iostream>
 #include <cmath>
 #include "gfft/gfft.h"
+#include <boost/progress.hpp>
 
 namespace Oi 
 {
@@ -152,9 +153,17 @@ namespace Oi
         int step = segmentLength - overlap;
         unsigned int nslices = 0;
 
+        vector<int> positions;
         while ((row_pos + segmentLength) < nrows)
         {
-            chunk = refData.rows(row_pos, row_pos + segmentLength-1);
+            positions.push_back(row_pos);
+            row_pos += step;
+        }
+        boost::progress_display showProgess(positions.size());
+        vector<int>::iterator it;
+        for( it = positions.begin(); it != positions.end(); ++it)
+        {
+            chunk = refData.rows(*it, *it + segmentLength-1);
             detrend(chunk);
             for (j = 0; j < ncols; ++j)
             {
@@ -164,8 +173,25 @@ namespace Oi
                 createPSD(powerSpectrum_, chunk);    
             }
             ++nslices;
-            row_pos += step; 
+            ++showProgess;
         }
+
+        /*
+         *while ((row_pos + segmentLength) < nrows)
+         *{
+         *    chunk = refData.rows(row_pos, row_pos + segmentLength-1);
+         *    detrend(chunk);
+         *    for (j = 0; j < ncols; ++j)
+         *    {
+         *        chunk.col(j) = chunk.col(j) % hamming;
+         *        gfft->fft(chunk.memptr() + j*segmentLength );
+         *   
+         *        createPSD(powerSpectrum_, chunk);    
+         *    }
+         *    ++nslices;
+         *    row_pos += step; 
+         *}
+         */
        
         cx_colvec Psd(powerSpectrum_.n_slices);
         for (j = 0; j < powerSpectrum_.n_slices; ++j)

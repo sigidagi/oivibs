@@ -1,1 +1,141 @@
-Until now there is nothing to add.
+=== Contents ===
+
+1. Introduction
+
+2. Installation
+   2.0. Preliminaries
+   2.1. Installation on Unix-like systems
+
+3. Compiling Programs and Linking
+   3.0. Examples
+   3.1. Compiling & Linking on Unix-like systems
+
+4. Documentation / Reference Manual
+
+5. FAQs and Bug Reports
+
+6. Credits
+
+7. License
+
+
+
+=== 1.0. Introduction ===
+
+OiVibration is a C++ library for estimation of madal parameters
+using Operational Modal Analysis, OMA technique. OMA is also 
+called output-only modal analysis. 
+
+
+=== 2.0. Installation: Preliminaries ===
+
+While this library has gone through testing, not all possible
+cases have been covered yet. As such, its functionality may
+not be 100% correct. If you find a bug, either in the library
+or the documentation, we are interested in hearing about it.
+
+The functionality of OiVibartions is dependent on Boost and 
+Armadillo libraries and partly dependent on other
+libraries -- mainly Mysql++ and Neko VM. OiVibrations can work 
+without Mysql++ or Neko, but its functionality will be reduced.
+To compile and install OiVibrations it is needed cross platform
+open-source build program CMAKE: http://www.cmake.org/
+
+Above mentioned libraries can be found at these sites:
+http://www.boost.org/
+http://arma.sourceforge.net/
+http://tangentsoft.net/mysql++/
+http://nekovm.org/
+
+For installation on all systems, see section 2.1.
+
+For installation on Unix-like systems, see section 2.2.
+Unix-like systems include:
+  - Linux
+  - Mac OS X
+  - FreeBSD
+  - Solaris
+  - CygWin
+
+
+=== 2.1. Installation on Unix-like systems ===
+
+* Step 1:
+  If CMake is not already be present on your system, download
+  it from http://www.cmake.org
+
+  On major Linux systems (such as Fedora, Ubuntu, Debian, etc),
+  cmake is available as a pre-built package, though it may need
+  to be explicitly installed (using a tool such as PackageKit,
+  yum, rpm, apt, aptitude, etc).
+    
+  If Git is not present on your sistem, download it from 
+  http://git-scm.com/ and install it.
+  
+* Step 2:
+  Open a shell (command line), goto directory that will reside
+  this project and execute following command: 
+  
+  git clone git://github.com/sigidagi/oivibs.git
+  
+
+=== 3.0. Comliling and linking === 
+
+* Step 3a:
+  Change into the directory that was
+  created by cloning the oivibs archive from the site, and type the following
+  commands:
+
+  cd build
+  ./configure 
+  make 
+
+  CMake will figure out what other libraries are currently installed
+  and will modify OiVibartions configuration correspondingly.
+  CMake will also generate a run-time OiVibrations library, which is a 
+  combined alias for all the relevant libraries present on your system
+  (e.g. Armadillo, Mysql++ and Neko VM).
+  
+  If you need to re-run cmake, it's a good idea to first delete the
+  "CMakeCache.txt" file (not "CMakeLists.txt").
+
+* Step 3b:
+  
+
+=== 4. Documentation / Reference Manual ===
+
+A reference manual (user documentation) is available at
+http://github.com/sigidagi/oivibs  in the "doc" directory.
+Use a web browser to open the "docs/index.html" file.
+
+The documentation explains how to use OiVibrations's classes
+and functions, with snippets of example code.
+
+This technical documentation is produced with the aid of Doxygen. 
+
+
+=== 5. FAQs and Bug Reports ===
+
+Answers to Frequently Asked Questions (FAQs) can be found at:
+  http://github.com/sigidagi/wiki
+
+If you find a bug, either in the library or the documentation,
+we are interested in hearing about it.  Please make a small
+self-contained program which exposes the bug and send the source
+for the program (as well as the bug description) to:
+  Sigitas Dagilis <sigidagi at gmail dot com>
+
+
+=== 6. Credits ===
+
+Main developer:
+- Sigitas Dagilis- http://www.sigidagi.com/
+
+Contributors:
+- 
+
+=== 7. License ===
+
+Please see the "LICENSE" file.
+
+
