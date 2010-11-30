@@ -68,25 +68,27 @@ int main(int argc, char* argv[])
     else
        exit(-1); 
  
-    functionType lines = (functionType)(dlsym(hndl, "getLines__1"));
-    value vlines = ((functionType)lines(arr))(arr);
-    float x, y, z;
-
-    if (val_is_array(vlines))
-    {
-        int lsize = val_array_size(vlines);
-        for (i = 0; i < lsize; ++i)
-        {
-            value obj = val_array_ptr(vlines)[i];
-            if (!val_is_object(obj))
-                continue;
-
-            x = val_float(val_field(obj, val_id("x")));            
-            y = val_float(val_field(obj, val_id("y")));            
-            z = val_float(val_field(obj, val_id("z")));            
-            printf("%f, %f, %f\n", x, y, z);
-        }
-    }
+/*
+ *    functionType lines = (functionType)(dlsym(hndl, "getLines__1"));
+ *    value vlines = ((functionType)lines(arr))(arr);
+ *    float x, y, z;
+ *
+ *    if (val_is_array(vlines))
+ *    {
+ *        int lsize = val_array_size(vlines);
+ *        for (i = 0; i < lsize; ++i)
+ *        {
+ *            value obj = val_array_ptr(vlines)[i];
+ *            if (!val_is_object(obj))
+ *                continue;
+ *
+ *            x = val_float(val_field(obj, val_id("x")));            
+ *            y = val_float(val_field(obj, val_id("y")));            
+ *            z = val_float(val_field(obj, val_id("z")));            
+ *            printf("%f, %f, %f\n", x, y, z);
+ *        }
+ *    }
+ */
 
     /*
      *functionType nodes = (functionType)dlsym(hndl, "getNumberOfNodes__0");

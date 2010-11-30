@@ -16,7 +16,7 @@ SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/build/cmake/Modu
 
 PROJECT(OiVibrations CXX)
 
-SET(CMAKE_CXX_FLAGS "-g -Wall ")
+SET(CMAKE_CXX_FLAGS "-g -Wall")
 #SET(CMAKE_CXX_FLAGS "-std=c++0x")
 
 SET(OI_USE_NEKO false)

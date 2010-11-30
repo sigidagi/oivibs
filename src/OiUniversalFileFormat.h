@@ -61,6 +61,7 @@ namespace Oi {
             public:
                 RecordInfo(FileFormatInterface* self, const string& file, int recordnumber);
                 void parse();
+                void parseHeader();
                 double getSamplingInterval();
                 int getNumberOfSamples();
             private:

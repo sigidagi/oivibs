@@ -113,10 +113,6 @@ namespace Oi {
             return;
         }
 
-    
-        // parse every information (UFF::Info) found in a file and save into the storage class  
-        std::for_each(info_.begin(), info_.end(), boost::bind(&UFF::Info::parse, _1)); 
- 
         vector< shared_ptr<UFF::RecordInfo> > rInfo;
         foreach( shared_ptr<UFF::Info> pinfo, info_)
         {
@@ -126,6 +122,7 @@ namespace Oi {
             }
         }
 
+        std::for_each(rInfo.begin(), rInfo.end(), boost::bind(&UFF::RecordInfo::parseHeader, _1));
 
         if (!rInfo.empty())
         {
@@ -150,26 +147,27 @@ namespace Oi {
             // as all element in container are equal - just take first one.
             samplingInterval_ = samplingT[0];
             
-/*
- *            // create vector which will contain number of samples for each record.
- *            vector<int> recordLenght;
- *            recordLenght.resize(rInfo.size());
- *           
- *            // loops through RecordInfo container and extract values. These values are saved in another container. 
- *            std::transform(rInfo.begin(), 
- *                           rInfo.end(), 
- *                           recordLenght.begin(), 
- *                           boost::bind(&UFF::RecordInfo::getNumberOfSamples, _1));
- *
- *            
- *            // only minimal value of record length (number of samples) will be 
- *            // used in every record.
- *            numberOfSamples_ = *std::min_element(recordLenght.begin(), recordLenght.end());
- *
- *            records_.set_size(numberOfSamples_, recordnumber); 
- */
+            // create vector which will contain number of samples for each record.
+            vector<int> recordLenght;
+            recordLenght.resize(rInfo.size());
+           
+            // loops through RecordInfo container and extract values. These values are saved in another container. 
+            std::transform(rInfo.begin(), 
+                           rInfo.end(), 
+                           recordLenght.begin(), 
+                           boost::bind(&UFF::RecordInfo::getNumberOfSamples, _1));
+
+            
+            // only minimal value of record length (number of samples) will be 
+            // used in every record.
+            numberOfSamples_ = *std::min_element(recordLenght.begin(), recordLenght.end());
+
+            records_.set_size(numberOfSamples_, recordnumber); 
                
         }
+
+        // parse every information (UFF::Info) found in a file and save into the storage class  
+        std::for_each(info_.begin(), info_.end(), boost::bind(&UFF::Info::parse, _1)); 
       
         // save parsed elements: nodes, lines, records to the storage.
         this->save();
@@ -247,13 +245,13 @@ namespace Oi {
                 cerr << "Inconsistency in Node numbering!\n";
             }
             
-            std::cout << (int)(it - nodeNumberList.begin()) << std::endl;
+            //std::cout << (int)(it - nodeNumberList.begin()) << std::endl;
 
             self_->getNodes()(i,0) = nodes(0, it-beg);
             self_->getNodes()(i,1) = nodes(1, it-beg);
             self_->getNodes()(i,2) = nodes(2, it-beg);
         }
-        
+
     }
 
     UniversalFileFormat::LineInfo::LineInfo(FileFormatInterface* self, const string& file) : Info(self, file)
@@ -324,7 +322,7 @@ namespace Oi {
             self_->getLines()(i/2, 0) = nodeList[i];
             self_->getLines()(i/2, 1) = nodeList[i+1];
         }
-       
+        
     }
     
     UniversalFileFormat::SurfaceInfo::SurfaceInfo(FileFormatInterface* self, const string& file) : Info(self, file)
@@ -386,12 +384,42 @@ namespace Oi {
         fileStream.close();
         
         self_->getSurfaces() = arma::trans(self_->getSurfaces());
+
     }
     
     
     UniversalFileFormat::RecordInfo::RecordInfo(FileFormatInterface* self, const string& file, int recordnumber) : Info(self, file)
     {
         recordnumber_ =  recordnumber;
+    }
+
+    void UniversalFileFormat::RecordInfo::parseHeader()
+    {
+        std::ifstream fileStream;
+        fileStream.open(file_.c_str(), ios::in);
+        if (!fileStream.is_open())
+            return;
+
+        fileStream.seekg(position_, ios::beg);
+
+        string line;
+        stringstream ss;
+
+        getline(fileStream, line);
+        getline(fileStream, line);
+        getline(fileStream, line);
+        getline(fileStream, line);
+        getline(fileStream, line);
+        getline(fileStream, line);
+        getline(fileStream, line);
+
+        double temp;
+        ss << line;
+        ss >> temp >> numberOfSamples_ >> temp >> temp >> samplingInterval_;
+        ss.str("");
+        ss.clear();
+
+        fileStream.close();
     }
 
     void UniversalFileFormat::RecordInfo::parse()
@@ -414,22 +442,13 @@ namespace Oi {
         getline(fileStream, line);
         getline(fileStream, line);
         getline(fileStream, line);
-
-        int type;
-        double temp;
-        ss << line;
-        ss >> type >> numberOfSamples_ >> temp >> temp >> samplingInterval_;
-        ss.str("");
-        ss.clear();
-
+        getline(fileStream, line);
         getline(fileStream, line);
         getline(fileStream, line);
         getline(fileStream, line);
         getline(fileStream, line);
 
         int count = 0;
-        self_->getRecords().reshape(numberOfSamples_, recordnumber_ + 1);
-
         while (!fileStream.eof())
         {
             getline(fileStream, line);

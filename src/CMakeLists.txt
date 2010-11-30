@@ -20,7 +20,7 @@ SOURCE_GROUP("Source files" FILES ${folder_source})
 SOURCE_GROUP("Header files" FILES ${folder_header})
 
 ADD_LIBRARY( OiVibrations SHARED ${folder_source} )
-TARGET_LINK_LIBRARIES( OiVibrations mysqlpp armadillo )
+TARGET_LINK_LIBRARIES( OiVibrations mysqlpp armadillo)
 
 IF(NEKO_FOUND)
     ADD_LIBRARY( Vibrations SHARED ${folder_source} neko/NekoInterface.cpp )
@@ -35,6 +35,11 @@ IF(NEKO_FOUND)
     ADD_SUBDIRECTORY(neko)
 
 ENDIF(NEKO_FOUND)
+
+ADD_SUBDIRECTORY(test)
+
+ENABLE_TESTING()
+ADD_TEST(SimpleTest ./test/dlltest /var/www/uploads/test2.uff)
 
 
 #SET_TARGET_PROPERTIES(OiVibartions PROPERTIES VERSION ${ARMA_MAJOR}.${ARMA_MINOR}.${ARMA_PATCH} SOVERSION 0)

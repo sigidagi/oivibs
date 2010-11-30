@@ -75,7 +75,6 @@ namespace Oi
 
     bool Root::init(const string& file, int processName)
     {
-        
         // Root is responsible for initialization of Storage
         string repoName = Oi::stripToBaseName(file);
         if (repoName.empty())
@@ -90,6 +89,8 @@ namespace Oi
         if (proc_->start())
         {
                // save processed data, singular values, singular vectors and etc.
+               int test = 0;
+               test++;
         }
         
 

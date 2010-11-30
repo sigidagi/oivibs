@@ -159,6 +159,8 @@ namespace Oi
             positions.push_back(row_pos);
             row_pos += step;
         }
+        
+        cout << "-- PSD calculation ---\n";
         boost::progress_display showProgess(positions.size());
         vector<int>::iterator it;
         for( it = positions.begin(); it != positions.end(); ++it)
@@ -175,6 +177,8 @@ namespace Oi
             ++nslices;
             ++showProgess;
         }
+        
+        cout << "Done.\n";
 
         /*
          *while ((row_pos + segmentLength) < nrows)
