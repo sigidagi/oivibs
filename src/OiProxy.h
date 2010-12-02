@@ -51,7 +51,10 @@ namespace Oi {
             virtual unsigned int** getLines(int& ) = 0;
             virtual unsigned int** getSurfaces(int& ) = 0;
     };
+} // namespace Oi
 
+
+namespace Oi {
 
     class Proxy : public ProxyInterface
     {

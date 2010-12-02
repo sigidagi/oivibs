@@ -21,6 +21,9 @@
 #include	"OiFileFormat.h"
 #include	"OiProcessing.h"
 #include	"OiUtil.h"
+#include    <boost/foreach.hpp>
+
+#define     foreach BOOST_FOREACH
 
 namespace Oi
 {
@@ -62,13 +65,15 @@ namespace Oi
     void Root::save()
     {
         fileFormat_->save();
-        proc_->save();
+        foreach( shared_ptr<ProcessingInterface> proc, procList_)
+            proc->save();
     }
 
     void Root::load()
     {
         fileFormat_->load();
-        proc_->load();
+        foreach( shared_ptr<ProcessingInterface> proc, procList_)
+            proc->load();
     }
     
     // Implementation of ProxyInterface interface
@@ -85,14 +90,14 @@ namespace Oi
         fileFormat_ = FileFormatInterface::createFileFormat(this, file);
         fileFormat_->parse(file);
 
-        proc_ = ProcessingInterface::createProcess(this, processName);
-        if (proc_->start())
+        shared_ptr<ProcessingInterface> proc = ProcessingInterface::createProcess(this, processName);
+        if (proc->start())
         {
+               procList_.push_back(proc);
+
                // save processed data, singular values, singular vectors and etc.
-               int test = 0;
-               test++;
         }
-        
+         
 
         return true;
     }
@@ -176,9 +181,12 @@ namespace Oi
         return fileFormat_;
     }
    
-    shared_ptr<ProcessingInterface> Root::getProcess() 
+    shared_ptr<ProcessingInterface> Root::getProcess(int i) 
     {
-        return proc_; 
+        if (i >= 0 && i < (int)procList_.size())
+            return  procList_[i]; 
+        else
+            return shared_ptr<ProcessingInterface>();
     }
 
 

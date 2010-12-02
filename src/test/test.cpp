@@ -1,19 +1,21 @@
-#include <pthread.h> 
+#include "OiProxy.h"
 #include <iostream>
 #include <cstdlib>
 #include <vector>
 
 #include <unistd.h>
 #include <stdio.h>
-#include <dlfcn.h>
 
 using namespace std;
 
-void dlcheck(void *p) {
-    if(!p) {
-        printf("[MAIN] ERROR: %s\n", dlerror());
-        exit(1);
-    }
+template<typename T>
+void free2D(T** p2Darray, int length)
+{
+    for (int i = 0; i < length; ++i)
+        delete [] p2Darray[i];
+
+    delete [] p2Darray;
+    p2Darray = 0;
 }
 
 
@@ -22,8 +24,6 @@ int main(int argc, char** argv)
     // don't forget to set LD_LIBRARY_PATH to directory where OiVibrations.ndll libary resides
     // LD_LIBRARY_PATH=/home/john/sharedlibs
     // export LD_LIBRARY_PATH
-    void* hndl = dlopen("/home/sigis/prg/cplus/OiVibs/OiVibrations/build/src/libOiVibrations.so", RTLD_LAZY);
-    dlcheck(hndl);    
 
     cout << "\n";
 	if (argc < 2)
@@ -54,12 +54,13 @@ int main(int argc, char** argv)
     if (fileList.empty())
         return false;
 
-    typedef void* (*fnc_t)();    
-    fnc_t lib_create = (fnc_t)dlsym(hndl, "create");
-    
-    void* proxy = ((fnc_t)lib_create())();
+    Oi::Proxy proxy;
+    bool bSucceess = proxy.init(fileList[0]);
+    if (bSucceess)
+        cout << "Initialization succeeded!\n";
+    else
+        cout << "Initialization failed!\n";
 
-    dlclose(hndl);
 
 	return 0;
 }

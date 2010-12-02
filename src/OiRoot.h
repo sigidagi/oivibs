@@ -21,8 +21,11 @@
 #include	"OiPersist.h"
 #include	"OiProxy.h"
 #include    <boost/shared_ptr.hpp>
+#include    <vector>
+
 
 using boost::shared_ptr;
+using std::vector;
 
 namespace Oi
 {
@@ -44,7 +47,7 @@ namespace Oi
 
                 shared_ptr<StorageInterface> storage_;
                 shared_ptr<FileFormatInterface> fileFormat_;
-                shared_ptr<ProcessingInterface> proc_;
+                vector< shared_ptr<ProcessingInterface> > procList_;
             
             // ProxyInterface 
             public:
@@ -64,7 +67,7 @@ namespace Oi
                 
                 shared_ptr<StorageInterface> getStorage();
                 shared_ptr<FileFormatInterface> getFileFormat();
-                shared_ptr<ProcessingInterface> getProcess();
+                shared_ptr<ProcessingInterface> getProcess(int i);
 
     };
 

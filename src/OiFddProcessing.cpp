@@ -111,7 +111,8 @@ namespace Oi
     {
         if (root_ == NULL)
             return false;
-
+        
+        // search for data, if not exist - return from function.
         const mat& refData = root_->getFileFormat()->getRecords();
         int nrows = refData.n_rows;
         unsigned int ncols = refData.n_cols;

@@ -32,20 +32,20 @@ namespace Oi {
 
     }
     
-    auto_ptr<ProcessingInterface> ProcessingInterface::createProcess(Root* owner, int processName)
+    shared_ptr<ProcessingInterface> ProcessingInterface::createProcess(Root* owner, int processName)
     {
         if (processName == Process::FDD)
         {
-            return auto_ptr<ProcessingInterface>(new FddProcessing(owner));
+            return shared_ptr<ProcessingInterface>(new FddProcessing(owner));
         }
         else if (processName == Process::SSI)
         {
-            return auto_ptr<ProcessingInterface>(new SsiProcessing(owner));
+            return shared_ptr<ProcessingInterface>(new SsiProcessing(owner));
         }
         // default process.
         else
         {
-            return auto_ptr<ProcessingInterface>(new FddProcessing(owner));
+            return shared_ptr<ProcessingInterface>(new FddProcessing(owner));
         }
     }
    
