@@ -30,9 +30,9 @@ namespace Oi {
 
     }
 
-    bool Proxy::init(const string& name, int processName)
+    bool Proxy::init(int argc, const char** fileList, int processName)
     {
-        return impl_->init(name, processName);
+        return impl_->init(argc, fileList, processName);
     }
 
     bool Proxy::connect(const string& name)

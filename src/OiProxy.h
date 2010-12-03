@@ -45,7 +45,7 @@ namespace Oi {
     class ProxyInterface
     {
         public:
-            virtual bool init(const string& name, int processName = 0) = 0;
+            virtual bool init(int argc, const char** fileList, int processName = 0) = 0;
             virtual bool connect(const string& name) = 0;
             virtual double** getNodes(int& ) = 0;
             virtual unsigned int** getLines(int& ) = 0;
@@ -64,7 +64,7 @@ namespace Oi {
 
         // Interfaces
         public:
-            bool init(const string& name, int processName = 0);
+            bool init(int argc, const char** fileList, int processName = 0);
             bool connect(const string& name);
             double** getNodes(int& size);
             unsigned int** getLines(int& size);

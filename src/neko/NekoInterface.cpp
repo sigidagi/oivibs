@@ -40,18 +40,22 @@ value init( value varr )
 {
     
     vector<string> fileList = convert2string(varr);
-
     if (fileList.empty())
         return val_false;
+   
+    vector<const char*> pcharList(fileList.size()+1);
+    long i = fileList.size(); 
+    pcharList[i] = 0;
+    for(--i; i >= 0; --i) { pcharList[i] = fileList[i].c_str(); }
+
     
+   
     // cration of object and initialization - parsing data. 
     // search for goemetry: nodes, lines and surfaces and search for data.
     Oi::Proxy proxy;
-    for (size_t i = 0; i < fileList.size(); ++i)
-    {
-        if ( !proxy.init(fileList[i]) )
-            return val_false;
-    }
+    
+    if ( !proxy.init((int)pcharList.size(), &pcharList[0] ))
+        return val_false;
 
     return val_true;
 }

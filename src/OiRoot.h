@@ -51,7 +51,7 @@ namespace Oi
             
             // ProxyInterface 
             public:
-                bool init(const string& file, int processName = 0);
+                bool init(int argc, const char** fileList, int processName = 0);
                 bool connect(const string& repoName);
                 double** getNodes(int& size);
                 unsigned int** getLines(int& size);

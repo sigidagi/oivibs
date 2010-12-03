@@ -7,6 +7,8 @@
 #include <string>
 #include <armadillo>
 #include <boost/shared_ptr.hpp>
+#include <boost/archive/text_oarchive.hpp>
+#include <boost/archive/text_iarchive.hpp>
 
 using std::pair;
 using boost::shared_ptr;

@@ -78,26 +78,56 @@ namespace Oi
     
     // Implementation of ProxyInterface interface
 
-    bool Root::init(const string& file, int processName)
+    bool Root::init(int argc, const char** argv, int processName)
     {
+        
+        vector<string> fileList;
+        for (int i = 0; i < argc; ++i)
+        {
+            // check if file format is supported.
+            string strInFile = argv[i];
+            string fileFormat = stripToExtension(strInFile);
+            if (fileFormat != "uff" && fileFormat != "txt")
+                continue;
+           
+            
+            string::size_type idx = strInFile.rfind('\\');
+            if (idx != string::npos)
+            {
+                string strPath = strInFile.substr(0, idx);
+                
+                chdir(strPath.c_str());
+                strInFile = strInFile.substr(idx+1);
+            }
+
+            fileList.push_back(strInFile);
+        }
+        
+        if (fileList.empty())
+            return false;
+             
+
         // Root is responsible for initialization of Storage
-        string repoName = Oi::stripToBaseName(file);
+        string repoName = Oi::stripToBaseName(fileList[0]);
         if (repoName.empty())
             return false;
         // 
         storage_->init(repoName);
         // 
-        fileFormat_ = FileFormatInterface::createFileFormat(this, file);
-        fileFormat_->parse(file);
-
-        shared_ptr<ProcessingInterface> proc = ProcessingInterface::createProcess(this, processName);
-        if (proc->start())
+        
+        foreach(string file, fileList)
         {
-               procList_.push_back(proc);
+            fileFormat_ = FileFormatInterface::createFileFormat(this, file);
+            fileFormat_->parse(file);
 
-               // save processed data, singular values, singular vectors and etc.
+            shared_ptr<ProcessingInterface> proc = ProcessingInterface::createProcess(this, processName);
+            if (proc->start())
+            {
+                   procList_.push_back(proc);
+
+                   // save processed data, singular values, singular vectors and etc.
+            }
         }
-         
 
         return true;
     }

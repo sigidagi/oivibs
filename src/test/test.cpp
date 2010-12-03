@@ -19,9 +19,9 @@ void free2D(T** p2Darray, int length)
 }
 
 
-int main(int argc, char** argv)
+int main(int argc, const char** argv)
 {
-    // don't forget to set LD_LIBRARY_PATH to directory where OiVibrations.ndll libary resides
+    // don't forget to set LD_LIBRARY_PATH to directory where libOiVibrations.so libary resides
     // LD_LIBRARY_PATH=/home/john/sharedlibs
     // export LD_LIBRARY_PATH
 
@@ -29,38 +29,59 @@ int main(int argc, char** argv)
 	if (argc < 2)
 	{
 		cout << "\n";
-		cout << "Requires one command argument - Universal file name : FileName.uff \n";
+        cout << "Requires one or more command arguments.\n";
+        cout << " Universal file name : FileName.uff \n";
 		exit(1);
 	}
 
-    vector<string> fileList;
-    int i;
-
-	for (i = 1; i < argc; ++i)
-	{
-		string strInFile = argv[i];
-		string::size_type idx = strInFile.rfind('\\');
-		if (idx != string::npos)
-		{
-			string strPath = strInFile.substr(0, idx);
-            
-			chdir(strPath.c_str());
-			strInFile = strInFile.substr(idx+1);
-		}
-
-		fileList.push_back(strInFile);
-	}
-    
-    if (fileList.empty())
-        return false;
-
     Oi::Proxy proxy;
-    bool bSucceess = proxy.init(fileList[0]);
+    bool bSucceess = proxy.init(argc, argv);
     if (bSucceess)
         cout << "Initialization succeeded!\n";
     else
         cout << "Initialization failed!\n";
 
+    int i;
+    int nodeLength = 0;
+    double** nodes = proxy.getNodes(nodeLength); 
+
+    if (nodes != NULL)
+    {
+        cout << " ---- Nodes ----\n";
+        for (i = 0; i < nodeLength; ++i)
+            cout << nodes[i][0] << " " << nodes[i][1] << " " << nodes[i][2] << "\n";
+    
+        cout << endl;
+
+        free2D(nodes, nodeLength);
+    }
+
+    int lineLength = 0;
+    unsigned int** lines = proxy.getLines(lineLength);
+    if (lines != NULL)
+    {
+        cout << " ---- Lines -----\n";
+        for (i = 0; i < lineLength; ++i)
+            cout << lines[i][0] << " " << lines[i][1] << "\n";
+        
+        cout << endl;
+        free2D(lines, lineLength);
+    }
+    
+    int surfaceLength = 0;
+    unsigned int** surfaces = proxy.getSurfaces(surfaceLength); 
+    if (surfaces != NULL)
+    {
+        cout << " ---- Surfaces ----\n";
+        for (i = 0; i < surfaceLength; ++i)
+            cout << surfaces[i][0] << " " << surfaces[i][1] << " " << surfaces[i][2] << "\n";
+    
+        cout << endl;
+
+        free2D(surfaces, surfaceLength);
+    }
+
+    
 
 	return 0;
 }
