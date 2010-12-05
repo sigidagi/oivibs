@@ -14,6 +14,7 @@
 // 
 // =====================================================================================
 
+#if (OI_USE_MYSQLPP)
 
 #ifndef  OIDATABASETABLE_INC
 #define  OIDATABASETABLE_INC
@@ -45,5 +46,5 @@ namespace Oi
 
 
 #endif   // ----- #ifndef OIDATABASETABLE_INC  -----
-
+#endif   // OI_USE_MYSQLPP
 

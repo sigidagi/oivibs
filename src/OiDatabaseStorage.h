@@ -14,6 +14,8 @@
 // 
 // =====================================================================================
 
+#if (OI_USE_MYSQLPP)
+
 #ifndef _OIDATABASE_H
 #define _OIDATABASE_H
 
@@ -53,3 +55,5 @@ namespace Oi {
 } // namespace Oi
 
 #endif
+#endif // OI_USE_MYSQLPP
+

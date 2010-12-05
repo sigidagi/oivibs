@@ -14,6 +14,8 @@
 // 
 // =====================================================================================
 
+#if (OI_USE_MYSQLPP)
+
 #include	"OiDatabaseTable.h"
 #include    "OiDatabaseStorage.h"
 #include    "OiFileFormat.h"
@@ -216,4 +218,4 @@ namespace Oi
     
  } // namespace Oi 
 
-
+#endif // OI_USE_MYSQLPP

@@ -4,8 +4,6 @@
 //      Sigitas Dagilis (sigidagi at gmail dot com)
 
 
-
-
 #if !defined(OI_USE_NEKO)
 #cmakedefine OI_USE_NEKO
 #endif
