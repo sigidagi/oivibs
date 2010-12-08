@@ -73,14 +73,14 @@ namespace Oi {
                 // if NodeInfos information 
                 if (line == "15")
                 {
-                    shared_ptr<UFF::NodeInfo> nodeinfo(new UFF::NodeInfo(this, file));
+                    shared_ptr<UFF::NodeInfo> nodeinfo(new UFF::NodeInfo(this, file_));
                     nodeinfo->setPosition(fileStream.tellg());
                     info_.push_back(nodeinfo);
                 }
                 // LineInfos
                 else if (line == "82")
                 {
-                    shared_ptr<UFF::LineInfo> lineinfo(new UFF::LineInfo(this, file));
+                    shared_ptr<UFF::LineInfo> lineinfo(new UFF::LineInfo(this, file_));
                     lineinfo->setPosition(fileStream.tellg());
                     info_.push_back(lineinfo);
 
@@ -88,14 +88,14 @@ namespace Oi {
                 // Surfaces
                 else if (line == "2412")
                 {
-                    shared_ptr<UFF::SurfaceInfo> surfaceinfo(new UFF::SurfaceInfo(this, file));
+                    shared_ptr<UFF::SurfaceInfo> surfaceinfo(new UFF::SurfaceInfo(this, file_));
                     surfaceinfo->setPosition(fileStream.tellg());
                     info_.push_back(surfaceinfo);
                 }
                 // Info
                 else if (line == "58")
                 {
-                    shared_ptr<UFF::RecordInfo> recordinfo(new UFF::RecordInfo(this, file, recordnumber));
+                    shared_ptr<UFF::RecordInfo> recordinfo(new UFF::RecordInfo(this, file_, recordnumber));
                     ++recordnumber;
                     
                     recordinfo->setPosition(fileStream.tellg());
@@ -192,11 +192,11 @@ namespace Oi {
         self_->getNodes().reset();
         fileStream.seekg(position_, ios::beg);
 
-        int nodeNumber, temp; 
+        int nodeNumber(0), temp(0); 
         string line;
         stringstream ss;
     
-        double x, y, z;
+        double x(0.0), y(0.0), z(0.0);
         vector<int> nodeNumberList;
         arma::mat nodes;
 
@@ -274,16 +274,17 @@ namespace Oi {
         self_->getLines().reset();    
         fileStream.seekg(position_, ios::beg);
 
-        int temp, nNumberOfEntries, nTraceLineInfoNumber, nColor;
+        int temp(0), entries(0), traceLineInfo(0), color(0);
         string line;
         stringstream ss;
         vector<int> nodeList;
 
         getline(fileStream, line);
         ss << line;
-        ss >> nTraceLineInfoNumber >> nNumberOfEntries >> nColor;
+        ss >> traceLineInfo >> entries >> color;
 
-        if (nNumberOfEntries == 0)
+        // entries holds number of lines
+        if (entries == 0)
             return;
 
         while(!fileStream.eof())
@@ -306,7 +307,7 @@ namespace Oi {
 
         fileStream.close();
         
-        if ((int)nodeList.size() != nNumberOfEntries)
+        if ((int)nodeList.size() != entries)
             return;
 
         vector<int>::iterator it;
@@ -346,23 +347,24 @@ namespace Oi {
 
         string line;
         stringstream ss;
-        int SurfaceNumber, FEDescriptor, PhysicalPropNumber, MaterialPropNumber, Color, NumberOfElementNodeInfos;
-
+        int surface(0), descriptor(0), physicalProperty(0),materialProperty(0), color(0), nodes(0);
+        int node1(0), node2(0), node3(0);
+        
         int count = 1;
         while (!fileStream.eof())
         {
             getline(fileStream, line);
             ss << line;
-            ss >> SurfaceNumber;
-            if (SurfaceNumber == -1)
+            ss >> surface;
+            if (surface == -1)
                 break;
 
-            ss >> FEDescriptor >> PhysicalPropNumber >> MaterialPropNumber >> Color >> NumberOfElementNodeInfos;
+            ss >> descriptor >> physicalProperty >> materialProperty >> color >> nodes;
             
-            if ( FEDescriptor != 91 ) // Only thin shell triangular elements allowed
+            if ( descriptor != 91 ) // 91 - code of triangular elements 
                 return;
 
-            if ( NumberOfElementNodeInfos != 3 ) // There need to be three nodes
+            if ( nodes != 3 ) 
                 return;
 
             getline(fileStream, line);
@@ -370,7 +372,6 @@ namespace Oi {
             ss.clear();
             ss << line;
 
-            int node1, node2, node3;
             ss >> node1 >>  node2 >> node3; 
             
             self_->getSurfaces().reshape(3, count);
@@ -413,7 +414,7 @@ namespace Oi {
         getline(fileStream, line);
         getline(fileStream, line);
 
-        double temp;
+        double temp(0.0);
         ss << line;
         ss >> temp >> numberOfSamples_ >> temp >> temp >> samplingInterval_;
         ss.str("");
@@ -433,7 +434,7 @@ namespace Oi {
 
         string line;
         stringstream ss;
-        double value;
+        double value(0.0);
 
         getline(fileStream, line);
         getline(fileStream, line);
