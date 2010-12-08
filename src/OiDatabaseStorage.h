@@ -14,10 +14,13 @@
 // 
 // =====================================================================================
 
-#if (OI_USE_MYSQLPP)
 
 #ifndef _OIDATABASE_H
 #define _OIDATABASE_H
+
+#include    "config.hpp"
+
+#if defined(OI_USE_MYSQLPP)
 
 #include    "OiProxy.h"
 #include    <string>
@@ -54,6 +57,6 @@ namespace Oi {
 
 } // namespace Oi
 
-#endif
 #endif // OI_USE_MYSQLPP
+#endif
 

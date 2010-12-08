@@ -1,36 +1,37 @@
 // =====================================================================================
-// 
-//       Filename:  DatabaseStorage.cpp
-// 
-//    Description:  DatabaseStorage
-// 
-//        Version:  1.0
-//        Created:  2010-06-15 14:02:38
-//       Revision:  none
-//       Compiler:  g++
-// 
-//         Author:  Sigitas Dagilis (), sigidagi@gmail.com
-//        Company:  sigidagis
-// 
+//
+// Filename: DatabaseStorage.cpp
+//
+// Description: DatabaseStorage
+//
+// Version: 1.0
+// Created: 2010-06-15 14:02:38
+// Revision: none
+// Compiler: g++
+//
+// Author: Sigitas Dagilis (), sigidagi@gmail.com
+// Company: sigidagis
+//
 // =====================================================================================
 
-#if (OI_USE_MYSQLPP)
+#include "OiDatabaseStorage.h"
 
-#include	"OiDatabaseTable.h"
-#include    "OiDatabaseStorage.h"
-#include    "OiFileFormat.h"
-#include    "OiProcessing.h"
-#include    "OiUtil.h"
+#if defined(OI_USE_MYSQLPP)
 
-#include    <iostream>
-#include    <stdexcept>
+#include "OiDatabaseTable.h"
+#include "OiFileFormat.h"
+#include "OiProcessing.h"
+#include "OiUtil.h"
 
-#define	DATABASE    "vibs_data"			//
-#define	HOST        "localhost"	    //
-#define	USER        "root"			//
-#define	PASSWORD    "testas"        //
+#include <iostream>
+#include <stdexcept>
 
-namespace Oi 
+#define DATABASE "vibs_data" //
+#define HOST "localhost" //
+#define USER "root" //
+#define PASSWORD "testas" //
+
+namespace Oi
 {
     DatabaseStorage::DatabaseStorage()
     {
@@ -38,13 +39,13 @@ namespace Oi
     }
 
     /* *
-     * init function creates database with specified name and makes a connection
-     * which is stored in private variable mysqlpp::Connection connection_
-     *
-     * Second phase is to parse given file and store found data: nodes, lines, surfaces and recorded data 
-     * into that database.
-     *
-     */
+* init function creates database with specified name and makes a connection
+* which is stored in private variable mysqlpp::Connection connection_
+*
+* Second phase is to parse given file and store found data: nodes, lines, surfaces and recorded data
+* into that database.
+*
+*/
     bool DatabaseStorage::init(const string& file)
     {
         if (file.empty())
@@ -58,7 +59,7 @@ namespace Oi
         if (repository.empty())
         {
             std::cerr << "DatabaseStorage::init --\n";
-            std::cerr << "Bad file name: " << file << "\n"; 
+            std::cerr << "Bad file name: " << file << "\n";
             return false;
         }
         
@@ -73,7 +74,7 @@ namespace Oi
             std::cout << "Database: " << DATABASE << " do not exist. Creating new one!\n";
             if (!con.create_db(DATABASE))
             {
-                std::cerr << "Error creating database: " << con.error() << std::endl; 
+                std::cerr << "Error creating database: " << con.error() << std::endl;
                 return false;
             }
             if(!createTable())
@@ -92,12 +93,12 @@ namespace Oi
     bool DatabaseStorage::connectToDatabase(mysqlpp::Connection& con)
     {
         const char *server = 0;
-        try 
+        try
         {
             if (!con.connect(0, server, USER, PASSWORD))
                 return false;
         }
-        catch (std::exception& er) 
+        catch (std::exception& er)
         {
             std::cerr << "Attempt to connect to database - exception was thrown.\n";
             return false;
@@ -122,11 +123,11 @@ namespace Oi
         if (!connectToDatabase(con))
             return false;
     
-        try 
+        try
         {
             mysqlpp::Query query = con.query();
-            // test if exist such tabe: if not - result would "false" 
-            query << "SELECT * FROM Store";           
+            // test if exist such tabe: if not - result would "false"
+            query << "SELECT * FROM Store";
 
             mysqlpp::SimpleResult res = query.execute();
             if (!res)
@@ -151,7 +152,7 @@ namespace Oi
         {
             mysqlpp::Query query = con.query();
             std::cout << "Creating Store table... ";
-            query << 
+            query <<
                 "CREATE TABLE Store (" <<
                 " file CHAR(30) NOT NULL, " <<
                 " variable CHAR(30) NOT NULL, " <<
@@ -180,7 +181,7 @@ namespace Oi
 
         ss >> variableName;
         int nr, nc;
-        ss >> nr >> nc; 
+        ss >> nr >> nc;
 
         mysqlpp::Connection con;
         if (!connectToDatabase(con))
@@ -190,8 +191,8 @@ namespace Oi
         {
             mysqlpp::Query query = con.query();
             query << "INSERT INTO Store (file, variable, data, nrows, ncols) VALUES(\"" << repoName <<
-            "\", \"" << variableName << "\", \"" << mysqlpp::escape << ss.str() << "\", " << 
-            nr << ", " << nc << ")"; 
+            "\", \"" << variableName << "\", \"" << mysqlpp::escape << ss.str() << "\", " <<
+            nr << ", " << nc << ")";
 
             mysqlpp::SimpleResult res = query.execute();
 
@@ -216,6 +217,6 @@ namespace Oi
         // NOT implemented
     }
     
- } // namespace Oi 
+ } // namespace Oi
 
 #endif // OI_USE_MYSQLPP

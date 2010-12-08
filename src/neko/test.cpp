@@ -22,7 +22,8 @@ int main(int argc, char* argv[])
         cerr << dlerror() << endl;
         exit(-1);
     }
-
+    
+    cout << "\n";
     cout << "\n";
 	if (argc < 2)
 	{

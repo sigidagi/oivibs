@@ -14,10 +14,12 @@
 // 
 // =====================================================================================
 
-#if (OI_USE_MYSQLPP)
-
 #ifndef  OIDATABASETABLE_INC
 #define  OIDATABASETABLE_INC
+
+#include    "config.hpp"
+
+#if defined(OI_USE_MYSQLPP)
 
 #include	<mysql++.h>
 #include	<ssqls.h>
@@ -45,6 +47,6 @@ namespace Oi
 } // namespace Oi
 
 
-#endif   // ----- #ifndef OIDATABASETABLE_INC  -----
 #endif   // OI_USE_MYSQLPP
+#endif   // ----- #ifndef OIDATABASETABLE_INC  -----
 

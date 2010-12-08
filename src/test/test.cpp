@@ -40,7 +40,8 @@ int main(int argc, const char** argv)
         cout << "Initialization succeeded!\n";
     else
         cout << "Initialization failed!\n";
-
+    
+    cout << "\n";
     int i;
     int nodeLength = 0;
     double** nodes = proxy.getNodes(nodeLength); 

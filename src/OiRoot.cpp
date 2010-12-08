@@ -17,7 +17,7 @@
 #include    "config.hpp"
 #include	"OiRoot.h"
 
-#if (OI_USE_MYSQLPP)
+#if defined(OI_USE_MYSQLPP)
 #include	"OiDatabaseStorage.h"
 #endif
 
@@ -36,7 +36,7 @@ namespace Oi
     
     Root::Root()
     {
-        #if (OI_USE_MYSQLPP)
+        #if defined(OI_USE_MYSQLPP)
         storage_ = shared_ptr<StorageInterface>(new DatabaseStorage);
         #else
         storage_ = shared_ptr<StorageInterface>(new LocalStorage);
