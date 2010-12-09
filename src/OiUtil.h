@@ -10,7 +10,15 @@
 //       Compiler:  g++
 // 
 //         Author:  Sigitas Dagilis (), sigidagi@gmail.com
-//        Company:  sigidagis
+// 
+//     This file is part of the OiVibrations C++ library.
+//     It is provided without any warranty of fitness
+//     for any purpose. You can redistribute this file
+//     and/or modify it under the terms of the GNU
+//     General Public License (GPL) as published
+//     by the Free Software Foundation, either version 3
+//     of the License or (at your option) any later version.
+//     (see http://www.opensource.org/licenses for more info)
 // 
 // =====================================================================================
 
@@ -25,15 +33,11 @@
 #define M_PI 3.14159265358979323846
 #endif
 
-
 using std::string;
 using std::pair;
 
-
-
 namespace Oi
 {
-
 /*
  *      template <class T>   
  *      inline typename std::tr1::remove_reference<T>::type&& move(T&& t)  
