@@ -66,26 +66,24 @@ namespace Oi
 
     void FileFormatInterface::save()
     {
-        std::stringstream ss;
-        string fileName = file_;
+
         if (existNodes())
         {
-            pushToStream(ss, fileName, "nodes_", nodes_);
-            root_->getStorage()->write(ss);                        
+            string variableName = string("nodes");
+            SerializableObject<arma::mat> nodes = SerializableObject<arma::mat>(file_, variableName, nodes_);
+            root_->getStorage()->write(nodes);                        
         }
         if (existLines())
         {
-            ss.str("");
-            ss.clear();
-            pushToStream(ss, file_, "lines_", lines_);
-            root_->getStorage()->write(ss);
+            string variableName = string("lines");
+            SerializableObject<arma::umat> lines= SerializableObject<arma::umat>(file_, variableName, lines_);
+            root_->getStorage()->write(lines);
         }
         if (existSurfaces())
         {
-            ss.str("");
-            ss.clear();
-            pushToStream(ss, file_, "surfaces_", surfaces_);
-            root_->getStorage()->write(ss);
+            string variableName = string("surfaces");
+            SerializableObject<arma::umat> surfaces = SerializableObject<arma::umat>(file_, variableName, surfaces_);
+            root_->getStorage()->write(surfaces);
         }
     }
 

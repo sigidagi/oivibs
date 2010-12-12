@@ -31,30 +31,25 @@
 
 using std::string;
 
-#define TO_STREAM(stream,variable) (stream) <<#variable
 
 namespace Oi
 {
     template<typename T>
-    void pushToStream(std::stringstream& ss, const string& fileName, const string& varName, const T& var)
+    struct SerializableObject
     {
-       ss << fileName << " ";
-       ss << varName << " "; 
-       ss << 1 << " " << 1 << " ";
-       ss << var;
-    }
+        string& fileName_;
+        string& variableName_;
+        T& variable_;
 
-    template<typename T>
-    void pushToStream(std::stringstream& ss, const string& fileName, const string& varName, const arma::Mat<T>& var)
-    {
-       ss << fileName << " ";
-       ss << varName << " ";
-       arma::mat A = arma::conv_to<arma::mat>::from(var); 
-       ss << A.n_rows << " " << A.n_cols << " ";
-       ss << A;
-    }
+        SerializableObject(string& fileName, string& variableName, T& variable) :  
+            fileName_(fileName),
+            variableName_(variableName),
+            variable_(variable)
+        {
+        }
 
-  
+    };
+
     class StorageInterface
     {
         public:
@@ -66,9 +61,16 @@ namespace Oi
             virtual bool init(const string& repoName) = 0;
             virtual bool existRepository(const string& name) = 0;
            
-            virtual void write(std::stringstream& ss) = 0;
-            virtual void read(std::stringstream& ss) = 0;
-            
+            template<typename T>
+            void write(SerializableObject<T>& serData)
+            {
+
+            }
+            template<typename T>
+            void read(SerializableObject<T>& serData)
+            {
+
+            }
 
     };
 

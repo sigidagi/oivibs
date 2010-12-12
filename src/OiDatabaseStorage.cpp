@@ -22,17 +22,18 @@
 // 
 // =====================================================================================
 
-#include "OiDatabaseStorage.h"
+#include    "OiDatabaseStorage.h"
 
 #if defined(OI_USE_MYSQLPP)
 
-#include "OiDatabaseTable.h"
-#include "OiFileFormat.h"
-#include "OiProcessing.h"
-#include "OiUtil.h"
+#include    "OiDatabaseTable.h"
+#include    "OiFileFormat.h"
+#include    "OiProcessing.h"
+#include    "OiUtil.h"
 
-#include <iostream>
-#include <stdexcept>
+#include    <iostream>
+#include    <stdexcept>
+#include	<typeinfo>
 
 #define DATABASE "vibs_data" //
 #define HOST "localhost" //
@@ -62,7 +63,8 @@ namespace Oi
             std::cerr << "File: is empty\n";
             return false;
         }
-   
+        
+        // TODO: repository? argument "file" is not needed.
         string repository = Oi::stripToFileName(file);
         if (repository.empty())
         {
@@ -178,18 +180,28 @@ namespace Oi
         std::cout << "Succeeded!\n";
         return true;
     }
-    
-    void DatabaseStorage::write(std::stringstream& ss)
+
+    template<typename T> 
+    void DatabaseStorage::write(SerializableObject<T>& object)
     {
-        string repoName, variableName;
-        ss >> repoName;
+        std::stringstream ss;
+        
+        int nr, nc;
+        nr = nc = 0;
+        if (typeid(arma::mat) == typeid(object.variable_) || typeid(arma::umat) == typeid(object.variable_))
+        {
+            nr = object.variable_.n_rows;
+            nc = object.variable_.n_cols;
+        }
+        else
+        {
+            nr = nc = 1;
+        }
+        
+        ss << object.variable_;
 
         if (!existTable())
             return;
-
-        ss >> variableName;
-        int nr, nc;
-        ss >> nr >> nc;
 
         mysqlpp::Connection con;
         if (!connectToDatabase(con))
@@ -198,8 +210,8 @@ namespace Oi
         try
         {
             mysqlpp::Query query = con.query();
-            query << "INSERT INTO Store (file, variable, data, nrows, ncols) VALUES(\"" << repoName <<
-            "\", \"" << variableName << "\", \"" << mysqlpp::escape << ss.str() << "\", " <<
+            query << "INSERT INTO Store (file, variable, data, nrows, ncols) VALUES(\"" << object.fileName_ <<
+            "\", \"" << object.variableName_ << "\", \"" << mysqlpp::escape << ss.str() << "\", " <<
             nr << ", " << nc << ")";
 
             mysqlpp::SimpleResult res = query.execute();
@@ -219,12 +231,19 @@ namespace Oi
 
     }
 
-    void DatabaseStorage::read(std::stringstream& ss)
+    template<typename T> 
+    void DatabaseStorage::read(SerializableObject<T>& object)
     {
         
         // NOT implemented
     }
-    
+   
+    template void DatabaseStorage::write<arma::mat>(SerializableObject<arma::mat>&); 
+    template void DatabaseStorage::write<arma::umat>(SerializableObject<arma::umat>&); 
+
+    template void DatabaseStorage::read<arma::mat>(SerializableObject<arma::mat>&); 
+    template void DatabaseStorage::read<arma::umat>(SerializableObject<arma::umat>&); 
+
  } // namespace Oi
 
 #endif // OI_USE_MYSQLPP

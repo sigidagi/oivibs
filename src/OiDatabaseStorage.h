@@ -41,7 +41,31 @@
 using std::string;
 
 namespace Oi {
- 
+
+/*
+ *    void pushToStream(std::stringstream& ss, const arma::umat& var)
+ *    {
+ *       arma::mat A = arma::conv_to<arma::mat>::from(var); 
+ *       ss << A.n_rows << " " << A.n_cols << " ";
+ *       ss << A;
+ *    }
+ *
+ *    void pushToStream(std::stringstream& ss, const arma::mat& var)
+ *    {
+ *       ss << var.n_rows << " " << var.n_cols << " ";
+ *       ss << var;
+ *    }
+ */
+
+    /*
+     *template<typename T>
+     *void pushToStream(std::stringstream& ss, const T& var)
+     *{
+     *   ss << 1 << " " << 1 << " ";
+     *   ss << var;
+     *}
+     */
+
     class DatabaseStorage : public StorageInterface
     {
         public:
@@ -57,9 +81,12 @@ namespace Oi {
         public:
             bool init(const string& repoName);
             bool existRepository(const string& name);
-             
-            void write(std::stringstream& ss);
-            void read(std::stringstream& ss); 
+           
+            template<typename T>
+            void write(SerializableObject<T>& object);
+
+            template<typename T>
+            void read(SerializableObject<T>& object);
      };
      
 
