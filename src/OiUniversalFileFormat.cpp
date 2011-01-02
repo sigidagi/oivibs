@@ -1,6 +1,6 @@
 // =====================================================================================
 // 
-//       Filename:  OiUniversalFileFormat.h
+//       Filename:  OiUniversalFileFormat.cpp
 // 
 //    Description:  
 // 
@@ -23,7 +23,6 @@
 // =====================================================================================
 
 #include "OiUniversalFileFormat.h"
-#include "OiStorage.h"
 #include "OiUtil.h"
 #include "OiRoot.h"
 
@@ -41,7 +40,7 @@ namespace Oi {
 
     typedef UniversalFileFormat UFF;
     
-    UniversalFileFormat::UniversalFileFormat(Root* owner) : FileFormatInterface(owner)
+    UniversalFileFormat::UniversalFileFormat(Root* owner, const string& file) : FileFormatInterface(owner, file)
     {
         
     }
@@ -51,20 +50,14 @@ namespace Oi {
 
     }
 
-    void UniversalFileFormat::parse(const string& file)
+    void UniversalFileFormat::parse()
     {
-        if (file.empty())
+        if (file_.empty())
         {
-            cerr << "UniversalFileFormat::parse -- file: " << file << " is empty!\n";
+            cerr << "UniversalFileFormat::parse -- file: " << file_ << " is empty!\n";
             return;
         }
-
-        string path = Oi::stripToPath(file);
-        chdir(path.c_str());
-
-        // save file name, later it will be used for persistency. 
-        file_ = Oi::stripToFileName(file);
-    
+        
         std::ifstream fileStream;
         int recordnumber = 0; 
 
@@ -130,7 +123,7 @@ namespace Oi {
         if (info_.empty())
         {
             cerr << "UniversalFileFormat::parse --\n";
-            cerr << "No information found in file: " << file << "\n";
+            cerr << "No information found in file: " << file_ << "\n";
             return;
         }
 
@@ -189,13 +182,9 @@ namespace Oi {
 
         // parse every information (UFF::Info) found in a file and save into the storage class  
         std::for_each(info_.begin(), info_.end(), boost::bind(&UFF::Info::parse, _1)); 
-      
-        // save parsed elements: nodes, lines, records to the storage.
-        this->save();
-                
     }
 
-    UniversalFileFormat::NodeInfo::NodeInfo(FileFormatInterface* self, const string& file) : Info(self, file)
+    UniversalFileFormat::NodeInfo::NodeInfo(UniversalFileFormat* self, const string& file) : Info(self, file)
     {
 
     }
@@ -210,7 +199,7 @@ namespace Oi {
             cerr << "Can NOT open file: " << file_ << "\n";
             return;
         }
-        self_->getNodes().reset();
+        self_->nodes_.reset();
         fileStream.seekg(position_, ios::beg);
 
         int nodeNumber(0), temp(0); 
@@ -253,7 +242,7 @@ namespace Oi {
         // second - in second column.
         vector<int>::const_iterator it;
         vector<int>::const_iterator beg = nodeNumberList.begin();
-        self_->getNodes().reshape(nodeNumberList.size(), 3);
+        self_->nodes_.reshape(nodeNumberList.size(), 3);
         // now fill up matrix (variable UniversalFileFormat::nodes__) 
         for (size_t i = 0; i < nodeNumberList.size(); ++i)
         {
@@ -268,14 +257,14 @@ namespace Oi {
             
             //std::cout << (int)(it - nodeNumberList.begin()) << std::endl;
 
-            self_->getNodes()(i,0) = nodes(0, it-beg);
-            self_->getNodes()(i,1) = nodes(1, it-beg);
-            self_->getNodes()(i,2) = nodes(2, it-beg);
+            self_->nodes_(i,0) = nodes(0, it-beg);
+            self_->nodes_(i,1) = nodes(1, it-beg);
+            self_->nodes_(i,2) = nodes(2, it-beg);
         }
 
     }
 
-    UniversalFileFormat::LineInfo::LineInfo(FileFormatInterface* self, const string& file) : Info(self, file)
+    UniversalFileFormat::LineInfo::LineInfo(UniversalFileFormat* self, const string& file) : Info(self, file)
     {
 
     }
@@ -292,7 +281,7 @@ namespace Oi {
             return;
         }
 
-        self_->getLines().reset();    
+        self_->lines_.reset();    
         fileStream.seekg(position_, ios::beg);
 
         int temp(0), entries(0), traceLineInfo(0), color(0);
@@ -338,16 +327,16 @@ namespace Oi {
 
         nodeList.erase(it, nodeList.end());
     
-        self_->getLines().set_size((int)(nodeList.size()/2), 2); 
+        self_->lines_.set_size((int)(nodeList.size()/2), 2); 
         for (size_t i = 0; i < nodeList.size(); i+=2)
         {
-            self_->getLines()(i/2, 0) = nodeList[i];
-            self_->getLines()(i/2, 1) = nodeList[i+1];
+            self_->lines_(i/2, 0) = nodeList[i];
+            self_->lines_(i/2, 1) = nodeList[i+1];
         }
         
     }
     
-    UniversalFileFormat::SurfaceInfo::SurfaceInfo(FileFormatInterface* self, const string& file) : Info(self, file)
+    UniversalFileFormat::SurfaceInfo::SurfaceInfo(UniversalFileFormat* self, const string& file) : Info(self, file)
     {
 
     }
@@ -363,7 +352,7 @@ namespace Oi {
             return;
         }
 
-        self_->getSurfaces().reset();   
+        self_->surfaces_.reset();   
         fileStream.seekg(position_, ios::beg);
 
         string line;
@@ -395,22 +384,22 @@ namespace Oi {
 
             ss >> node1 >>  node2 >> node3; 
             
-            self_->getSurfaces().reshape(3, count);
-            self_->getSurfaces()(0, count-1) = node1;
-            self_->getSurfaces()(1, count-1) = node2;
-            self_->getSurfaces()(2, count-1) = node3;
+            self_->surfaces_.reshape(3, count);
+            self_->surfaces_(0, count-1) = node1;
+            self_->surfaces_(1, count-1) = node2;
+            self_->surfaces_(2, count-1) = node3;
            
             ++count;
         }
 
         fileStream.close();
         
-        self_->getSurfaces() = arma::trans(self_->getSurfaces());
+        self_->surfaces_ = arma::trans(self_->getSurfaces());
 
     }
     
     
-    UniversalFileFormat::RecordInfo::RecordInfo(FileFormatInterface* self, const string& file, int recordnumber) : Info(self, file)
+    UniversalFileFormat::RecordInfo::RecordInfo(UniversalFileFormat* self, const string& file, int recordnumber) : Info(self, file)
     {
         recordnumber_ =  recordnumber;
     }
@@ -481,7 +470,7 @@ namespace Oi {
             
             do 
             {
-                self_->getRecords()(count, recordnumber_) = value;
+                self_->records_(count, recordnumber_) = value;
                 ++count;
             }
             while (ss >> value);
@@ -521,26 +510,6 @@ namespace Oi {
         return numberOfSamples_;
     }
     
-    arma::mat& UniversalFileFormat::getNodes()
-    {
-        return nodes_;
-    }
-
-    arma::umat& UniversalFileFormat::getLines()
-    {
-        return lines_;
-    }
-
-    arma::umat& UniversalFileFormat::getSurfaces()
-    {
-        return surfaces_;
-    }
-
-    arma::mat& UniversalFileFormat::getRecords()
-    {
-        return records_;
-    }
-
     bool UniversalFileFormat::existNodes()
     {
         return existInfo<UFF::NodeInfo>(); 

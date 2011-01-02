@@ -1,6 +1,6 @@
 // =====================================================================================
 // 
-//       Filename:  OiFormat.h
+//       Filename:  OiFileFormat.h
 // 
 //    Description:  
 // 
@@ -25,12 +25,13 @@
 #ifndef _OIFORMAT_H
 #define _OIFORMAT_H
 
-
-#include	"OiPersist.h"
 #include    <armadillo>
 #include    <string>
 #include	<vector>
 #include    <boost/shared_ptr.hpp>
+#include	<boost/archive/text_oarchive.hpp>
+#include	<boost/archive/text_iarchive.hpp>
+#include	<boost/serialization/string.hpp>
 
 using boost::shared_ptr;
 using std::string;
@@ -39,34 +40,119 @@ namespace Oi {
     
     class Root;
 
-    class FileFormatInterface : public PersistInterface
+    class FileFormatInterface
     {
+        private:
+            friend class boost::serialization::access;
+            template<typename Archive>
+            void save(Archive& ar, unsigned int version)
+            {
+                int i; int itemp; double dtemp;
+                // nodes
+                ar & nodes_.n_rows;
+                ar & nodes_.n_cols;
+                for (i = 0; i < nodes_.n_elem; ++i)
+                {
+                    dtemp = nodes_(i); ar & dtemp;
+                }
+                // lines
+                ar & lines_.n_rows;
+                ar & lines_.n_cols;
+                for (i = 0; i < lines_.n_elem; ++i)
+                {
+                    itemp = lines_(i); ar & itemp;
+                }
+                // surfaces
+                ar & surfaces_.n_rows;
+                ar & surfaces_.n_cols;
+                for (i = 0; i < surfaces_.n_elem; ++i)
+                {
+                    itemp = surfaces_(i); ar & itemp;
+                }
+                // records
+                ar & records_.n_rows;
+                ar & records_.n_cols;
+                for (i = 0; i < records_.n_elem; ++i)
+                {
+                    dtemp = records_(i); ar & dtemp;
+                }
+
+                ar & samplingInterval_;
+                ar & numberOfSamples_;
+                ar & file_;
+            }
+            template<typename Archive>
+            void load(Archive& ar, unsigned int version)
+            {
+                int i, rows, cols, itemp;
+                double dtemp;
+
+                nodes_.reset();
+                ar & rows;
+                ar & cols;
+                nodes_.set_size(rows, cols);
+                for (i = 0; i < nodes_.n_elem; ++i)
+                {
+                     ar & dtemp; nodes_(i) = dtemp;
+                }
+                // lines
+                lines_.reset();
+                ar & rows;
+                ar & cols;
+                lines_.set_size(rows, cols);
+                for (i = 0; i < lines_.n_elem; ++i)
+                {
+                    ar & itemp; lines_(i) = itemp;
+                }
+                // surfaces
+                surfaces_.reset();
+                ar & rows;
+                ar & cols;
+                for (i = 0; i < surfaces_.n_elem; ++i)
+                {
+                    ar & itemp; surfaces_(i) = itemp;
+                }
+                // records
+                records_.reset();
+                ar & rows;
+                ar & cols;
+                records_.set_size(rows, cols);
+                for (i = 0; i < records_.n_elem; ++i)
+                {
+                    ar & dtemp; records_(i) = dtemp;
+                }
+
+                ar & samplingInterval_;
+                ar & numberOfSamples_;
+                ar & file_;
+            }
+
+            BOOST_SERIALIZATION_SPLIT_MEMBER()
+
         public:
-            FileFormatInterface(Root* owner);
+            FileFormatInterface(Root* owner, const string& file);
             virtual ~FileFormatInterface(){}
 
         public:
             static shared_ptr<FileFormatInterface> createFileFormat(Root* owner, const string& file);
 
-            virtual void parse(const string& file) = 0;
+            virtual void parse() = 0;
             
             virtual bool existNodes() = 0;
             virtual bool existLines() = 0;
             virtual bool existSurfaces() = 0;
             virtual bool existRecords() = 0;
 
-            virtual arma::mat& getNodes() = 0;
-            virtual arma::umat& getLines() = 0;
-            virtual arma::umat& getSurfaces() = 0;
-            virtual arma::mat& getRecords() = 0;
+            const arma::mat& getNodes() const;
+            const arma::umat& getLines() const;
+            const arma::umat& getSurfaces() const;
+            const arma::mat& getRecords() const;
             
-            // PersistInterface
-            void save();
-            void load();
+            double getSamplingInterval() const;
+            int getNumberOfSamples() const;
+            
+            string getFileName();
 
-            double getSamplingInterval();
-            int getNumberOfSamples();
-            
         protected:
             Root* root_;
             

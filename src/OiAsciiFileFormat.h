@@ -35,26 +35,19 @@ using std::string;
 
 namespace Oi {
     
-    class StorageInterface;
-
     class AsciiFileFormat : public FileFormatInterface  
     {
         public:
-            AsciiFileFormat(Root* owner);
+            AsciiFileFormat(Root* owner, const string& file);
             ~AsciiFileFormat(){}
 
         public:
-            void parse(const string& file);
+            void parse();
             
             bool existNodes();
             bool existLines();
             bool existSurfaces();
             bool existRecords();
-
-            arma::mat& getNodes();
-            arma::umat& getLines();
-            arma::umat& getSurfaces();
-            arma::mat& getRecords();
 
             double getSamplingInterval();
             int getNumberOfSamples();

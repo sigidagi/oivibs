@@ -24,20 +24,20 @@
 #ifndef _OISSIPROCESSING_H
 #define _OISSIPROCESSING_H
 
-#include "OiProcessing.h"
+#include    "OiProcessing.h"
+#include	<cassert>
 
 namespace Oi 
 {
-    class Root;
+    class FileFormatInterface;
     
     class SsiProcessing : public ProcessingInterface 
     {
         public:
-            SsiProcessing(Root* owner);
             ~SsiProcessing();
 
          public:
-            bool start();
+            bool start(const FileFormatInterface* format);
 
     };
 

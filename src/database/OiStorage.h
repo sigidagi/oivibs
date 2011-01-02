@@ -50,6 +50,50 @@ namespace Oi
 
     };
 
+/*
+ *    template<typename Derived>
+ *    struct StorageInterface
+ *    {
+ *         bool init(const string& name)
+ *         {
+ *             return static_cast<Derived*>(this)->init(name);
+ *         }
+ *         bool existRepository(const string& name)
+ *         {
+ *             return static_cast<Derived*>(this)->existRepository(name);
+ *         }
+ *
+ *         template<typename T>
+ *         void write(SerializableObject<T>& object)
+ *         {
+ *             return static_cast<Derived*>(this)->write(object);
+ *         }
+ *
+ *         template<typename T>
+ *         void read(SerializableObject<T>& object)
+ *         {
+ *             return static_cast<Derived*>(this)->read(object);
+ *         }
+ *    };
+ */
+
+
+/*
+ *
+ *    template<typename StorageInterface, typename T>
+ *    void writeToStorage(StorageInterface& storage, SerializableObject<T>& object)
+ *    {
+ *         storage.write(object);    
+ *    }
+ *
+ *    template<typename StorageInterface, typename T>
+ *    void readFromStorage(StorageInterface& storage, SerializableObject<T>& object)
+ *    {
+ *         storage.read(object);    
+ *    }
+ *
+ */
+
     class StorageInterface
     {
         public:

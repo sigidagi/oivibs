@@ -43,15 +43,16 @@ namespace Oi {
     class UniversalFileFormat : public FileFormatInterface
     {
         // pivate data
+         
     private:
         class Info 
         {
             public:
-                Info(FileFormatInterface* self, const string& file) : self_(self), file_(file) {}
+                Info(UniversalFileFormat* self, const string& file) : self_(self), file_(file) {}
                 virtual void parse() = 0;
                 void setPosition(int pos) { position_ = pos; }
             protected:
-                FileFormatInterface* self_;
+                UniversalFileFormat* self_;
                 string file_;
                 int position_;
         };
@@ -59,28 +60,28 @@ namespace Oi {
         class NodeInfo : public Info
         {
             public:
-                NodeInfo(FileFormatInterface* self, const string& file);
+                NodeInfo(UniversalFileFormat* self, const string& file);
                 void parse();
         };
 
         class LineInfo : public Info
         {
             public:
-                LineInfo(FileFormatInterface* self, const string& file);
+                LineInfo(UniversalFileFormat* self, const string& file);
                 void parse();
         };
 
         class SurfaceInfo : public Info
         {
             public:
-                SurfaceInfo(FileFormatInterface* self, const string& file);
+                SurfaceInfo(UniversalFileFormat* self, const string& file);
                 void parse();
         };
 
         class RecordInfo: public Info
         {
             public:
-                RecordInfo(FileFormatInterface* self, const string& file, int recordnumber);
+                RecordInfo(UniversalFileFormat* self, const string& file, int recordnumber);
                 void parse();
                 void parseHeader();
                 double getSamplingInterval();
@@ -91,9 +92,11 @@ namespace Oi {
                 int numberOfSamples_;
         };
 
-        vector< shared_ptr<Info> > info_;
 
     private:
+        
+        vector< shared_ptr<Info> > info_;
+        
         template<typename T>
         bool existInfo()
         {
@@ -107,21 +110,16 @@ namespace Oi {
         }
         
     public:
-        UniversalFileFormat(Root* owner);
+        UniversalFileFormat(Root* owner, const string& file);
         ~UniversalFileFormat();
 
         // FileFormatInterface
-        void parse(const string& file);
+        void parse();
 
         bool existNodes();
         bool existLines();
         bool existSurfaces();
         bool existRecords();
-
-        arma::mat& getNodes();
-        arma::umat& getLines();
-        arma::umat& getSurfaces();
-        arma::mat& getRecords();
 
         /*
          *void save();

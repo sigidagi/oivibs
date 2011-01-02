@@ -22,17 +22,21 @@
 // 
 // =====================================================================================
 
-#include "OiRoot.h"
-#include "OiUniversalFileFormat.h"
-#include "OiAsciiFileFormat.h"
-#include "OiFileFormat.h"
-#include "OiUtil.h"
+#include    "OiRoot.h"
+#include    "OiUniversalFileFormat.h"
+#include    "OiFileFormat.h"
+#include	"OiAsciiFileFormat.h"
+#include    "OiUtil.h"
 
 namespace Oi 
 {
-    FileFormatInterface::FileFormatInterface(Root* owner) : root_(owner)
+    FileFormatInterface::FileFormatInterface(Root* owner, const string& file) : root_(owner)
     {
+        string path = Oi::stripToPath(file);
+        chdir(path.c_str());
 
+        // save file name, 
+        file_ = Oi::stripToFileName(file);
     }
 
     shared_ptr<FileFormatInterface> FileFormatInterface::createFileFormat(Root* owner, const string& file)
@@ -41,11 +45,11 @@ namespace Oi
 
             if (extension == "uff")
             {
-                return shared_ptr<FileFormatInterface>(new UniversalFileFormat(owner));
+                return shared_ptr<FileFormatInterface>(new UniversalFileFormat(owner, file));
             }
             else if (extension == "txt")
             {
-                return shared_ptr<FileFormatInterface>(new AsciiFileFormat(owner));
+                return shared_ptr<FileFormatInterface>(new AsciiFileFormat(owner, file));
             }
             else
             {
@@ -54,42 +58,69 @@ namespace Oi
             }
     }
 
-    double FileFormatInterface::getSamplingInterval()
+    double FileFormatInterface::getSamplingInterval() const
     {
         return samplingInterval_;
     }
 
-    int FileFormatInterface::getNumberOfSamples()
+    int FileFormatInterface::getNumberOfSamples() const
     {
         return numberOfSamples_;
     }
 
-    void FileFormatInterface::save()
+    string FileFormatInterface::getFileName()
     {
-
-        if (existNodes())
-        {
-            string variableName = string("nodes");
-            SerializableObject<arma::mat> nodes = SerializableObject<arma::mat>(file_, variableName, nodes_);
-            root_->getStorage()->write(nodes);                        
-        }
-        if (existLines())
-        {
-            string variableName = string("lines");
-            SerializableObject<arma::umat> lines= SerializableObject<arma::umat>(file_, variableName, lines_);
-            root_->getStorage()->write(lines);
-        }
-        if (existSurfaces())
-        {
-            string variableName = string("surfaces");
-            SerializableObject<arma::umat> surfaces = SerializableObject<arma::umat>(file_, variableName, surfaces_);
-            root_->getStorage()->write(surfaces);
-        }
+        return file_;
     }
 
-    void FileFormatInterface::load()
-    {
+/*
+ *    void FileFormatInterface::save()
+ *    {
+ *
+ *        if (existNodes())
+ *        {
+ *            string variableName = string("nodes");
+ *            SerializableObject<arma::mat> nodes = SerializableObject<arma::mat>(file_, variableName, nodes_);
+ *            root_->getStorage()->write(nodes);                        
+ *        }
+ *        if (existLines())
+ *        {
+ *            string variableName = string("lines");
+ *            SerializableObject<arma::umat> lines= SerializableObject<arma::umat>(file_, variableName, lines_);
+ *            root_->getStorage()->write(lines);
+ *        }
+ *        if (existSurfaces())
+ *        {
+ *            string variableName = string("surfaces");
+ *            SerializableObject<arma::umat> surfaces = SerializableObject<arma::umat>(file_, variableName, surfaces_);
+ *            root_->getStorage()->write(surfaces);
+ *        }
+ *    }
+ *
+ *    void FileFormatInterface::load()
+ *    {
+ *
+ *    }
+ */
 
+    const arma::mat& FileFormatInterface::getNodes() const 
+    {
+        return nodes_;
     }
-    
+
+    const arma::umat& FileFormatInterface::getLines() const 
+    {
+        return lines_;
+    }
+
+    const arma::umat& FileFormatInterface::getSurfaces() const
+    {
+        return surfaces_;
+    }
+
+    const arma::mat& FileFormatInterface::getRecords() const
+    {
+        return records_;
+    }
+  
 } // namspace Oi

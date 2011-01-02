@@ -45,15 +45,11 @@ namespace Oi {
         public: 
              bool init(const string& repoName);
              bool existRepository(const string& repoName); 
-
-             void write(std::stringstream& ss)
-             {
-
-             }
-             void read(std::stringstream& ss)
-             {
-
-             }
+                
+             template<typename T>   
+             void write(SerializableObject<T>& object);
+             template<typename T>
+             void read(SerializableObject<T>& object);
 
     };
 

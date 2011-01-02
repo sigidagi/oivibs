@@ -39,5 +39,20 @@ namespace Oi {
         // NOT implemented jet!
         return false;
     }
+   
+    template<typename T>
+    void LocalStorage::write(SerializableObject<T>& object)
+    {
+                 
+    }
+
+    template<typename T>
+    void LocalStorage::read(SerializableObject<T>& object)
+    {
+
+    }
+
+    template<> void LocalStorage::write<arma::mat>(SerializableObject<arma::mat>& object);
+    template<> void LocalStorage::write<arma::umat>(SerializableObject<arma::umat>& object);
 
 } // namespace Oi

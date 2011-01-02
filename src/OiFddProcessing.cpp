@@ -22,7 +22,6 @@
 // 
 // =====================================================================================
 
-#include "OiRoot.h"
 #include "OiFddProcessing.h"
 #include "OiFileFormat.h"
 #include "OiUniversalFileFormat.h"
@@ -35,7 +34,7 @@
 namespace Oi 
 {
 
-    FddProcessing::FddProcessing(Root* owner) : ProcessingInterface(owner)
+    FddProcessing::FddProcessing()
     {
 
     }
@@ -115,13 +114,14 @@ namespace Oi
 
     }
 
-    bool FddProcessing::start()
+    bool FddProcessing::start(const FileFormatInterface* format)
     {
-        if (root_ == NULL)
+        if (format == NULL)
             return false;
         
         // search for data, if not exist - return from function.
-        const mat& refData = root_->getFileFormat()->getRecords();
+        const mat& refData = format->getRecords();
+
         int nrows = refData.n_rows;
         unsigned int ncols = refData.n_cols;
         if (nrows == 0 || ncols == 0)
@@ -213,7 +213,7 @@ namespace Oi
         colvec myPSD = arma::real(Psd);
         myPSD.save("myPsd.txt", arma_ascii);
 
-        double T = root_->getFileFormat()->getSamplingInterval();
+        double T = format->getSamplingInterval();
         frequencies_ = 1/(2.0*T) * linspace<colvec>(0,1, segmentLength/2); 
 
         

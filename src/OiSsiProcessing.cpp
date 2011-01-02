@@ -22,23 +22,18 @@
 // 
 // =====================================================================================
 
-#include "OiSsiProcessing.h"
-#include "OiRoot.h"
+#include    "OiSsiProcessing.h"
 
 namespace Oi {
-
-    SsiProcessing::SsiProcessing(Root* owner) : ProcessingInterface(owner)
-    {
-
-    }
 
     SsiProcessing::~SsiProcessing()
     {
 
     }
 
-    bool SsiProcessing::start()
+    bool SsiProcessing::start(const FileFormatInterface* format)
     {
+        assert(false);
         // not implemented jet.
         return false;
     }

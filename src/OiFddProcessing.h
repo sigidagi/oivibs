@@ -32,12 +32,12 @@ using namespace arma;
 
 namespace Oi 
 {
-    class Root;
+    class FileFormatInterface;
 
     class FddProcessing : public ProcessingInterface 
     {
          public:
-            FddProcessing (Root* owner);
+            FddProcessing ();
             ~FddProcessing();
             
             const arma::mat& getSingularValues();
@@ -45,7 +45,7 @@ namespace Oi
             
         // ProcessingInterface
          public:
-            bool start();
+            bool start(const FileFormatInterface* format);
             
         // private methods 
         private:

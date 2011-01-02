@@ -26,30 +26,20 @@
 #include "OiAsciiFileFormat.h"
 #include "OiUtil.h"
 #include <sstream>
-#include <unistd.h>
-
 
 namespace Oi {
 
-    AsciiFileFormat::AsciiFileFormat(Root* owner) 
-            : FileFormatInterface(owner), existData_(false)
+    AsciiFileFormat::AsciiFileFormat(Root* owner, const string& file) 
+            : FileFormatInterface(owner, file), existData_(false)
     {
 
     }
 
-    void AsciiFileFormat::parse(const string& file)
+    void AsciiFileFormat::parse()
     {
-        string path = Oi::stripToPath(file);
-        chdir(path.c_str());
-
-        string fileName = Oi::stripToFileName(file);
-
-        bool status = records_.load(file, arma::raw_ascii);            
+        bool status = records_.load(file_, arma::raw_ascii);            
         if (status == true)
-        {
             existData_ = true;
-        }
-
     }
 
 /*
@@ -117,25 +107,6 @@ namespace Oi {
         return existData_;
     }
 
-    arma::mat& AsciiFileFormat::getNodes()
-    {
-        return nodes_;
-    }
-
-    arma::umat& AsciiFileFormat::getLines()
-    {
-        return lines_;
-    }
-
-    arma::umat& AsciiFileFormat::getSurfaces()
-    {
-        return surfaces_;
-    }
-
-    arma::mat& AsciiFileFormat::getRecords()
-    {
-        return records_;
-    }
 
     double AsciiFileFormat::getSamplingInterval()
     {

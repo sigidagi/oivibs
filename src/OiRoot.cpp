@@ -24,12 +24,6 @@
 
 #include    "config.hpp"
 #include	"OiRoot.h"
-
-#if defined(OI_USE_MYSQLPP)
-#include	"OiDatabaseStorage.h"
-#endif
-
-#include	"OiLocalStorage.h"
 #include	"OiFileFormat.h"
 #include	"OiProcessing.h"
 #include	"OiUtil.h"
@@ -44,11 +38,7 @@ namespace Oi
     
     Root::Root()
     {
-        #if defined(OI_USE_MYSQLPP)
-        storage_ = shared_ptr<StorageInterface>(new DatabaseStorage);
-        #else
-        storage_ = shared_ptr<StorageInterface>(new LocalStorage);
-        #endif
+
     }
 
     Root::~Root()
@@ -69,24 +59,6 @@ namespace Oi
         return instance_;
     }
 
-    shared_ptr<StorageInterface> Root::getStorage()
-    {
-        return storage_;
-    }
-    
-    void Root::save()
-    {
-        fileFormat_->save();
-        foreach( shared_ptr<ProcessingInterface> proc, procList_)
-            proc->save();
-    }
-
-    void Root::load()
-    {
-        fileFormat_->load();
-        foreach( shared_ptr<ProcessingInterface> proc, procList_)
-            proc->load();
-    }
     
     // Implementation of ProxyInterface interface
 
@@ -120,107 +92,120 @@ namespace Oi
              
 
         // Root is responsible for initialization of Storage
-        string repoName = Oi::stripToBaseName(fileList[0]);
-        if (repoName.empty())
-            return false;
         // 
-        storage_->init(repoName);
-        // 
-        
+                
         foreach(string file, fileList)
         {
-            fileFormat_ = FileFormatInterface::createFileFormat(this, file);
-            fileFormat_->parse(file);
-
-            shared_ptr<ProcessingInterface> proc = ProcessingInterface::createProcess(this, processName);
-            if (proc->start())
+            shared_ptr<FileFormatInterface> fileFormat = FileFormatInterface::createFileFormat(this, file);
+            fileFormat->parse();
+            if (fileFormat->existNodes() || 
+                fileFormat->existLines() ||
+                fileFormat->existSurfaces() ||
+                fileFormat->existRecords() )
             {
-                   procList_.push_back(proc);
-
-                   // save processed data, singular values, singular vectors and etc.
+                fileFormatList_.push_back(fileFormat);
             }
+            
+            if (fileFormat->existRecords())
+            {
+                shared_ptr<ProcessingInterface> proc = ProcessingInterface::createProcess(processName);
+                if (proc->start(fileFormat.get()))
+                    procList_.push_back(proc);
+ 
+            }
+
+/*
+ *            shared_ptr<ProcessingInterface> proc = ProcessingInterface::createProcess(this, processName);
+ *            if (proc->start())
+ *            {
+ *                   procList_.push_back(proc);
+ *
+ *                   // save processed data, singular values, singular vectors and etc.
+ *            }
+ */
         }
+        
+        if (fileFormatList_.empty())
+            return false;
 
         return true;
     }
 
     bool Root::connect(const string& file)
     {
-        string repoName = Oi::stripToBaseName(file);
-        if (!storage_->existRepository(repoName))
-            return false;
-
-        repositoryName_ = file;
+/*
+ *        string repoName = Oi::stripToBaseName(file);
+ *        if (!storage_->existRepository(repoName))
+ *            return false;
+ *
+ *        repositoryName_ = file;
+ */
 
         return true;
     }
     
     double** Root::getNodes(int& size)
     {
-        if (fileFormat_.get() == NULL)
+        if (fileFormatList_.empty())
             return NULL;
-
-        // first check if nodes are stored in variable 
-        // if variable is empty try to load from repository 
-        if (!fileFormat_->existNodes())
+       
+        foreach(shared_ptr<FileFormatInterface> format, fileFormatList_)
         {
-            fileFormat_->load();
-            if (!fileFormat_->existNodes())
-                return NULL;
+            if (format->existNodes())
+            {
+                const arma::mat& nodes = format->getNodes();
+                size = (int)nodes.n_rows;
+        
+                return allocate2D(nodes); 
+            }
         }
 
-        // if we reached this point - nodes exist and can allocate matrix for user.
-        arma::mat& nodes = fileFormat_->getNodes();
-        size = (int)nodes.n_rows;
-        
-        return allocate2D(nodes); 
+        return NULL;
     }
 
     unsigned int** Root::getLines(int& size)
     {
-         if (fileFormat_.get() == NULL)
+        if (fileFormatList_.empty())
             return NULL;
-
-        // first check if lines are stored in variable 
-        // if variable is empty try to load from repository 
-        if (!fileFormat_->existLines())
+       
+        foreach(shared_ptr<FileFormatInterface> format, fileFormatList_)
         {
-            fileFormat_->load();
-            if (!fileFormat_->existLines())
-                return NULL;
+            if (format->existLines())
+            {
+                const arma::umat& lines = format->getLines();
+                size = (int)lines.n_rows;
+        
+                return allocate2D(lines); 
+            }
         }
 
-        // if we reached this point - nodes exist and can allocate matrix for user.
-        arma::umat& lines = fileFormat_->getLines();
-        size = (int)lines.n_rows;
-        
-        return allocate2D(lines); 
+        return NULL;
     }
     
     unsigned int** Root::getSurfaces(int& size)
     {
-          if (fileFormat_.get() == NULL)
+        if (fileFormatList_.empty())
             return NULL;
-
-        // first check if nodes are stored in variable 
-        // if variable is empty try to load from repository 
-        if (!fileFormat_->existSurfaces())
+       
+        foreach(shared_ptr<FileFormatInterface> format, fileFormatList_)
         {
-            fileFormat_->load();
-            if (!fileFormat_->existSurfaces())
-                return NULL;
+            if (format->existSurfaces())
+            {
+                const arma::umat& surfaces = format->getSurfaces();
+                size = (int)surfaces.n_rows;
+        
+                return allocate2D(surfaces); 
+            }
         }
 
-        // if we reached this point - nodes exist and can allocate matrix for user.
-        arma::umat& surfaces = fileFormat_->getSurfaces();
-        size = (int)surfaces.n_rows;
-        
-        return allocate2D(surfaces); 
+        return NULL;
+
     }
 
     shared_ptr<FileFormatInterface> Root::getFileFormat() 
     {
-        return fileFormat_;
+        assert(false);
+        return shared_ptr<FileFormatInterface>();
     }
    
     shared_ptr<ProcessingInterface> Root::getProcess(int i) 

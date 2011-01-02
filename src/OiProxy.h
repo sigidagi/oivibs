@@ -25,7 +25,6 @@
 #ifndef _OIPROXY_H
 #define _OIPROXY_H
 
-#include "OiStorage.h"
 #include <string>
 
 using std::string;
