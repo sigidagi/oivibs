@@ -68,7 +68,7 @@ namespace Oi
         return numberOfSamples_;
     }
 
-    string FileFormatInterface::getFileName()
+    string FileFormatInterface::getFileName() const
     {
         return file_;
     }
@@ -103,20 +103,27 @@ namespace Oi
  *    }
  */
 
-    const arma::mat& FileFormatInterface::getNodes() const 
+    const double* FileFormatInterface::getNodes(int& nrows, int& ncols) const
     {
-        return nodes_;
+        nrows = nodes_.n_rows;
+        ncols = nodes_.n_cols;
+        return nodes_.memptr();
+    }
+ 
+    const unsigned int* FileFormatInterface::getLines(int& nrows, int& ncols) const
+    {
+        nrows = lines_.n_rows;
+        ncols = lines_.n_cols;
+        return lines_.memptr();
+    }
+   
+    const unsigned int* FileFormatInterface::getSurfaces(int& nrows, int& ncols) const
+    {
+        nrows = surfaces_.n_rows;
+        ncols = surfaces_.n_cols;
+        return surfaces_.memptr();
     }
 
-    const arma::umat& FileFormatInterface::getLines() const 
-    {
-        return lines_;
-    }
-
-    const arma::umat& FileFormatInterface::getSurfaces() const
-    {
-        return surfaces_;
-    }
 
     const arma::mat& FileFormatInterface::getRecords() const
     {

@@ -48,19 +48,19 @@ namespace Oi {
         return impl_->connect(name);
     }
 
-    double** Proxy::getNodes(int& size)
+    const double* Proxy::getNodes(int& nrows, int& ncols) const
     {
-        return impl_->getNodes(size);
+        return impl_->getNodes(nrows, ncols);
     }
 
-    unsigned int** Proxy::getLines(int& size)
+    const unsigned int* Proxy::getLines(int& nrows, int& ncols) const
     {
-        return impl_->getLines(size);
+        return impl_->getLines(nrows, ncols);
     }
 
-    unsigned int** Proxy::getSurfaces(int& size)
+    const unsigned int* Proxy::getSurfaces(int& nrows, int& ncols) const
     {
-        return impl_->getSurfaces(size);
+        return impl_->getSurfaces(nrows, ncols);
     }
 
 } // namespace Oi

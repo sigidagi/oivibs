@@ -25,13 +25,16 @@
 #ifndef _UNIVERSALFORMAT_H
 #define _UNIVERSALFORMAT_H
 
-#include "OiFileFormat.h"
-#include <vector>
-#include <string>
-#include <armadillo>
-#include <boost/shared_ptr.hpp>
+#include    "OiUFF.h"
+#include    "OiFileFormat.h"
+#include    <vector>
+#include    <string>
+#include    <armadillo>
+#include    <boost/shared_ptr.hpp>
+#include	<boost/tuple/tuple.hpp>
 
 using boost::shared_ptr;
+using boost::tuple;
 using std::vector;
 using std::string;
 
@@ -42,73 +45,64 @@ namespace Oi {
 
     class UniversalFileFormat : public FileFormatInterface
     {
+    
+    private:
+        // list of all possible universal dataset number which represent data (or records)
+
         // pivate data
-         
     private:
-        class Info 
-        {
-            public:
-                Info(UniversalFileFormat* self, const string& file) : self_(self), file_(file) {}
-                virtual void parse() = 0;
-                void setPosition(int pos) { position_ = pos; }
-            protected:
-                UniversalFileFormat* self_;
-                string file_;
-                int position_;
-        };
-
-        class NodeInfo : public Info
-        {
-            public:
-                NodeInfo(UniversalFileFormat* self, const string& file);
-                void parse();
-        };
-
-        class LineInfo : public Info
-        {
-            public:
-                LineInfo(UniversalFileFormat* self, const string& file);
-                void parse();
-        };
-
-        class SurfaceInfo : public Info
-        {
-            public:
-                SurfaceInfo(UniversalFileFormat* self, const string& file);
-                void parse();
-        };
-
-        class RecordInfo: public Info
-        {
-            public:
-                RecordInfo(UniversalFileFormat* self, const string& file, int recordnumber);
-                void parse();
-                void parseHeader();
-                double getSamplingInterval();
-                int getNumberOfSamples();
-            private:
-                int recordnumber_;
-                double samplingInterval_;
-                int numberOfSamples_;
-        };
-
-
-    private:
+        // 1st tuple variable - uff format nummber, 2nd - position in file, 3rd - number of lines.
+        vector< tuple<int, int, int> > info_;
+        vector< shared_ptr<UFF> > uffObjects_;
         
-        vector< shared_ptr<Info> > info_;
+        UFactory<int> uffFactory_;
+        
+        typedef vector< shared_ptr<UFF> >::iterator uffIterator;
+            
+        bool isTag(string& line);
+
+        void loadRecords();
         
         template<typename T>
-        bool existInfo()
+        void loadGeometry( arma::Mat<T>& geo, const string& category, int ncols)
         {
-            vector< shared_ptr<Info> >::iterator it;
-            for (it = info_.begin(); it != info_.end(); ++it)
-            {
-                if(boost::dynamic_pointer_cast<T>(*it))
-                    return true;
-            }
-            return false;
-        }
+            vector<int> keys;
+            uffFactory_.selectKeysByCategory(keys, category);
         
+            // existing universal dataset numbers.
+            vector<int> univ_numbers;
+            std::transform(uffObjects_.begin(),
+                           uffObjects_.end(),
+                           back_inserter(univ_numbers),
+                           boost::bind(&UFF::number, _1));                   
+
+            vector<int>::const_iterator iit = univ_numbers.end();
+            if (!keys.empty())
+            {
+                iit = univ_numbers.end();
+                for (size_t idx = 0; idx < keys.size(); ++idx)
+                {
+                    iit = std::find(univ_numbers.begin(), univ_numbers.end(), keys[idx]);
+                    if ( iit != univ_numbers.end() )
+                        break;
+                }
+                
+                if ( iit != univ_numbers.end() )
+                {
+                    vector< shared_ptr<UFF> >::iterator uit = uffObjects_.begin();
+                    std::advance( uit, (int)(iit - univ_numbers.begin()) ); 
+
+                    size_t sz(0);
+                    const void* praw = (*uit)->getData(sz);
+
+                    geo.set_size(sz/ncols, ncols);
+                    T* pdata = geo.memptr();
+                    std::memcpy(pdata, praw, sz*sizeof(T));
+                }
+            }
+
+        }
+
     public:
         UniversalFileFormat(Root* owner, const string& file);
         ~UniversalFileFormat();

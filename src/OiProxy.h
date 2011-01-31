@@ -54,9 +54,9 @@ namespace Oi {
         public:
             virtual bool init(int argc, const char** fileList, int processName = 0) = 0;
             virtual bool connect(const string& name) = 0;
-            virtual double** getNodes(int& ) = 0;
-            virtual unsigned int** getLines(int& ) = 0;
-            virtual unsigned int** getSurfaces(int& ) = 0;
+            virtual const double* getNodes(int&, int& ) const = 0;
+            virtual const unsigned int* getLines(int&, int& ) const = 0;
+            virtual const unsigned int* getSurfaces(int&, int& ) const = 0;
     };
 } // namespace Oi
 
@@ -73,9 +73,9 @@ namespace Oi {
         public:
             bool init(int argc, const char** fileList, int processName = 0);
             bool connect(const string& name);
-            double** getNodes(int& size);
-            unsigned int** getLines(int& size);
-            unsigned int** getSurfaces(int& size);
+            const double* getNodes(int& nrows, int& ncols) const;
+            const unsigned int* getLines(int& nrows, int& ncols) const;
+            const unsigned int* getSurfaces(int& nrows, int& ncols) const;
 
         private:
             ProxyInterface* impl_; 

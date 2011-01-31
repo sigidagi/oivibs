@@ -38,21 +38,6 @@ using std::pair;
 
 namespace Oi
 {
-/*
- *      template <class T>   
- *      inline typename std::tr1::remove_reference<T>::type&& move(T&& t)  
- *      {  
- *        return t;  
- *      } 
- *
- *      template<class T>
- *      inline void swap(T& a, T& b) 
- *      { 
- *          T dum(move(a)); 
- *          a = move(b); 
- *          b = move(dum); 
- *      }
- */
     
     struct Process
     {
@@ -64,8 +49,6 @@ namespace Oi
         };  
     };
 
-
-    void free2D(double**, int);
     
     string stripToBaseName(const string& pathToFile);
     string stripToFileName(const string& pathToFile);
@@ -73,43 +56,6 @@ namespace Oi
     string stripToPath(const string& pathToFile);
 
     
-
-    /*
-     *template<typename eT>
-     *string matType(const arma::Mat<eT>& m)
-     *{
-     *    if (arma::is_float<eT>::value == true)
-     *        return string("FLOAT");
-     *    else if (arma::is_double<eT>::value == true)
-     *        return string("DUOBLE");
-     *    else if (arma::is_integer<eT>::value == true)
-     *        return string("INT");
-     *    else
-     *        return string("");
-     *    
-     *}
-     */
-
-    template<typename T>
-    T** allocate2D(arma::Mat<T> a)
-    {
-        if (a.n_elem == 0 || a.n_rows == 0) 
-            return NULL;
-
-        T** array = new T*[a.n_rows];
-        for (size_t n = 0; n < a.n_rows; ++n)
-            array[n] = new T[a.n_cols];
-
-        // assign values
-        for (size_t i = 0; i < a.n_rows; ++i)
-        {
-            for (size_t j = 0; j < a.n_cols; ++j)
-                array[i][j] = a(i,j);
-        }
-        
-        return array;
-    }
-
     template<class T> 
     struct sort_index
     {
@@ -133,7 +79,41 @@ namespace Oi
       }
       return res;
     }
- 
+    
+    template<typename T>
+    struct select1st
+    {
+        typename T::first_type operator()(const T& key) const
+        {
+            return key.first;
+        }
+    };
+
+    template<typename T>
+    select1st<typename T::value_type> make_select1st(const T& m)
+    {
+        return select1st<typename T::value_type>();
+    }
+
+    template<typename In, typename Out, typename Pred, typename UnaryOp>
+    const Out transform_if(In first, const In last, Out res, const Pred pr, const UnaryOp uop)
+    {
+        while (first != last)
+        {
+            if (pr(*first))
+                *res++ = uop(*first);
+            ++first;
+        }
+        return res;
+    }
+    
+    template<class K, class V>
+    bool is_value_equal( std::pair<const K, V>& elem, const V& value)
+    {
+        return (elem.second == value);
+    };
+
+
     template<typename In>
     bool equal_elements(In next, In last)
     {
@@ -144,7 +124,13 @@ namespace Oi
         }
         return true;
     }
-
+   
+    template<class T>
+    bool from_string(T& t, const std::string& s, std::ios_base& (*f)(std::ios_base&))
+    {
+        std::istringstream iss(s);
+        return !(iss >> f >> t).fail();
+    }
 }
 
 #endif

@@ -57,9 +57,9 @@ namespace Oi
             public:
                 bool init(int argc, const char** fileList, int processName = 0);
                 bool connect(const string& repoName);
-                double** getNodes(int& size);
-                unsigned int** getLines(int& size);
-                unsigned int** getSurfaces(int& size);
+                const double* getNodes(int& nrows, int& ncols) const;
+                const unsigned int* getLines(int& nrows, int& ncols) const;
+                const unsigned int* getSurfaces(int& nrows, int& ncols) const;
             
             public:
                 static Root* Instance();

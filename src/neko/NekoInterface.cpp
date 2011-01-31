@@ -6,16 +6,6 @@
 
 using std::vector;
 
-template<typename T>
-void free2D(T** p2Darray, int length)
-{
-    for (int i = 0; i < length; ++i)
-        delete [] p2Darray[i];
-
-    delete [] p2Darray;
-    p2Darray = 0;
-}
-
 //using namespace Oi;
 vector<string> convert2string(value varr)
 {
@@ -78,26 +68,23 @@ value getNodes( value varr )
           if (!proxy.connect(fileList[i]))
               continue;
           
-          int nnodes = 0;
-          double** nodesarray = proxy.getNodes(nnodes);
-          if (nodesarray == 0 || nnodes == 0)
+          int nrows(0), ncols(0);
+          const double* nodesarray = proxy.getNodes(nrows, ncols);
+          if (nodesarray == 0 || ncols != 3)
               continue;
 
-          value arr = alloc_array(nnodes);
-          for (int i = 0; i < nnodes; ++i)
+          value arr = alloc_array(nrows*ncols);
+          for (int i = 0; i < nrows; ++i)
           {
-            value o1  = alloc_object(NULL);
+                value o1  = alloc_object(NULL);
 
-            alloc_field(o1, val_id("x"), alloc_float(nodesarray[i][0]));
-            alloc_field(o1, val_id("y"), alloc_float(nodesarray[i][1]));
-            alloc_field(o1, val_id("z"), alloc_float(nodesarray[i][2]));
-     
-
-            val_array_ptr(arr)[i] = alloc_object(o1);
+                alloc_field(o1, val_id("x"), alloc_float(nodesarray[0*nrows+i]));
+                alloc_field(o1, val_id("y"), alloc_float(nodesarray[1*nrows+i]));
+                alloc_field(o1, val_id("z"), alloc_float(nodesarray[2*nrows+i]));
+         
+                val_array_ptr(arr)[i] = alloc_object(o1);
           }
         
-          // free allocated memory.
-          free2D(nodesarray, nnodes);     
           return arr;
              
       }
@@ -134,39 +121,37 @@ static value getLines(value varr)
         if (!proxy.connect(fileList[i]))
             continue;
 
-        int nlines = 0;
-        unsigned int** linesarray = proxy.getLines(nlines);
-        if (linesarray == 0 || nlines == 0)
+        int nrowsLines(0), ncolsLines(0);
+        const unsigned int* linesarray = proxy.getLines(nrowsLines, ncolsLines);
+        if (linesarray == 0 || ncolsLines != 2)
             continue;
     
-        int nnodes= 0;
-        double** nodesarray = proxy.getNodes(nnodes);
-        if (nodesarray == 0 || nnodes == 0)
+        int nrows(0), ncols(0);
+        const double* nodesarray = proxy.getNodes(nrows, ncols);
+        if (nodesarray == 0 || ncols != 2)
             continue;
 
-        value arr = alloc_array(nlines*2);
+        value arr = alloc_array(ncolsLines*nrowsLines);
         int node1, node2;
         value o1,o2;
-        for (int idx = 0; idx < nlines; ++idx)
+        for (int idx = 0; idx < nrowsLines; ++idx)
         {
             o1  = alloc_object(NULL);
-            node1 = linesarray[idx][0] - 1;
-            alloc_field(o1, val_id("x"), alloc_float(nodesarray[node1][0]));
-            alloc_field(o1, val_id("y"), alloc_float(nodesarray[node1][1]));
-            alloc_field(o1, val_id("z"), alloc_float(nodesarray[node1][2]));
+            node1 = linesarray[idx+0*nrowsLines] - 1;
+            alloc_field(o1, val_id("x"), alloc_float(nodesarray[0*nrows+node1]));
+            alloc_field(o1, val_id("y"), alloc_float(nodesarray[1*nrows+node1]));
+            alloc_field(o1, val_id("z"), alloc_float(nodesarray[2*nrows+node1]));
             
             o2 = alloc_object(NULL);
-            node2 = linesarray[idx][1] - 1;
-            alloc_field(o2, val_id("x"), alloc_float(nodesarray[node2][0]));
-            alloc_field(o2, val_id("y"), alloc_float(nodesarray[node2][1]));
-            alloc_field(o2, val_id("z"), alloc_float(nodesarray[node2][2]));
+            node2 = linesarray[idx+1*nrowsLines] - 1;
+            alloc_field(o2, val_id("x"), alloc_float(nodesarray[node2+0*nrows]));
+            alloc_field(o2, val_id("y"), alloc_float(nodesarray[node2+1*nrows]));
+            alloc_field(o2, val_id("z"), alloc_float(nodesarray[node2+2*nrows]));
 
             val_array_ptr(arr)[2*idx] = alloc_object(o1);
             val_array_ptr(arr)[2*idx+1] = alloc_object(o2);
         }
         
-        free2D(nodesarray, nnodes);
-        free2D(linesarray, nlines);
         return arr;
 
     }
@@ -188,37 +173,39 @@ value getSurfaces( value varr )
         if (!proxy.connect(fileNames[i]))
             continue;
 
-        int nsurfaces = 0;
-        unsigned int** surfacearray = proxy.getSurfaces(nsurfaces);
-        if ( surfacearray == 0 || nsurfaces == 0)
+        int nrowsSurf(0), ncolsSurf(0);
+        const unsigned int* surfacearray = proxy.getSurfaces(nrowsSurf, ncolsSurf);
+        if ( surfacearray == 0 || ncolsSurf != 3)
             continue;
        
-        int nnodes = 0;
-        double** nodesarray = proxy.getNodes(nnodes); 
+        int nrows(0), ncols(0);
+        const double* nodesarray = proxy.getNodes(nrows, ncols); 
+        if (nodesarray == 0 || ncols != 3)
+            continue;
         
         int node1, node2, node3;
         value o1, o2, o3;
-        value arr = alloc_array(nsurfaces*3);
+        value arr = alloc_array(nrowsSurf*ncolsSurf);
         
-        for (int idx = 0; idx < nsurfaces; ++idx)
+        for (int idx = 0; idx < nrowsSurf; ++idx)
         {
             o1 = alloc_object(NULL);
-            node1 = surfacearray[idx][0] -1;
-            alloc_field(o1, val_id("x"), alloc_float(nodesarray[node1][0]));
-            alloc_field(o1, val_id("y"), alloc_float(nodesarray[node1][1]));
-            alloc_field(o1, val_id("z"), alloc_float(nodesarray[node1][2]));
+            node1 = surfacearray[idx+0*nrowsSurf] -1;
+            alloc_field(o1, val_id("x"), alloc_float(nodesarray[node1+0*nrows]));
+            alloc_field(o1, val_id("y"), alloc_float(nodesarray[node1+1*nrows]));
+            alloc_field(o1, val_id("z"), alloc_float(nodesarray[node1+2*nrows]));
 
             o2 = alloc_object(NULL);
-            node2 = surfacearray[idx][1] -1;
-            alloc_field(o2, val_id("x"), alloc_float(nodesarray[node2][0]));
-            alloc_field(o2, val_id("y"), alloc_float(nodesarray[node2][1]));
-            alloc_field(o2, val_id("z"), alloc_float(nodesarray[node2][2]));
+            node2 = surfacearray[idx+1*nrowsSurf] -1;
+            alloc_field(o2, val_id("x"), alloc_float(nodesarray[node2+0*nrows]));
+            alloc_field(o2, val_id("y"), alloc_float(nodesarray[node2+1*nrows]));
+            alloc_field(o2, val_id("z"), alloc_float(nodesarray[node2+2*nrows]));
 
             o3 = alloc_object(NULL);
-            node3 = surfacearray[idx][2] -1;
-            alloc_field(o3, val_id("x"), alloc_float(nodesarray[node3][0]));
-            alloc_field(o3, val_id("y"), alloc_float(nodesarray[node3][1]));
-            alloc_field(o3, val_id("z"), alloc_float(nodesarray[node3][2]));
+            node3 = surfacearray[idx+2*nrowsSurf] -1;
+            alloc_field(o3, val_id("x"), alloc_float(nodesarray[node3+0*nrows]));
+            alloc_field(o3, val_id("y"), alloc_float(nodesarray[node3+1*nrows]));
+            alloc_field(o3, val_id("z"), alloc_float(nodesarray[node3*2*nrows]));
 
 
             val_array_ptr(arr)[3*idx] = alloc_object(o1);
@@ -226,7 +213,6 @@ value getSurfaces( value varr )
             val_array_ptr(arr)[3*idx+2] = alloc_object(o3);
         }
        
-        free2D(surfacearray, nsurfaces);
         return arr;
 
     }

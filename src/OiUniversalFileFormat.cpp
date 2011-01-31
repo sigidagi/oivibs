@@ -26,7 +26,13 @@
 #include "OiUtil.h"
 #include "OiRoot.h"
 
+#include "OiUFF15.h"
+#include "OiUFF58.h"
+#include "OiUFF82.h"
+#include "OiUFF2412.h"
+
 #include <algorithm>
+#include	<iterator>
 #include <sstream>
 #include <unistd.h>
 #include <boost/bind.hpp>
@@ -34,454 +40,210 @@
 
 #define foreach BOOST_FOREACH 
 
-using namespace std;
+using boost::get;
 
 namespace Oi {
 
-    typedef UniversalFileFormat UFF;
     
     UniversalFileFormat::UniversalFileFormat(Root* owner, const string& file) : FileFormatInterface(owner, file)
     {
-        
+        // Universal Dataset number is ID for registration of supported Universal Formats.
+        uffFactory_.registerClass<UFF15>(15, "nodes");
+        uffFactory_.registerClass<UFF82>(82, "lines");
+        uffFactory_.registerClass<UFF2412>(2412, "surfaces");
+        uffFactory_.registerClass<UFF58>(58, "records");
     }
 
     UniversalFileFormat::~UniversalFileFormat()
     {
 
     }
+   
+    bool UniversalFileFormat::isTag(string& line)
+    {
+        string whitespaces(" \t\v\f\n\r");
 
+        // trim white space from beginning of line.
+        size_t pos = line.find_first_not_of(' ');
+        line = line.substr(pos == string::npos ? 0 : pos);
+        
+        pos = line.find_last_not_of(whitespaces);
+        if (pos != string::npos)
+            line.erase(pos + 1);
+        else
+            line.clear();
+        
+        if (line == "-1")
+            return true;
+        
+        return false;
+    }
+
+    // Pass 1
     void UniversalFileFormat::parse()
     {
         if (file_.empty())
         {
-            cerr << "UniversalFileFormat::parse -- file: " << file_ << " is empty!\n";
+            std::cerr << "UniversalFileFormat::parse -- file: " << file_ << " is empty!\n";
             return;
         }
         
         std::ifstream fileStream;
-        int recordnumber = 0; 
 
-        fileStream.open(file_.c_str(), ios::in);
+        fileStream.open(file_.c_str(), std::ios::in);
         if (fileStream.is_open())
         {
             // serches for nodes, lines, surfaces and data in UFF file.
 
-            fileStream.seekg(0, ios::beg);
+            fileStream.seekg(0, std::ios::beg);
             info_.clear(); 
             string line;
+            int format(0), position(0), numberOfLines(0);
 
+ 
             while (!fileStream.eof())
             {
                 getline(fileStream, line);
-                if (fileStream.eof())
-                    break;
+                if (isTag(line) && !fileStream.eof())
+                {
+                    getline(fileStream, line);
+                    from_string(format, line, std::dec);
+                    position = fileStream.tellg();
+                    numberOfLines = 0;
 
-                // trim white space. 
-                size_t pos1 =  line.find_first_not_of(' ');
-                line = line.substr(pos1 == string::npos ? 0 : pos1);
-                // remove curriage return (CR) if txt file is created in MSDOS.
-                pos1 = line.find('\r');
-                if (pos1 != string::npos)
-                    line = line.substr(0, pos1);
+                    while (!fileStream.eof())
+                    {
+                        getline(fileStream, line);
+                        if (isTag(line))
+                            break;
 
-                // if NodeInfos information 
-                if (line == "15")
-                {
-                    shared_ptr<UFF::NodeInfo> nodeinfo(new UFF::NodeInfo(this, file_));
-                    nodeinfo->setPosition(fileStream.tellg());
-                    info_.push_back(nodeinfo);
-                }
-                // LineInfos
-                else if (line == "82")
-                {
-                    shared_ptr<UFF::LineInfo> lineinfo(new UFF::LineInfo(this, file_));
-                    lineinfo->setPosition(fileStream.tellg());
-                    info_.push_back(lineinfo);
-
-                }
-                // Surfaces
-                else if (line == "2412")
-                {
-                    shared_ptr<UFF::SurfaceInfo> surfaceinfo(new UFF::SurfaceInfo(this, file_));
-                    surfaceinfo->setPosition(fileStream.tellg());
-                    info_.push_back(surfaceinfo);
-                }
-                // Info
-                else if (line == "58")
-                {
-                    shared_ptr<UFF::RecordInfo> recordinfo(new UFF::RecordInfo(this, file_, recordnumber));
-                    ++recordnumber;
+                        ++numberOfLines;
+                    }
                     
-                    recordinfo->setPosition(fileStream.tellg());
-                    info_.push_back(recordinfo);
+                    info_.push_back(boost::make_tuple(format, position, numberOfLines));
                 }
             }
-
+                        
+                            
             fileStream.close();
-        }
 
-        if (info_.empty())
+        } // if fileStream.is_open()
+        
+        // Check if found in a file UFF format is supported by the program.
+        // And if supported - initialize UFF object and set relevant parameters for later parsing.
+        for (size_t i = 0; i < info_.size(); ++i)
         {
-            cerr << "UniversalFileFormat::parse --\n";
-            cerr << "No information found in file: " << file_ << "\n";
-            return;
-        }
-
-        vector< shared_ptr<UFF::RecordInfo> > rInfo;
-        foreach( shared_ptr<UFF::Info> pinfo, info_)
-        {
-            if (boost::dynamic_pointer_cast<UFF::RecordInfo>(pinfo))
+            if (uffFactory_.hasClass( get<0>(info_[i]) ))
             {
-                rInfo.push_back(boost::dynamic_pointer_cast<UFF::RecordInfo>(pinfo));
-            }
+                 // first parameter - UFF format type(integer). It'll be used as ID to create UFF object. 
+                 shared_ptr<UFF> uff(uffFactory_.createObject( get<0>(info_[i]) ));
+                 // second and third parameters: position in file and number of lines to parse accordingly.
+                 uff->setParameters(file_, get<1>(info_[i]), get<2>(info_[i])); 
+
+
+                 uffObjects_.push_back( uff );
+            }     
+            else
+                std::cerr << "Found format: " << get<0>(info_[i]) << " is not supported!\n";
         }
+        
+        // One UFF object are found and initialized - parse those objects according their format. 
+        // UFF object will be filed with data from parsed file. 
+        
+        std::for_each(uffObjects_.begin(), uffObjects_.end(), boost::bind(&UFF::parse, _1));
+        
 
-        std::for_each(rInfo.begin(), rInfo.end(), boost::bind(&UFF::RecordInfo::parseHeader, _1));
+        loadGeometry(nodes_, "nodes", 3); 
+        loadGeometry(lines_, "lines", 2); 
+        loadGeometry(surfaces_, "surfaces", 3); 
+        
+        std::cout << "Test\n";
+        loadRecords();
 
-        if (!rInfo.empty())
-        {
-            // check if sampling interval is the same for every record.
-            vector<double> samplingT;
-            samplingT.resize(rInfo.size());
-
-            std::transform(rInfo.begin(), 
-                           rInfo.end(), 
-                           samplingT.begin(), 
-                           boost::bind(&UFF::RecordInfo::getSamplingInterval, _1));
-
-            // if 
-            if (!equal_elements(samplingT.begin(), samplingT.end()))
-            {
-                cerr << "UniversalFileFormat::parse --\n";
-                cerr << "Sampling intervals differ in data records!\n";
-                // one solution for such error would be delete those records ...... 
-                return;
-            }
-           
-            // as all element in container are equal - just take first one.
-            samplingInterval_ = samplingT[0];
-            
-            // create vector which will contain number of samples for each record.
-            vector<int> recordLenght;
-            recordLenght.resize(rInfo.size());
-           
-            // loops through RecordInfo container and extract values. These values are saved in another container. 
-            std::transform(rInfo.begin(), 
-                           rInfo.end(), 
-                           recordLenght.begin(), 
-                           boost::bind(&UFF::RecordInfo::getNumberOfSamples, _1));
-
-            
-            // only minimal value of record length (number of samples) will be 
-            // used in every record.
-            numberOfSamples_ = *std::min_element(recordLenght.begin(), recordLenght.end());
-
-            records_.set_size(numberOfSamples_, recordnumber); 
-               
-        }
-
-        // parse every information (UFF::Info) found in a file and save into the storage class  
-        std::for_each(info_.begin(), info_.end(), boost::bind(&UFF::Info::parse, _1)); 
-    }
-
-    UniversalFileFormat::NodeInfo::NodeInfo(UniversalFileFormat* self, const string& file) : Info(self, file)
-    {
-
-    }
-
-    void UniversalFileFormat::NodeInfo::parse()
-    {
-        std::ifstream fileStream;
-        fileStream.open(file_.c_str(), ios::in);
-        if (!fileStream.is_open())
-        {
-            cerr << "UniversalFileFormat::NodeInfo::parse --\n";
-            cerr << "Can NOT open file: " << file_ << "\n";
-            return;
-        }
-        self_->nodes_.reset();
-        fileStream.seekg(position_, ios::beg);
-
-        int nodeNumber(0), temp(0); 
-        string line;
-        stringstream ss;
+    } // method end
     
-        double x(0.0), y(0.0), z(0.0);
-        vector<int> nodeNumberList;
-        arma::mat nodes;
-
-        int count = 1;
-        while (!fileStream.eof())
-        {
-            getline(fileStream, line);
-            ss.str("");
-            ss.clear();
-            ss << line;
-            ss >> nodeNumber;
-            if (nodeNumber == -1)
-                break;
-        
-            nodeNumberList.push_back(nodeNumber);
-            ss >> temp >> temp >> temp;
-            ss >> x >> y >> z;
-        
-            // reshape preserves elements in a matrix. 
-            // NOTE: only if matrix is extended columnwise! 
-            nodes.reshape(3, count);
-            nodes(0, count-1) = x;
-            nodes(1, count-1) = y;
-            nodes(2, count-1) = z;
-            
-            ++count;
-        }
-
-        fileStream.close();
-        
-        // in some case nodes in a file can be presented not in ascending order.
-        // following procedure rearange matrix that first node starts in first column,
-        // second - in second column.
-        vector<int>::const_iterator it;
-        vector<int>::const_iterator beg = nodeNumberList.begin();
-        self_->nodes_.reshape(nodeNumberList.size(), 3);
-        // now fill up matrix (variable UniversalFileFormat::nodes__) 
-        for (size_t i = 0; i < nodeNumberList.size(); ++i)
-        {
-            // node numbers starts from 1.
-            
-            it = std::find(nodeNumberList.begin(), nodeNumberList.end(), i+1);
-            if (it == nodeNumberList.end())
-            {
-                cerr << "UFF::NodeInfo::parse --\n";
-                cerr << "Inconsistency in Node numbering!\n";
-            }
-            
-            //std::cout << (int)(it - nodeNumberList.begin()) << std::endl;
-
-            self_->nodes_(i,0) = nodes(0, it-beg);
-            self_->nodes_(i,1) = nodes(1, it-beg);
-            self_->nodes_(i,2) = nodes(2, it-beg);
-        }
-
-    }
-
-    UniversalFileFormat::LineInfo::LineInfo(UniversalFileFormat* self, const string& file) : Info(self, file)
+    // return pair as first - position in uffObject vector, second - number of such objects in a row.
+    void UniversalFileFormat::loadRecords()
     {
+        if (uffObjects_.empty())
+            return ;
 
-    }
-
-    void UniversalFileFormat::LineInfo::parse()
-    {
-        std::ifstream fileStream;
+        // existing universal dataset numbers.
+        vector<int> univ_numbers;
+        std::transform(uffObjects_.begin(),
+                       uffObjects_.end(),
+                       back_inserter(univ_numbers),
+                       boost::bind(&UFF::number, _1));                   
+      
         
-        fileStream.open(file_.c_str(), ios::in);
-        if (!fileStream.is_open())
+        // ----------------------------- RECORDS-------------------------------
+        //
+        // acccess records as raw data and form arma matrix
+        vector<int> recordKeys;
+        uffFactory_.selectKeysByCategory( recordKeys, "records");
+
+
+        int count(0);
+        size_t idx(0);
+        vector<int>::const_iterator iit = univ_numbers.end();
+        // 
+        // loop through possible dataset numbers. First match with existed uffObject
+        // will be chosen that dataset number as number represented recorded data.
+        if (!recordKeys.empty())
         {
-            cerr << "UniversalFileFormat::LineInfo::parse --\n";
-            cerr << "Can NOT open file: " << file_ << "\n";  
-            return;
-        }
-
-        self_->lines_.reset();    
-        fileStream.seekg(position_, ios::beg);
-
-        int temp(0), entries(0), traceLineInfo(0), color(0);
-        string line;
-        stringstream ss;
-        vector<int> nodeList;
-
-        getline(fileStream, line);
-        ss << line;
-        ss >> traceLineInfo >> entries >> color;
-
-        // entries holds number of lines
-        if (entries == 0)
-            return;
-
-        while(!fileStream.eof())
-        {
-            getline(fileStream, line);
-            ss.str("");
-            ss.clear();
-            ss << line;
-
-            while (ss >> temp)
+            for (idx = 0; idx < recordKeys.size(); ++idx)
             {
-                if (temp == -1)
+                count = (int)std::count(univ_numbers.begin(), univ_numbers.end(), recordKeys[idx]); 
+                if (count != 0)
                     break;
-
-                nodeList.push_back(temp);		
             }
-            if (temp == -1)
-                break;
-        }
 
-        fileStream.close();
-        
-        if ((int)nodeList.size() != entries)
-            return;
-
-        vector<int>::iterator it;
-        it = std::remove(nodeList.begin(), nodeList.end(), 0);
-        if (it == nodeList.end())
-            return;
-
-        nodeList.erase(it, nodeList.end());
-    
-        self_->lines_.set_size((int)(nodeList.size()/2), 2); 
-        for (size_t i = 0; i < nodeList.size(); i+=2)
-        {
-            self_->lines_(i/2, 0) = nodeList[i];
-            self_->lines_(i/2, 1) = nodeList[i+1];
-        }
-        
-    }
-    
-    UniversalFileFormat::SurfaceInfo::SurfaceInfo(UniversalFileFormat* self, const string& file) : Info(self, file)
-    {
-
-    }
-
-    void UniversalFileFormat::SurfaceInfo::parse()
-    {
-        std::ifstream fileStream;
-        fileStream.open(file_.c_str(), ios::in);
-        if (!fileStream.is_open())
-        {
-            cerr << "UniversalFileFormat::SurfaceInfo::parse --\n";
-            cerr << "Can NOT open file: " << file_ << "\n";
-            return;
-        }
-
-        self_->surfaces_.reset();   
-        fileStream.seekg(position_, ios::beg);
-
-        string line;
-        stringstream ss;
-        int surface(0), descriptor(0), physicalProperty(0),materialProperty(0), color(0), nodes(0);
-        int node1(0), node2(0), node3(0);
-        
-        int count = 1;
-        while (!fileStream.eof())
-        {
-            getline(fileStream, line);
-            ss << line;
-            ss >> surface;
-            if (surface == -1)
-                break;
-
-            ss >> descriptor >> physicalProperty >> materialProperty >> color >> nodes;
-            
-            if ( descriptor != 91 ) // 91 - code of triangular elements 
-                return;
-
-            if ( nodes != 3 ) 
-                return;
-
-            getline(fileStream, line);
-            ss.str("");
-            ss.clear();
-            ss << line;
-
-            ss >> node1 >>  node2 >> node3; 
-            
-            self_->surfaces_.reshape(3, count);
-            self_->surfaces_(0, count-1) = node1;
-            self_->surfaces_(1, count-1) = node2;
-            self_->surfaces_(2, count-1) = node3;
-           
-            ++count;
-        }
-
-        fileStream.close();
-        
-        self_->surfaces_ = arma::trans(self_->getSurfaces());
-
-    }
-    
-    
-    UniversalFileFormat::RecordInfo::RecordInfo(UniversalFileFormat* self, const string& file, int recordnumber) : Info(self, file)
-    {
-        recordnumber_ =  recordnumber;
-    }
-
-    void UniversalFileFormat::RecordInfo::parseHeader()
-    {
-        std::ifstream fileStream;
-        fileStream.open(file_.c_str(), ios::in);
-        if (!fileStream.is_open())
-            return;
-
-        fileStream.seekg(position_, ios::beg);
-
-        string line;
-        stringstream ss;
-
-        getline(fileStream, line);
-        getline(fileStream, line);
-        getline(fileStream, line);
-        getline(fileStream, line);
-        getline(fileStream, line);
-        getline(fileStream, line);
-        getline(fileStream, line);
-
-        double temp(0.0);
-        ss << line;
-        ss >> temp >> numberOfSamples_ >> temp >> temp >> samplingInterval_;
-        ss.str("");
-        ss.clear();
-
-        fileStream.close();
-    }
-
-    void UniversalFileFormat::RecordInfo::parse()
-    {
-        std::ifstream fileStream;
-        fileStream.open(file_.c_str(), ios::in);
-        if (!fileStream.is_open())
-            return;
-
-        fileStream.seekg(position_, ios::beg);
-
-        string line;
-        stringstream ss;
-        double value(0.0);
-
-        getline(fileStream, line);
-        getline(fileStream, line);
-        getline(fileStream, line);
-        getline(fileStream, line);
-        getline(fileStream, line);
-        getline(fileStream, line);
-        getline(fileStream, line);
-        getline(fileStream, line);
-        getline(fileStream, line);
-        getline(fileStream, line);
-        getline(fileStream, line);
-        getline(fileStream, line);
-
-        int count = 0;
-        while (!fileStream.eof())
-        {
-            getline(fileStream, line);
-            ss << line;
-            ss >> value;
-            if (value == -1.0 || count == numberOfSamples_ )
-                break;
-            
-            do 
+            if (count != 0)
             {
-                self_->records_(count, recordnumber_) = value;
-                ++count;
+                // if we are here - we found existing records. variable "count" holds how many uffObject
+                // exist, idx - as index.
+                iit = std::search_n(univ_numbers.begin(), univ_numbers.end(), count, recordKeys[idx]);
             }
-            while (ss >> value);
-        
-            ss.str("");
-            ss.clear();
-        }
+            
+            if (count != 0 && iit != univ_numbers.end())
+            {
+                vector< shared_ptr<UFF> >::iterator uit = uffObjects_.begin();
+                std::advance(uit, (int)(iit - univ_numbers.begin()));
 
-        fileStream.close();
-    }
- 
+                
+                // first find minimum number of samples.
+                int i(0);
+                vector<int> nsamples;
+                size_t sz(0);
+    
+                for (i = 0; i < count; ++i)
+                {
+                    (*uit)->getData(sz);
+                    nsamples.push_back(sz);
+                    ++uit;
+                }
+                for (i = 0; i < count; ++i, --uit) { ; }
+                
+                numberOfSamples_ = *std::min_element(nsamples.begin(), nsamples.end());
+                records_.set_size(numberOfSamples_, count);
+
+                for (int i = 0; i < count; ++i, ++uit)
+                {
+                    double* pdata = records_.colptr(i);
+                    const void* praw = (*uit)->getData(sz);
+                    if (praw == 0)
+                        continue;
+
+                    std::memcpy(pdata, praw, numberOfSamples_*sizeof(double));
+                }
+                
+            }
+               
+        } // if (!recordKeys.empty())
+
+    } // end of function 
+    
+
 /*
  *    void UniversalFileFormat::save()
  *    {
@@ -500,34 +262,25 @@ namespace Oi {
  *    }
  */
 
-    double UniversalFileFormat::RecordInfo::getSamplingInterval()
-    {
-        return samplingInterval_;
-    }
-
-    int UniversalFileFormat::RecordInfo::getNumberOfSamples()
-    {
-        return numberOfSamples_;
-    }
     
     bool UniversalFileFormat::existNodes()
     {
-        return existInfo<UFF::NodeInfo>(); 
+        return !nodes_.is_empty();
     }
 
     bool UniversalFileFormat::existLines()
     {
-        return existInfo<UFF::LineInfo>(); 
+        return !lines_.is_empty(); 
     }
 
     bool UniversalFileFormat::existSurfaces()
     {
-        return existInfo<UFF::SurfaceInfo>(); 
+        return !surfaces_.is_empty();
     }
 
     bool UniversalFileFormat::existRecords()
     {
-        return existInfo<UFF::RecordInfo>(); 
+        return !records_.is_empty();
     }
 
 } // namespace Oi

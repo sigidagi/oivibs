@@ -36,6 +36,7 @@
 using boost::shared_ptr;
 using std::string;
 
+
 namespace Oi {
     
     class Root;
@@ -143,25 +144,26 @@ namespace Oi {
             virtual bool existSurfaces() = 0;
             virtual bool existRecords() = 0;
 
-            const arma::mat& getNodes() const;
-            const arma::umat& getLines() const;
-            const arma::umat& getSurfaces() const;
             const arma::mat& getRecords() const;
             
+            const double* getNodes(int& nrows, int& ncols) const;
+            const unsigned int* getLines(int& nrows, int& ncols) const;
+            const unsigned int* getSurfaces(int& nrows, int& ncols) const;
+
             double getSamplingInterval() const;
             int getNumberOfSamples() const;
             
-            string getFileName();
+            string getFileName() const;
 
         protected:
             Root* root_;
             
             string file_; 
         
-            arma::mat nodes_;
-            arma::umat lines_;
-            arma::umat surfaces_;
-            arma::mat records_;
+            arma::Mat<double> nodes_;
+            arma::Mat<unsigned int> lines_;
+            arma::Mat<unsigned int> surfaces_;
+            arma::Mat<double> records_;
             
             std::vector<string> variableNames; 
 

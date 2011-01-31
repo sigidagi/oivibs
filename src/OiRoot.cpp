@@ -144,7 +144,7 @@ namespace Oi
         return true;
     }
     
-    double** Root::getNodes(int& size)
+    const double* Root::getNodes(int& nrows, int& ncols) const
     {
         if (fileFormatList_.empty())
             return NULL;
@@ -152,18 +152,12 @@ namespace Oi
         foreach(shared_ptr<FileFormatInterface> format, fileFormatList_)
         {
             if (format->existNodes())
-            {
-                const arma::mat& nodes = format->getNodes();
-                size = (int)nodes.n_rows;
-        
-                return allocate2D(nodes); 
-            }
+                return format->getNodes(nrows, ncols);
         }
-
         return NULL;
     }
 
-    unsigned int** Root::getLines(int& size)
+    const unsigned int* Root::getLines(int& nrows, int& ncols) const
     {
         if (fileFormatList_.empty())
             return NULL;
@@ -171,18 +165,12 @@ namespace Oi
         foreach(shared_ptr<FileFormatInterface> format, fileFormatList_)
         {
             if (format->existLines())
-            {
-                const arma::umat& lines = format->getLines();
-                size = (int)lines.n_rows;
-        
-                return allocate2D(lines); 
-            }
+                return format->getLines(nrows, ncols);
         }
-
         return NULL;
     }
     
-    unsigned int** Root::getSurfaces(int& size)
+    const unsigned int* Root::getSurfaces(int& nrows, int& ncols) const
     {
         if (fileFormatList_.empty())
             return NULL;
@@ -190,16 +178,9 @@ namespace Oi
         foreach(shared_ptr<FileFormatInterface> format, fileFormatList_)
         {
             if (format->existSurfaces())
-            {
-                const arma::umat& surfaces = format->getSurfaces();
-                size = (int)surfaces.n_rows;
-        
-                return allocate2D(surfaces); 
-            }
+                return format->getSurfaces(nrows, ncols);
         }
-
         return NULL;
-
     }
 
     shared_ptr<FileFormatInterface> Root::getFileFormat() 

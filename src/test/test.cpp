@@ -8,16 +8,6 @@
 
 using namespace std;
 
-template<typename T>
-void free2D(T** p2Darray, int length)
-{
-    for (int i = 0; i < length; ++i)
-        delete [] p2Darray[i];
-
-    delete [] p2Darray;
-    p2Darray = 0;
-}
-
 
 int main(int argc, const char** argv)
 {
@@ -42,47 +32,50 @@ int main(int argc, const char** argv)
         cout << "Initialization failed!\n";
     
     cout << "\n";
-    int i;
-    int nodeLength = 0;
-    double** nodes = proxy.getNodes(nodeLength); 
+    int i(0), j(0);
+    int nrows(0), ncols(0);
+    const double* nodes = proxy.getNodes(nrows, ncols); 
 
     if (nodes != NULL)
     {
         cout << " ---- Nodes ----\n";
-        for (i = 0; i < nodeLength; ++i)
-            cout << nodes[i][0] << " " << nodes[i][1] << " " << nodes[i][2] << "\n";
-    
+        for (i = 0; i < nrows; ++i)
+        {
+            for (j = 0; j < ncols; ++j)
+                cout << nodes[j*nrows + i] << " ";
+            cout << "\n";    
+        }
         cout << endl;
-
-        free2D(nodes, nodeLength);
     }
 
-    int lineLength = 0;
-    unsigned int** lines = proxy.getLines(lineLength);
+    const unsigned int* lines = proxy.getLines(nrows, ncols);
     if (lines != NULL)
     {
         cout << " ---- Lines -----\n";
-        for (i = 0; i < lineLength; ++i)
-            cout << lines[i][0] << " " << lines[i][1] << "\n";
-        
+
+        for (i = 0; i < nrows; ++i)
+        {
+            for (j = 0; j < ncols; ++j)
+                cout << lines[j*nrows + i] << " ";
+            cout << "\n";   
+        }
         cout << endl;
-        free2D(lines, lineLength);
     }
     
-    int surfaceLength = 0;
-    unsigned int** surfaces = proxy.getSurfaces(surfaceLength); 
+    const unsigned int* surfaces = proxy.getSurfaces(nrows, ncols); 
     if (surfaces != NULL)
     {
         cout << " ---- Surfaces ----\n";
-        for (i = 0; i < surfaceLength; ++i)
-            cout << surfaces[i][0] << " " << surfaces[i][1] << " " << surfaces[i][2] << "\n";
-    
+ 
+        for (i = 0; i < nrows; ++i)
+        {
+            for (j = 0; j < ncols; ++j)
+                cout << surfaces[j*nrows + i] << " ";
+            cout << "\n";   
+        }
         cout << endl;
-
-        free2D(surfaces, surfaceLength);
+        cout << endl;
     }
-
-    
 
 	return 0;
 }
