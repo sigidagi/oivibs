@@ -42,34 +42,42 @@ namespace Oi {
 class UFF58 : public UFF
 {
     private:
-            vector<double> records_;
-            string file_;
-            int position_;
-            int numberOfLines_;
-            int numberOfSamples_;
-            int samplingInterval_;
+        vector<double> records_;
+        string file_;
+        string name_;
+        int position_;
+        int numberOfLines_;
+        int numberOfSamples_;
+        double samplingInterval_;
 
-        public:
-            UFF58() : file_(""), position_(0), numberOfLines_(0) {}
-            UFF58(const string& file, int pos, int nlines) : records_(0), file_(file), position_(pos), numberOfLines_(nlines) {}
-            
-            typedef UFF58 uff_type;
-            
-            const int number() const { return 58; }
+    public:
+        UFF58() : file_(""), position_(0), numberOfLines_(0) {}
+        UFF58(const string& file, int pos, int nlines) : file_(file), position_(pos), numberOfLines_(nlines) {}
+        
+        typedef UFF58 uff_type;
+        
+        const int number() const { return 58; }
 
-            void setParameters(const string& file, int position, int nlines)
-            {
-                file_ = file;
-                position_ = position;
-                numberOfLines_ = nlines;
-            }
+        void setParameters(const string& file, int position, int nlines)
+        {
+            file_ = file;
+            position_ = position;
+            numberOfLines_ = nlines;
+        }
 
-            const void* getData(size_t& size)
-            {
-                size = numberOfSamples_; 
-                return reinterpret_cast<void*>(&records_[0]);
-            }
-            
+        const void* getData(size_t& size)
+        {
+            size = numberOfSamples_; 
+            return reinterpret_cast<void*>(&records_[0]);
+        }
+
+        void getExtraData(std::list<boost::any>& coll)
+        {
+            coll.clear();
+            coll.push_back(samplingInterval_);
+            coll.push_back(name_);
+        }
+        
         void parse()
         {
             if ( file_.empty() || numberOfLines_ == 0)
@@ -92,6 +100,8 @@ class UFF58 : public UFF
             stringstream ss;
 
             getline(fileStream, line);
+            name_ = line;
+
             getline(fileStream, line);
             getline(fileStream, line);
             getline(fileStream, line);
@@ -130,7 +140,6 @@ class UFF58 : public UFF
                 ss.clear();
             }
             
-            std::cout << "UFF58\n";   
             fileStream.close();
         }
 

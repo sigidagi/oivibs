@@ -59,26 +59,6 @@ namespace Oi {
 
     }
    
-    bool UniversalFileFormat::isTag(string& line)
-    {
-        string whitespaces(" \t\v\f\n\r");
-
-        // trim white space from beginning of line.
-        size_t pos = line.find_first_not_of(' ');
-        line = line.substr(pos == string::npos ? 0 : pos);
-        
-        pos = line.find_last_not_of(whitespaces);
-        if (pos != string::npos)
-            line.erase(pos + 1);
-        else
-            line.clear();
-        
-        if (line == "-1")
-            return true;
-        
-        return false;
-    }
-
     // Pass 1
     void UniversalFileFormat::parse()
     {
@@ -99,12 +79,24 @@ namespace Oi {
             info_.clear(); 
             string line;
             int format(0), position(0), numberOfLines(0);
-
+            string whitespaces1(" \t\v\f");
+            string whitespaces(" \t\v\f\n\r");
  
             while (!fileStream.eof())
             {
                 getline(fileStream, line);
-                if (isTag(line) && !fileStream.eof())
+
+                // trim white space from beginning of line.
+                size_t pos = line.find_first_not_of(whitespaces1);
+                line = line.substr(pos == string::npos ? 0 : pos);
+                
+                pos = line.find_last_not_of(whitespaces);
+                if (pos != string::npos)
+                    line.erase(pos + 1);
+                else
+                    line.clear();
+
+                if (line == "-1" && !fileStream.eof())
                 {
                     getline(fileStream, line);
                     from_string(format, line, std::dec);
@@ -114,7 +106,17 @@ namespace Oi {
                     while (!fileStream.eof())
                     {
                         getline(fileStream, line);
-                        if (isTag(line))
+                        // trim white space from beginning of line.
+                        pos = line.find_first_not_of(' ');
+                        line = line.substr(pos == string::npos ? 0 : pos);
+                        
+                        pos = line.find_last_not_of(whitespaces);
+                        if (pos != string::npos)
+                            line.erase(pos + 1);
+                        else
+                            line.clear();
+
+                        if (line == "-1")
                             break;
 
                         ++numberOfLines;
@@ -157,11 +159,64 @@ namespace Oi {
         loadGeometry(lines_, "lines", 2); 
         loadGeometry(surfaces_, "surfaces", 3); 
         
-        std::cout << "Test\n";
         loadRecords();
 
     } // method end
     
+    double UniversalFileFormat::findSamplingInterval(uffIterator it, int nrecords)
+    {
+        // ----- Check if sampling interval in all records is the same.
+        vector<double> samplIntervals;
+        std::list<boost::any> many;
+        std::list<boost::any>::const_iterator cit; 
+        double dT; 
+        
+        for (int i = 0; i < nrecords; ++i, ++it)
+        {
+            (*it)->getExtraData(many);
+            if (many.empty())
+                continue;
+
+            cit = many.begin();
+            try { dT = boost::any_cast<double>(*cit); }
+            catch( boost::bad_any_cast& a) { std::cerr << a.what() << "\n"; return 0; } 
+
+            samplIntervals.push_back(dT);
+        }
+
+        if (samplIntervals.empty())
+        {
+            std::cerr << "Didn't found sampling interval value in records!\n";
+            return 0;
+        }
+
+        vector<double> sameValues(samplIntervals.size(), samplIntervals[0]);
+        if (!std::equal(samplIntervals.begin(), samplIntervals.end(), sameValues.begin()))
+        {
+            std::cerr << "Sampling Intervals differs in records!\n";
+            return 0;
+        }
+        
+        // all sampling interval values are equal. Return first one.
+        return samplIntervals[0];
+    }
+    
+    int UniversalFileFormat::findNumberOfSamples(uffIterator it, int nrecords)
+    {
+        // find minimum number of samples. If there are difference - all records will be sliced
+        // to such minimum number of samples.
+        vector<int> nsamples;
+        size_t sz(0);
+
+        for (int i = 0; i < nrecords; ++i, ++it)
+        {
+            (*it)->getData(sz);
+            nsamples.push_back(sz);
+        }
+
+        return *std::min_element(nsamples.begin(), nsamples.end());
+    }
+
     // return pair as first - position in uffObject vector, second - number of such objects in a row.
     void UniversalFileFormat::loadRecords()
     {
@@ -207,26 +262,18 @@ namespace Oi {
             
             if (count != 0 && iit != univ_numbers.end())
             {
-                vector< shared_ptr<UFF> >::iterator uit = uffObjects_.begin();
-                std::advance(uit, (int)(iit - univ_numbers.begin()));
+                uffIterator uit = uffObjects_.begin();
+                int nsteps = (int)(iit - univ_numbers.begin());
+                std::advance(uit, nsteps);
+                
+                samplingInterval_ = findSamplingInterval(uit, count);
+                numberOfSamples_ = findNumberOfSamples(uit, count);
 
-                
-                // first find minimum number of samples.
-                int i(0);
-                vector<int> nsamples;
-                size_t sz(0);
-    
-                for (i = 0; i < count; ++i)
-                {
-                    (*uit)->getData(sz);
-                    nsamples.push_back(sz);
-                    ++uit;
-                }
-                for (i = 0; i < count; ++i, --uit) { ; }
-                
-                numberOfSamples_ = *std::min_element(nsamples.begin(), nsamples.end());
                 records_.set_size(numberOfSamples_, count);
+                size_t sz(0); 
 
+                // Record matrix (column number represent record number) is initialized.
+                // Next step copy data to that matrix.
                 for (int i = 0; i < count; ++i, ++uit)
                 {
                     double* pdata = records_.colptr(i);
@@ -242,8 +289,49 @@ namespace Oi {
         } // if (!recordKeys.empty())
 
     } // end of function 
-    
+ 
+    template<typename T>
+    void UniversalFileFormat::loadGeometry( arma::Mat<T>& geo, const string& category, int ncols)
+    {
+            vector<int> keys;
+            uffFactory_.selectKeysByCategory(keys, category);
+        
+            // existing universal dataset numbers.
+            vector<int> univ_numbers;
+            std::transform(uffObjects_.begin(),
+                           uffObjects_.end(),
+                           back_inserter(univ_numbers),
+                           boost::bind(&UFF::number, _1));                   
 
+            vector<int>::const_iterator iit = univ_numbers.end();
+            if (!keys.empty())
+            {
+                iit = univ_numbers.end();
+                for (size_t idx = 0; idx < keys.size(); ++idx)
+                {
+                    iit = std::find(univ_numbers.begin(), univ_numbers.end(), keys[idx]);
+                    if ( iit != univ_numbers.end() )
+                        break;
+                }
+                
+                if ( iit != univ_numbers.end() )
+                {
+                    vector< shared_ptr<UFF> >::iterator uit = uffObjects_.begin();
+                    std::advance( uit, (int)(iit - univ_numbers.begin()) ); 
+
+                    size_t sz(0);
+                    const void* praw = (*uit)->getData(sz);
+
+                    geo.set_size(sz/ncols, ncols);
+                    T* pdata = geo.memptr();
+                    std::memcpy(pdata, praw, sz*sizeof(T));
+                }
+            }
+     } 
+     
+     template void UniversalFileFormat::loadGeometry<double>( arma::Mat<double>& geo, const string& category, int ncols);
+     template void UniversalFileFormat::loadGeometry<unsigned int>( arma::Mat<unsigned int>& geo, const string& category, int ncols);
+    
 /*
  *    void UniversalFileFormat::save()
  *    {

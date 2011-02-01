@@ -29,10 +29,12 @@
 
 #include    "OiUtil.h"	
 #include	<map>
+#include	<list>
 #include    <string>
 #include	<vector>
 #include	<algorithm>
 #include	<boost/bind.hpp>
+#include	<boost/any.hpp>
 
 using std::string;
 
@@ -48,6 +50,10 @@ class UFF
         virtual void parse() = 0; 
 
         virtual const void* getData(size_t& size) = 0;
+        virtual void getExtraData(std::list<boost::any>& coll) 
+        {
+            coll.clear();
+        }
 };
 
 template<class K>

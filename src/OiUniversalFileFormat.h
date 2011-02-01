@@ -53,61 +53,29 @@ namespace Oi {
     private:
         // 1st tuple variable - uff format nummber, 2nd - position in file, 3rd - number of lines.
         vector< tuple<int, int, int> > info_;
+
+        // holds raw data after parsing uff file.
         vector< shared_ptr<UFF> > uffObjects_;
         
         UFactory<int> uffFactory_;
-        
         typedef vector< shared_ptr<UFF> >::iterator uffIterator;
-            
-        bool isTag(string& line);
 
+        // helper function for creating matrix of records
         void loadRecords();
-        
+        double findSamplingInterval(uffIterator it, int nrecords);
+        int findNumberOfSamples(uffIterator it, int nrecords);
+
         template<typename T>
-        void loadGeometry( arma::Mat<T>& geo, const string& category, int ncols)
-        {
-            vector<int> keys;
-            uffFactory_.selectKeysByCategory(keys, category);
-        
-            // existing universal dataset numbers.
-            vector<int> univ_numbers;
-            std::transform(uffObjects_.begin(),
-                           uffObjects_.end(),
-                           back_inserter(univ_numbers),
-                           boost::bind(&UFF::number, _1));                   
-
-            vector<int>::const_iterator iit = univ_numbers.end();
-            if (!keys.empty())
-            {
-                iit = univ_numbers.end();
-                for (size_t idx = 0; idx < keys.size(); ++idx)
-                {
-                    iit = std::find(univ_numbers.begin(), univ_numbers.end(), keys[idx]);
-                    if ( iit != univ_numbers.end() )
-                        break;
-                }
-                
-                if ( iit != univ_numbers.end() )
-                {
-                    vector< shared_ptr<UFF> >::iterator uit = uffObjects_.begin();
-                    std::advance( uit, (int)(iit - univ_numbers.begin()) ); 
-
-                    size_t sz(0);
-                    const void* praw = (*uit)->getData(sz);
-
-                    geo.set_size(sz/ncols, ncols);
-                    T* pdata = geo.memptr();
-                    std::memcpy(pdata, praw, sz*sizeof(T));
-                }
-            }
-
-        }
+        void loadGeometry( arma::Mat<T>& geo, const string& category, int ncols);
 
     public:
         UniversalFileFormat(Root* owner, const string& file);
         ~UniversalFileFormat();
 
         // FileFormatInterface
+        // First pass. It just find information: uff type or format, position in file 
+        // and how big that format is (number of lines).
+        // Second pass is accomplished by created UFF object.
         void parse();
 
         bool existNodes();
