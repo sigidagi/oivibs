@@ -34,20 +34,20 @@ namespace Oi {
 
     }
     
-    shared_ptr<ProcessingInterface> ProcessingInterface::createProcess(int processName)
+    shared_ptr<ProcessingInterface> ProcessingInterface::createProcess(int processName, const string& file)
     {
         if (processName == Process::FDD)
         {
-            return shared_ptr<ProcessingInterface>(new FddProcessing());
+            return shared_ptr<ProcessingInterface>(new FddProcessing(file));
         }
         else if (processName == Process::SSI)
         {
-            return shared_ptr<ProcessingInterface>(new SsiProcessing());
+            return shared_ptr<ProcessingInterface>(new SsiProcessing(file));
         }
         // default process.
         else
         {
-            return shared_ptr<ProcessingInterface>(new FddProcessing());
+            return shared_ptr<ProcessingInterface>(new FddProcessing(file));
         }
     }
    

@@ -137,6 +137,7 @@ namespace Oi {
         {
             if (uffFactory_.hasClass( get<0>(info_[i]) ))
             {
+                 std::cout << "Found universal dataset number: " << get<0>(info_[i]) << "\t" <<"... OK\n";
                  // first parameter - UFF format type(integer). It'll be used as ID to create UFF object. 
                  shared_ptr<UFF> uff(uffFactory_.createObject( get<0>(info_[i]) ));
                  // second and third parameters: position in file and number of lines to parse accordingly.
@@ -146,7 +147,7 @@ namespace Oi {
                  uffObjects_.push_back( uff );
             }     
             else
-                std::cerr << "Found format: " << get<0>(info_[i]) << " is not supported!\n";
+                std::cerr << "Found universal dataset number: " << get<0>(info_[i]) << " is not supported!\n";
         }
         
         // One UFF object are found and initialized - parse those objects according their format. 

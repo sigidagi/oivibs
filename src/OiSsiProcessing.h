@@ -33,12 +33,19 @@ namespace Oi
     
     class SsiProcessing : public ProcessingInterface 
     {
+        private:
+            string file_;
+            arma::mat singulatValues_;
+            arma::cx_mat singulatVectors_;
+
         public:
-            ~SsiProcessing();
+            explicit SsiProcessing(const string& file);
 
          public:
             bool start(const FileFormatInterface* format);
-
+            string getFileName() const;
+            const double* getSingularValues(int& nrows, int& ncols) const;
+            const arma::cx_mat& getSingularVectors() const;
     };
 
 } // namespace Oi

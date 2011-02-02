@@ -26,8 +26,11 @@
 #define _OIPROCESSING_H
 
 #include    <boost/shared_ptr.hpp>
+#include	<string>
+#include	<armadillo>
 
 using boost::shared_ptr;
+using std::string;
 
 namespace Oi 
 {
@@ -39,8 +42,11 @@ namespace Oi
             virtual ~ProcessingInterface();
 
         public:
-            static shared_ptr<ProcessingInterface> createProcess(int processName);
+            static shared_ptr<ProcessingInterface> createProcess(int processName, const string& file);
             virtual bool start(const FileFormatInterface* format) = 0;
+            virtual string getFileName() const = 0;
+            virtual const double* getSingularValues(int& nrows, int& ncols) const = 0;
+            virtual const arma::cx_mat& getSingularVectors() const = 0;
     };
 
 } // namespace Oi

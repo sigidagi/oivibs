@@ -60,12 +60,13 @@ namespace Oi
                 const double* getNodes(int& nrows, int& ncols) const;
                 const unsigned int* getLines(int& nrows, int& ncols) const;
                 const unsigned int* getSurfaces(int& nrows, int& ncols) const;
+                const double* getSingularValues(const string& fileName, int& nrows, int& ncols) const; 
             
             public:
                 static Root* Instance();
                 
                 shared_ptr<FileFormatInterface> getFileFormat();
-                shared_ptr<ProcessingInterface> getProcess(int i);
+                shared_ptr<ProcessingInterface> getProcess(const string& fileName) const;
 
     };
 

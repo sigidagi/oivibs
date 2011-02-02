@@ -57,6 +57,7 @@ namespace Oi {
             virtual const double* getNodes(int&, int& ) const = 0;
             virtual const unsigned int* getLines(int&, int& ) const = 0;
             virtual const unsigned int* getSurfaces(int&, int& ) const = 0;
+            virtual const double* getSingularValues(const string& fileName, int& nrows, int& ncols) const = 0; 
     };
 } // namespace Oi
 
@@ -76,6 +77,7 @@ namespace Oi {
             const double* getNodes(int& nrows, int& ncols) const;
             const unsigned int* getLines(int& nrows, int& ncols) const;
             const unsigned int* getSurfaces(int& nrows, int& ncols) const;
+            const double* getSingularValues(const string& fileName, int& nrows, int& ncols) const; 
 
         private:
             ProxyInterface* impl_; 

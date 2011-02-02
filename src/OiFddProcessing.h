@@ -37,15 +37,17 @@ namespace Oi
     class FddProcessing : public ProcessingInterface 
     {
          public:
-            FddProcessing ();
+            explicit FddProcessing (const string& file);
             ~FddProcessing();
             
-            const arma::mat& getSingularValues();
-            const arma::cx_mat& getSingularVectors();
             
         // ProcessingInterface
          public:
             bool start(const FileFormatInterface* format);
+            string getFileName() const;
+            const double* getSingularValues(int& nrows, int& ncols) const;
+            const arma::cx_mat& getSingularVectors() const;
+
             
         // private methods 
         private:
@@ -58,8 +60,10 @@ namespace Oi
 
         // private member variables.
         private:
+            string file_;   
+
             cx_cube powerSpectrum_;
-            mat singularValues_;
+            arma::Mat<double> singularValues_;
             cx_mat singularVectors_;
             colvec frequencies_;
 

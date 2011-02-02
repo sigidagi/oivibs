@@ -26,9 +26,14 @@
 
 namespace Oi {
 
-    SsiProcessing::~SsiProcessing()
+    SsiProcessing::SsiProcessing(const string& file) : file_(file)
     {
 
+    }
+    
+    string SsiProcessing::getFileName() const
+    {
+        return file_;
     }
 
     bool SsiProcessing::start(const FileFormatInterface* format)
@@ -36,6 +41,18 @@ namespace Oi {
         assert(false);
         // not implemented jet.
         return false;
+    }
+    
+    const double* SsiProcessing::getSingularValues(int& nrows, int& ncols) const
+    {
+        nrows = singulatValues_.n_rows;
+        ncols = singulatValues_.n_cols;
+        return singulatValues_.memptr();        
+    }
+
+    const arma::cx_mat& SsiProcessing::getSingularVectors() const
+    {
+        return singulatVectors_;
     }
 
 } // namespace Oi

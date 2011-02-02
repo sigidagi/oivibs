@@ -63,4 +63,8 @@ namespace Oi {
         return impl_->getSurfaces(nrows, ncols);
     }
 
+    const double* Proxy::getSingularValues(const string& fileName, int& nrows, int& ncols) const 
+    {
+        return impl_->getSingularValues(fileName, nrows, ncols);
+    }
 } // namespace Oi

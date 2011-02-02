@@ -34,7 +34,7 @@
 namespace Oi 
 {
 
-    FddProcessing::FddProcessing()
+    FddProcessing::FddProcessing(const string& file) : file_(file)
     {
 
     }
@@ -43,7 +43,12 @@ namespace Oi
     {
 
     }
-
+    
+    string FddProcessing::getFileName() const
+    {
+        return file_;
+    }
+        
     void  FddProcessing::inverse( Mat<double>& x)
     {
         if (x.n_cols == 0 || x.n_rows == 0)
@@ -234,7 +239,7 @@ namespace Oi
             singularValues_.col(nn) = singvalues;
         }
 
-         
+        singularValues_ = arma::trans(singularValues_);   
 
         /*
          *rowvec svd0(singularValues_.n_cols);
@@ -247,12 +252,14 @@ namespace Oi
     }
 
 
-    const arma::mat& FddProcessing::getSingularValues()
+    const double* FddProcessing::getSingularValues(int& nrows, int& ncols) const
     {
-        return singularValues_;
+        nrows = singularValues_.n_rows;
+        ncols = singularValues_.n_cols;
+        return singularValues_.memptr();
     }
 
-    const arma::cx_mat& FddProcessing::getSingularVectors()
+    const arma::cx_mat& FddProcessing::getSingularVectors() const
     {
         return singularVectors_;
     }

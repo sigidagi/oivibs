@@ -28,6 +28,7 @@
 #include	"OiProcessing.h"
 #include	"OiUtil.h"
 #include    <boost/foreach.hpp>
+#include	<boost/bind.hpp>
 
 #define     foreach BOOST_FOREACH
 
@@ -64,7 +65,6 @@ namespace Oi
 
     bool Root::init(int argc, const char** argv, int processName)
     {
-        
         vector<string> fileList;
         for (int i = 0; i < argc; ++i)
         {
@@ -74,8 +74,7 @@ namespace Oi
             if (fileFormat != "uff" && fileFormat != "txt")
                 continue;
            
-            
-            string::size_type idx = strInFile.rfind('\\');
+            string::size_type idx = strInFile.rfind('/');
             if (idx != string::npos)
             {
                 string strPath = strInFile.substr(0, idx);
@@ -108,22 +107,14 @@ namespace Oi
             
             if (fileFormat->existRecords())
             {
-                shared_ptr<ProcessingInterface> proc = ProcessingInterface::createProcess(processName);
+                shared_ptr<ProcessingInterface> proc = ProcessingInterface::createProcess(processName, file);
                 if (proc->start(fileFormat.get()))
                     procList_.push_back(proc);
  
             }
+            
 
-/*
- *            shared_ptr<ProcessingInterface> proc = ProcessingInterface::createProcess(this, processName);
- *            if (proc->start())
- *            {
- *                   procList_.push_back(proc);
- *
- *                   // save processed data, singular values, singular vectors and etc.
- *            }
- */
-        }
+        } // end of foreach in fileList
         
         if (fileFormatList_.empty())
             return false;
@@ -183,16 +174,41 @@ namespace Oi
         return NULL;
     }
 
+    const double* Root::getSingularValues(const string& fileName, int& nrows, int& ncols) const 
+    {
+        shared_ptr<ProcessingInterface> pt = getProcess(fileName);
+        if (pt.get() == 0)
+            return NULL;
+        
+        return pt->getSingularValues(nrows, ncols);
+    }
+
     shared_ptr<FileFormatInterface> Root::getFileFormat() 
     {
         assert(false);
         return shared_ptr<FileFormatInterface>();
     }
    
-    shared_ptr<ProcessingInterface> Root::getProcess(int i) 
+    shared_ptr<ProcessingInterface> Root::getProcess(const string& fileName) const 
     {
-        if (i >= 0 && i < (int)procList_.size())
-            return  procList_[i]; 
+        string file = Oi::stripToFileName(fileName);
+
+        vector<string> coll;
+        std::transform(procList_.begin(), 
+                       procList_.end(), 
+                       back_inserter(coll), 
+                       boost::bind(&ProcessingInterface::getFileName, _1));
+    
+        vector<string>::const_iterator cit;
+        vector< shared_ptr<ProcessingInterface> >::const_iterator proc_it;
+        
+
+        cit = find(coll.begin(), coll.end(), file);
+        if (cit != coll.end())
+        {
+            int idx = (int)(cit - coll.begin());
+            return procList_[idx]; 
+        }
         else
             return shared_ptr<ProcessingInterface>();
     }
