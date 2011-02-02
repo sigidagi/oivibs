@@ -5,6 +5,7 @@
 #include    <vector>
 #include	<algorithm>
 #include	<iterator>
+#include	<sstream>
 #include	"gnuplot_i.hpp"
 
 #include    <unistd.h>
@@ -119,7 +120,6 @@ int main(int argc, const char** argv)
     std::cout << std::endl; 
    
     vector<double> singularValues;
-    vector<int> freq;
 
     const double* pvalues = 0;
     for ( i = 1; i < argc; ++i)
@@ -128,36 +128,31 @@ int main(int argc, const char** argv)
         pvalues = proxy.getSingularValues(fileName, nrows, ncols);
         if (pvalues != 0)
         {
-            freq.resize(nrows);
-            singularValues.resize(nrows);        
-            for (i = 0; i < nrows; ++i) 
-            { 
-                singularValues[i] = pvalues[i];
-                freq[i] = i; 
+            try 
+            {
+                Gnuplot gplot("Singular values");
+                gplot.set_title("singular values");
+                gplot.set_grid();
+                gplot.set_style("steps");
+                std::stringstream ss;
+                for (int j = 0; j < ncols; ++j)
+                {
+                    ss << "singular values " << j; 
+                    gplot.plot_x(pvalues+j*nrows, pvalues+(j+1)*nrows-1, ss.str() );                   
+                    ss.str("");
+                    ss.clear();
+                }
+                
+                wait_for_key();
+            }
+            catch(GnuplotException& e)
+            {
+                std::cout << e.what() << "\n";
             }
 
         }
     }
     
-    if (!singularValues.empty())
-    {
-        try 
-        {
-            Gnuplot gplot("Singular values");
-            gplot.set_title("singular values");
-            gplot.set_grid();
-            gplot.plot_xy(freq, singularValues, "amplitude");                   
-            
-            wait_for_key();
-        }
-        catch(GnuplotException& e)
-        {
-            std::cout << e.what() << "\n";
-        }
-        
-
-    }
-
 	return 0;
 }
 

@@ -475,8 +475,8 @@ class Gnuplot
                         const unsigned int column = 1,
                         const std::string &title = "");
     ///   from std::vector
-    template<typename X>
-    Gnuplot& plot_x(const X& x, const std::string &title = "");
+    template<class Iterator>
+    Gnuplot& plot_x(Iterator first, Iterator last, const std::string &title = "");
 
 
     /// plot x,y pairs: x y
@@ -486,8 +486,8 @@ class Gnuplot
                          const unsigned int column_y = 2,
                          const std::string &title = "");
     ///   from data
-    template<typename X, typename Y>
-    Gnuplot& plot_xy(const X& x, const Y& y, const std::string &title = "");
+    template<class Iterator1, class Iterator2>
+    Gnuplot& plot_xy(Iterator1 first1, Iterator1 last1, Iterator2 first2, Iterator2 last2, const std::string &title = "");
 
 
     /// plot x,y pairs with dy errorbars: x y dy
@@ -638,7 +638,7 @@ inline Gnuplot::Gnuplot(const std::vector<double> &x,
     set_xlabel(labelx);
     set_ylabel(labely);
 
-    plot_x(x,title);
+    plot_x(x.begin(), x.end(), title);
 }
 
 
@@ -660,7 +660,7 @@ inline Gnuplot::Gnuplot(const std::vector<double> &x,
     set_xlabel(labelx);
     set_ylabel(labely);
 
-    plot_xy(x,y,title);
+    plot_xy(x.begin(), x.end(), y.begin(), y.end(), title);
 }
 
 
@@ -693,12 +693,12 @@ inline Gnuplot::Gnuplot(const std::vector<double> &x,
 //
 /// Plots a 2d graph from a list of doubles: x
 //
-template<typename X>
-Gnuplot& Gnuplot::plot_x(const X& x, const std::string &title)
+template<class Iterator>
+Gnuplot& Gnuplot::plot_x(Iterator first, Iterator last, const std::string &title)
 {
-    if (x.size() == 0)
+    if ( first > last)
     {
-        throw GnuplotException("std::vector too small");
+        throw GnuplotException("last iterator has lower value than first!");
         return *this;
     }
 
@@ -709,10 +709,17 @@ Gnuplot& Gnuplot::plot_x(const X& x, const std::string &title)
 
     //
     // write the data to file
-    //
-    for (unsigned int i = 0; i < x.size(); i++)
-        tmp << x[i] << std::endl;
+    while(first != last)
+    {
+        tmp << *first << "\n";
+        ++first;
+    }
 
+/*
+ *    for (unsigned int i = 0; i < x.size(); i++)
+ *        tmp << x[i] << std::endl;
+ *
+ */
     tmp.flush();
     tmp.close();
 
@@ -727,21 +734,20 @@ Gnuplot& Gnuplot::plot_x(const X& x, const std::string &title)
 //
 /// Plots a 2d graph from a list of doubles: x y
 //
-template<typename X, typename Y>
-Gnuplot& Gnuplot::plot_xy(const X& x, const Y& y, const std::string &title)
+template<class Iterator1, class Iterator2>
+Gnuplot& Gnuplot::plot_xy(Iterator1 first1, Iterator1 last1, Iterator2 first2, Iterator2 last2, const std::string &title)
 {
-    if (x.size() == 0 || y.size() == 0)
+    if (first1 > last1 || first2 > last2)
     {
-        throw GnuplotException("std::vectors too small");
+        throw GnuplotException("Iterator's last value is smaller than first.");
         return *this;
     }
 
-    if (x.size() != y.size())
+    if ( (last1-first1) != (last2-first2) )
     {
-        throw GnuplotException("Length of the std::vectors differs");
+        throw GnuplotException("Length differs");
         return *this;
     }
-
 
     std::ofstream tmp;
     std::string name = create_tmpfile(tmp);
@@ -750,16 +756,22 @@ Gnuplot& Gnuplot::plot_xy(const X& x, const Y& y, const std::string &title)
 
     //
     // write the data to file
-    //
-    for (unsigned int i = 0; i < x.size(); i++)
-        tmp << x[i] << " " << y[i] << std::endl;
+    while (first1 != last1)
+    {
+        tmp << *first1 << " " << *first2 << "\n";
+        ++first1;
+        ++first2;
+    }
 
+/*
+ *    for (unsigned int i = 0; i < x.size(); i++)
+ *        tmp << x[i] << " " << y[i] << std::endl;
+ *
+ */
     tmp.flush();
     tmp.close();
 
-
     plotfile_xy(name, 1, 2, title);
-
     return *this;
 }
 
