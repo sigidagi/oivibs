@@ -50,7 +50,7 @@ namespace Oi {
         return singulatValues_.memptr();        
     }
 
-    const arma::cx_mat& SsiProcessing::getSingularVectors() const
+    const arma::cx_cube& SsiProcessing::getSingularVectors() const
     {
         return singulatVectors_;
     }

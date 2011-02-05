@@ -30,7 +30,7 @@
 #include	<string>
 #include	<vector>
 #include	<algorithm>
-#include	<fstream>
+#include	<iterator>
 #include    <sstream>
 
 using std::vector;
@@ -39,17 +39,35 @@ using std::stringstream;
 
 namespace Oi {
 
+template<class Iter>
+double mySum(Iter begin, Iter end) { 
+  double sum = 0.0;
+  
+  for( ; begin != end ;)
+    sum += *begin++;
+  return sum;
+} 
+
+struct RecordHeader
+{
+    string name;
+    unsigned int node;
+    int direction;
+    unsigned int nsamples;
+    double sampling;
+};
+
 class UFF58 : public UFF
 {
     private:
-        vector<double> records_;
+    
         string file_;
-        string name_;
         int position_;
         int numberOfLines_;
-        int numberOfSamples_;
-        double samplingInterval_;
-
+       
+        vector<double> records_;
+        RecordHeader header_; 
+        
     public:
         UFF58() : file_(""), position_(0), numberOfLines_(0) {}
         UFF58(const string& file, int pos, int nlines) : file_(file), position_(pos), numberOfLines_(nlines) {}
@@ -67,65 +85,114 @@ class UFF58 : public UFF
 
         const void* getData(size_t& size)
         {
-            size = numberOfSamples_; 
+            size = records_.size(); 
             return reinterpret_cast<void*>(&records_[0]);
         }
 
-        void getExtraData(std::list<boost::any>& coll)
+        boost::any getExtraData()
         {
-            coll.clear();
-            coll.push_back(samplingInterval_);
-            coll.push_back(name_);
+            boost::any toReturn = header_;
+            return toReturn;
         }
         
         void parse()
         {
-            if ( file_.empty() || numberOfLines_ == 0)
-                return;
+            stringstream ss;
             
-            // if once it is parsed - data exist and there is no need to repeat.
-            if (!records_.empty())
-                return;
+            if ( file_.empty() )                
+            {
+                throw string("UFF58\n Nothing to parse, no file exist!");
+            }
             
-            // find out dimmensions of record - number of samples;
-            // parse header
+            if (numberOfLines_ < 11)
+            {
+                ss << "UFF58\n Format is too small. Number of lines: " << numberOfLines_; 
+                throw ss.str(); 
+            }
+
+            // ---------------------------parse header------------------------
             std::ifstream fileStream;
             fileStream.open(file_.c_str(), std::ios::in);
             if (!fileStream.is_open())
-                return;
+            {
+                ss << "UFF58\n Can't open the file: " << file_;
+                throw ss.str();
+            }
             
             fileStream.seekg(position_, std::ios::beg);
 
             string line;
-            stringstream ss;
+            unsigned int nfields(0);
+            
+            // Record 1. ID or name. 
+            getline(fileStream, line);
+            header_.name = line;
 
-            getline(fileStream, line);
-            name_ = line;
+            advanceLines(fileStream, 4);
 
+            // Record 6. filed 6: response node and field 7: response direction. 
             getline(fileStream, line);
-            getline(fileStream, line);
-            getline(fileStream, line);
-            getline(fileStream, line);
-            getline(fileStream, line);
-            getline(fileStream, line);
-
-            double temp(0.0);
             ss << line;
-            ss >> temp >> numberOfSamples_ >> temp >> temp >> samplingInterval_;
-            ss.str("");
-            ss.clear();
-            // end parse header
+            std::istream_iterator<string> string_it;
+            string_it = ss;
+
+            nfields = std::distance(string_it, std::istream_iterator<string>()); 
+            if (nfields != 10)
+            {
+                ss.clear(); ss.str("");
+                ss << "UFF58\n";
+                ss << "Record 6 should hold 10 fields, counted only: " << nfields;
+                throw ss.str();
+            }
+
+            // clear error flag and return to beginning.
+            ss.clear(); ss.seekg(0, std::ios::beg);
+
+            std::advance(string_it, 6);
+            // field 6 - node.            
+            header_.node = numeric_cast<unsigned int>(lexical_cast<int>(*string_it));  
+            std::advance(string_it, 1);
+            // field 7 - direction
+            header_.direction = boost::lexical_cast<int>(*string_it);
+
+            ss.str(""); ss.clear(); ss.seekg(0, std::ios::beg);
+            
+            // Record 7. field 2: number of samples and field 5: sampling interval.
+            getline(fileStream, line);
+            ss << line;
+            string_it = ss; 
+            
+            nfields = std::distance(string_it, std::istream_iterator<string>());
+            if (nfields != 6)
+            {
+                ss.clear(); ss.str("");
+                ss << "UFF58\n";
+                ss << "Record 7 should hold 6 fields, counted only: " << nfields;
+                throw ss.str();
+            }
+
+            ss.clear(); ss.seekg(0, std::ios::beg);
+            
+            std::advance(string_it, 2);
+            header_.nsamples = numeric_cast<unsigned int>(lexical_cast<int>(*string_it));
+            std::advance(string_it, 3);
+            header_.sampling = boost::lexical_cast<double>(*string_it);
+
+            ss.str(""); ss.clear();
+            // --------------------------end parse header------------------------
           
+            advanceLines(fileStream, 4);
+           
+
+
+            // --------------------------- parse data -------------------------------
             // reserve memory for records_ data.
-            records_.reserve(numberOfSamples_);
+            records_.clear();
+            records_.reserve(header_.nsamples);
             double value(0.0);
-
-            getline(fileStream, line);
-            getline(fileStream, line);
-            getline(fileStream, line);
-            getline(fileStream, line);
-
-            for (int j = 0; j < numberOfLines_; ++j)
+            
+            // 11 lines takes header of UFF58
+            for (int j = 0; j < numberOfLines_ - 11; ++j)
             {
                 getline(fileStream, line);
                 ss << line;
@@ -139,7 +206,18 @@ class UFF58 : public UFF
                 ss.str("");
                 ss.clear();
             }
+            // ---------------------------- end of parse data --------------------------
             
+            if (header_.nsamples != static_cast<unsigned int>(records_.size()))
+            {
+                ss.clear(); ss.str("");
+                ss << "UFF58 Warning!  ";
+                ss << "Size mismatch between saved data(" << records_.size();
+                ss << ") and recorded number in the header(" << header_.nsamples << ")\n"; 
+                std::cerr << ss.str();
+//                throw ss.str();
+            }
+
             fileStream.close();
         }
 

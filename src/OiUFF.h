@@ -32,11 +32,19 @@
 #include	<list>
 #include    <string>
 #include	<vector>
+#include	<fstream>
 #include	<algorithm>
 #include	<boost/bind.hpp>
 #include	<boost/any.hpp>
+#include	<boost/lexical_cast.hpp>
+#include	<boost/numeric/conversion/cast.hpp>
 
 using std::string;
+using boost::lexical_cast;
+using boost::bad_lexical_cast;
+using boost::numeric_cast;
+using boost::bad_numeric_cast;
+
 
 namespace Oi {
 
@@ -50,9 +58,17 @@ class UFF
         virtual void parse() = 0; 
 
         virtual const void* getData(size_t& size) = 0;
-        virtual void getExtraData(std::list<boost::any>& coll) 
+        virtual boost::any getExtraData() 
         {
-            coll.clear();
+            return boost::any();
+        }
+
+    protected:
+        void advanceLines(std::ifstream& fs, unsigned int numberOfLines)
+        {
+            string temp;
+            for (unsigned int i = 0; i < numberOfLines; ++i)
+                getline(fs, temp);
         }
 };
 
@@ -104,6 +120,16 @@ class UFactory
                              back_inserter(keys),
                              boost::bind(Oi::is_value_equal<int, string>, _1, category),
                              Oi::make_select1st(categoryList));
+        }
+
+        string selectCategory(K id)
+        {
+            typename std::map<K, string>::iterator it;
+            it = categoryList.find(id);
+            if (it != categoryList.end())
+                return it->second;
+            else
+                return string();
         }
 
         bool hasClass(K id)

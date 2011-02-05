@@ -54,7 +54,7 @@ namespace Oi
         if (x.n_cols == 0 || x.n_rows == 0)
             return;
 
-        pinv(x); 
+        arma::pinv(x); 
     }
 
     // 
@@ -62,10 +62,9 @@ namespace Oi
     {
         if (x.n_cols == 0 || x.n_rows == 0)
             return;
-        
 
         if (x.n_rows == 1)
-            x = trans(x);
+            x = arma::trans(x);
        
        // create a matrix b where columns represent polinomial order:
        // second column - linear approximation of data
@@ -81,7 +80,7 @@ namespace Oi
         }
         
         // subtract approximation curve from original data.
-        x = x - b *( pinv(b)*x );
+        x = x - b *( arma::pinv(b)*x );
     }
 
     colvec  hamming(int m)
@@ -127,7 +126,7 @@ namespace Oi
         // search for data, if not exist - return from function.
         const mat& refData = format->getRecords();
 
-        int nrows = refData.n_rows;
+        unsigned int nrows = refData.n_rows;
         unsigned int ncols = refData.n_cols;
         if (nrows == 0 || ncols == 0)
             return false;
@@ -139,7 +138,6 @@ namespace Oi
         int segmentLength = 2*(1 << P);
         int overlap = std::floor(segmentLength*2/3);
 
-
     // range of the needed GFFT classes
         const unsigned Min = 1;
         const unsigned Max = 27;
@@ -148,10 +146,8 @@ namespace Oi
         Loki::Factory<AbstractFFT<Tp>,unsigned int> gfft_factory;
         FactoryInit<GFFTList<GFFT,Min,Max>::Result>::apply(gfft_factory);
 
-
     // create an instance of the GFFT
         AbstractFFT<Tp>* gfft = gfft_factory.CreateObject(P);
-
 
     //    mat X(segmentLength, ncols);
     //    cx_mat Y(segmentLength, ncols);
@@ -176,6 +172,7 @@ namespace Oi
         
         cout << "-- PSD calculation ---\n";
         boost::progress_display showProgess(positions.size());
+
         vector<int>::iterator it;
         for( it = positions.begin(); it != positions.end(); ++it)
         {
@@ -185,7 +182,6 @@ namespace Oi
             {
                 chunk.col(j) = chunk.col(j) % hamming;
                 gfft->fft(chunk.memptr() + j*segmentLength );
-           
                 createPSD(powerSpectrum_, chunk);    
             }
             ++nslices;
@@ -194,59 +190,36 @@ namespace Oi
         
         cout << "Done.\n";
 
-        /*
-         *while ((row_pos + segmentLength) < nrows)
-         *{
-         *    chunk = refData.rows(row_pos, row_pos + segmentLength-1);
-         *    detrend(chunk);
-         *    for (j = 0; j < ncols; ++j)
-         *    {
-         *        chunk.col(j) = chunk.col(j) % hamming;
-         *        gfft->fft(chunk.memptr() + j*segmentLength );
-         *   
-         *        createPSD(powerSpectrum_, chunk);    
-         *    }
-         *    ++nslices;
-         *    row_pos += step; 
-         *}
-         */
-       
-        cx_colvec Psd(powerSpectrum_.n_slices);
-        for (j = 0; j < powerSpectrum_.n_slices; ++j)
-            Psd(j) = powerSpectrum_(0,0,j);
-    
-        colvec myPSD = arma::real(Psd);
-        myPSD.save("myPsd.txt", arma_ascii);
-
         double T = format->getSamplingInterval();
         frequencies_ = 1/(2.0*T) * linspace<colvec>(0,1, segmentLength/2); 
-
         
         // Scale factor
         // scale = n_ffts * seg_len * Fs * win_meansq
         // where win_meansq = (window.' * window)/seg_len;
-
         double win_meansq = arma::accu(hamming % hamming)/hamming.n_elem;
         double scale = win_meansq * nslices * (double)segmentLength/(2.0*T);
        
         powerSpectrum_ = powerSpectrum_ / scale;
-
-        singularValues_.set_size(ncols, powerSpectrum_.n_slices);
+       
+        // form singular values matrix
+        // after FFT power spectrum is fliped.
+        singularValues_.set_size(powerSpectrum_.n_slices, ncols);
         colvec singvalues(ncols);
-        for (size_t nn = 0; nn < powerSpectrum_.n_slices; ++nn)
+        singularVectors_.set_size(ncols, ncols, powerSpectrum_.n_slices);
+        cx_mat Uunitary;
+        cx_mat Vunitary;
+
+        unsigned int lastSlice = powerSpectrum_.n_slices-1;
+        int idx = (int)lastSlice; 
+        
+        while (idx != -1)       
         {
-            arma::svd(singvalues, powerSpectrum_.slice(nn)); 
-            singularValues_.col(nn) = singvalues;
+            arma::svd(Uunitary, singvalues, Vunitary, powerSpectrum_.slice(idx));
+            singularValues_.row(lastSlice-idx) = trans(singvalues);
+            singularVectors_.slice(lastSlice-idx) = Uunitary;
+            --idx;
         }
 
-        singularValues_ = arma::trans(singularValues_);   
-
-        /*
-         *rowvec svd0(singularValues_.n_cols);
-         *svd0 = singularValues_.row(0);
-         *svd0.save("SVD.txt", arma_ascii);
-         *
-         */
         return true;
 
     }
@@ -259,7 +232,7 @@ namespace Oi
         return singularValues_.memptr();
     }
 
-    const arma::cx_mat& FddProcessing::getSingularVectors() const
+    const arma::cx_cube& FddProcessing::getSingularVectors() const
     {
         return singularVectors_;
     }

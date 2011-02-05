@@ -46,7 +46,7 @@ namespace Oi
             bool start(const FileFormatInterface* format);
             string getFileName() const;
             const double* getSingularValues(int& nrows, int& ncols) const;
-            const arma::cx_mat& getSingularVectors() const;
+            const arma::cx_cube& getSingularVectors() const;
 
             
         // private methods 
@@ -64,7 +64,7 @@ namespace Oi
 
             cx_cube powerSpectrum_;
             arma::Mat<double> singularValues_;
-            cx_mat singularVectors_;
+            cx_cube singularVectors_;
             colvec frequencies_;
 
     };

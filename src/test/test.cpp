@@ -109,15 +109,17 @@ int main(int argc, const char** argv)
         }
     }
     
-    std::cout << "------ Nodes ---------\n";
-    std::ostream_iterator<Point> os_pit( std::cout, "\n" );
-    std::copy(nodesCollection.begin(), nodesCollection.end(), os_pit);
-    std::cout << std::endl;
-
-    std::cout << "------- Lines --------\n";
-    std::ostream_iterator<Line> os_it( std::cout, "\n" );
-    std::copy(linesCollection.begin(), linesCollection.end(), os_it); 
-    std::cout << std::endl; 
+/*
+ *    std::cout << "------ Nodes ---------\n";
+ *    std::ostream_iterator<Point> os_pit( std::cout, "\n" );
+ *    std::copy(nodesCollection.begin(), nodesCollection.end(), os_pit);
+ *    std::cout << std::endl;
+ *
+ *    std::cout << "------- Lines --------\n";
+ *    std::ostream_iterator<Line> os_it( std::cout, "\n" );
+ *    std::copy(linesCollection.begin(), linesCollection.end(), os_it); 
+ *    std::cout << std::endl; 
+ */
    
     vector<double> singularValues;
 

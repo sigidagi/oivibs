@@ -22,21 +22,22 @@
 // 
 // =====================================================================================
 
-#include "OiUniversalFileFormat.h"
-#include "OiUtil.h"
-#include "OiRoot.h"
+#include    "OiUniversalFileFormat.h"
+#include    "OiUtil.h"
+#include    "OiRoot.h"
 
-#include "OiUFF15.h"
-#include "OiUFF58.h"
-#include "OiUFF82.h"
-#include "OiUFF2412.h"
+#include    "OiUFF15.h"
+#include    "OiUFF58.h"
+#include    "OiUFF82.h"
+#include    "OiUFF2412.h"
 
-#include <algorithm>
+#include	<iomanip>
+#include    <algorithm>
 #include	<iterator>
-#include <sstream>
-#include <unistd.h>
-#include <boost/bind.hpp>
-#include <boost/foreach.hpp>
+#include    <sstream>
+#include    <unistd.h>
+#include    <boost/bind.hpp>
+#include    <boost/foreach.hpp>
 
 #define foreach BOOST_FOREACH 
 
@@ -137,7 +138,8 @@ namespace Oi {
         {
             if (uffFactory_.hasClass( get<0>(info_[i]) ))
             {
-                 std::cout << "Found universal dataset number: " << get<0>(info_[i]) << "\t" <<"... OK\n";
+                 std::cout << "Found universal dataset number: " << get<0>(info_[i]) << "\t";
+                 std::cout << std::setw(10) << uffFactory_.selectCategory( get<0>(info_[i]) ) << "... OK\n";
                  // first parameter - UFF format type(integer). It'll be used as ID to create UFF object. 
                  shared_ptr<UFF> uff(uffFactory_.createObject( get<0>(info_[i]) ));
                  // second and third parameters: position in file and number of lines to parse accordingly.
@@ -153,13 +155,31 @@ namespace Oi {
         // One UFF object are found and initialized - parse those objects according their format. 
         // UFF object will be filed with data from parsed file. 
         
-        std::for_each(uffObjects_.begin(), uffObjects_.end(), boost::bind(&UFF::parse, _1));
-        
+        std::cout << std::endl;
+        std::cout << "Parsing....\n";
+
+        try {
+
+            std::for_each(uffObjects_.begin(), uffObjects_.end(), boost::bind(&UFF::parse, _1));
+        }
+        catch (bad_lexical_cast& ecast)
+        {
+            std::cerr << ecast.what() << std::endl;
+        }
+        catch (bad_numeric_cast& en)
+        {
+            std::cout << "My bad!" << std::endl;
+        }
+        catch (string& estring)
+        {
+            std::cerr << estring << std::endl;
+        }
+        std::cout << "Done!\n";
+        std::cout << std::endl;
 
         loadGeometry(nodes_, "nodes", 3); 
         loadGeometry(lines_, "lines", 2); 
         loadGeometry(surfaces_, "surfaces", 3); 
-        
         loadRecords();
 
     } // method end
@@ -168,21 +188,19 @@ namespace Oi {
     {
         // ----- Check if sampling interval in all records is the same.
         vector<double> samplIntervals;
-        std::list<boost::any> many;
-        std::list<boost::any>::const_iterator cit; 
-        double dT; 
-        
+        boost::any anyInfo;
+        RecordHeader recordInfo; 
+
         for (int i = 0; i < nrecords; ++i, ++it)
         {
-            (*it)->getExtraData(many);
-            if (many.empty())
+            anyInfo = (*it)->getExtraData();
+            if (anyInfo.empty())
                 continue;
 
-            cit = many.begin();
-            try { dT = boost::any_cast<double>(*cit); }
-            catch( boost::bad_any_cast& a) { std::cerr << a.what() << "\n"; return 0; } 
+            try { recordInfo = boost::any_cast<RecordHeader>(anyInfo); }
+            catch(boost::bad_any_cast& e) { std::cerr << e.what() << "\n"; continue; }
 
-            samplIntervals.push_back(dT);
+            samplIntervals.push_back(recordInfo.sampling);
         }
 
         if (samplIntervals.empty())
