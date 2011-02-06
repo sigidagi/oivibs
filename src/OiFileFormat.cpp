@@ -58,16 +58,6 @@ namespace Oi
             }
     }
 
-    double FileFormatInterface::getSamplingInterval() const
-    {
-        return samplingInterval_;
-    }
-
-    int FileFormatInterface::getNumberOfSamples() const
-    {
-        return numberOfSamples_;
-    }
-
     string FileFormatInterface::getFileName() const
     {
         return file_;
@@ -124,10 +114,9 @@ namespace Oi
         return surfaces_.memptr();
     }
 
-
-    const arma::mat& FileFormatInterface::getRecords() const
+    const arma::mat& FileFormatInterface::getChannels() const
     {
-        return records_;
+        return channels_;
     }
   
 } // namspace Oi

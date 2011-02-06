@@ -27,6 +27,7 @@
 #define  OIUFF58_INC
 
 #include	"OiUFF.h"
+#include	"OiChannelInfo.h"
 #include	<string>
 #include	<vector>
 #include	<algorithm>
@@ -39,23 +40,7 @@ using std::stringstream;
 
 namespace Oi {
 
-template<class Iter>
-double mySum(Iter begin, Iter end) { 
-  double sum = 0.0;
-  
-  for( ; begin != end ;)
-    sum += *begin++;
-  return sum;
-} 
 
-struct RecordHeader
-{
-    string name;
-    unsigned int node;
-    int direction;
-    unsigned int nsamples;
-    double sampling;
-};
 
 class UFF58 : public UFF
 {
@@ -66,7 +51,7 @@ class UFF58 : public UFF
         int numberOfLines_;
        
         vector<double> records_;
-        RecordHeader header_; 
+        ChannelInfo info_; 
         
     public:
         UFF58() : file_(""), position_(0), numberOfLines_(0) {}
@@ -91,7 +76,7 @@ class UFF58 : public UFF
 
         boost::any getExtraData()
         {
-            boost::any toReturn = header_;
+            boost::any toReturn = info_;
             return toReturn;
         }
         
@@ -126,7 +111,7 @@ class UFF58 : public UFF
             
             // Record 1. ID or name. 
             getline(fileStream, line);
-            header_.name = line;
+            info_.name = line;
 
             advanceLines(fileStream, 4);
 
@@ -150,10 +135,10 @@ class UFF58 : public UFF
 
             std::advance(string_it, 6);
             // field 6 - node.            
-            header_.node = numeric_cast<unsigned int>(lexical_cast<int>(*string_it));  
+            info_.node = numeric_cast<unsigned int>(lexical_cast<int>(*string_it));  
             std::advance(string_it, 1);
             // field 7 - direction
-            header_.direction = boost::lexical_cast<int>(*string_it);
+            info_.direction = boost::lexical_cast<int>(*string_it);
 
             ss.str(""); ss.clear(); ss.seekg(0, std::ios::beg);
             
@@ -174,9 +159,9 @@ class UFF58 : public UFF
             ss.clear(); ss.seekg(0, std::ios::beg);
             
             std::advance(string_it, 2);
-            header_.nsamples = numeric_cast<unsigned int>(lexical_cast<int>(*string_it));
+            info_.nsamples = numeric_cast<unsigned int>(lexical_cast<int>(*string_it));
             std::advance(string_it, 3);
-            header_.sampling = boost::lexical_cast<double>(*string_it);
+            info_.sampling = boost::lexical_cast<double>(*string_it);
 
             ss.str(""); ss.clear();
             // --------------------------end parse header------------------------
@@ -188,7 +173,7 @@ class UFF58 : public UFF
             // --------------------------- parse data -------------------------------
             // reserve memory for records_ data.
             records_.clear();
-            records_.reserve(header_.nsamples);
+            records_.reserve(info_.nsamples);
             double value(0.0);
             
             // 11 lines takes header of UFF58
@@ -208,12 +193,12 @@ class UFF58 : public UFF
             }
             // ---------------------------- end of parse data --------------------------
             
-            if (header_.nsamples != static_cast<unsigned int>(records_.size()))
+            if (info_.nsamples != static_cast<unsigned int>(records_.size()))
             {
                 ss.clear(); ss.str("");
                 ss << "UFF58 Warning!  ";
                 ss << "Size mismatch between saved data(" << records_.size();
-                ss << ") and recorded number in the header(" << header_.nsamples << ")\n"; 
+                ss << ") and recorded number in the header(" << info_.nsamples << ")\n"; 
                 std::cerr << ss.str();
 //                throw ss.str();
             }

@@ -89,10 +89,8 @@ namespace Oi
         if (fileList.empty())
             return false;
              
-
         // Root is responsible for initialization of Storage
         // 
-                
         foreach(string file, fileList)
         {
             shared_ptr<FileFormatInterface> fileFormat = FileFormatInterface::createFileFormat(this, file);
@@ -100,12 +98,12 @@ namespace Oi
             if (fileFormat->existNodes() || 
                 fileFormat->existLines() ||
                 fileFormat->existSurfaces() ||
-                fileFormat->existRecords() )
+                fileFormat->existChannels() )
             {
                 fileFormatList_.push_back(fileFormat);
             }
             
-            if (fileFormat->existRecords())
+            if (fileFormat->existChannels())
             {
                 shared_ptr<ProcessingInterface> proc = ProcessingInterface::createProcess(processName, file);
                 if (proc->start(fileFormat.get()))
@@ -202,7 +200,6 @@ namespace Oi
         vector<string>::const_iterator cit;
         vector< shared_ptr<ProcessingInterface> >::const_iterator proc_it;
         
-
         cit = find(coll.begin(), coll.end(), file);
         if (cit != coll.end())
         {

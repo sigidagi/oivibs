@@ -61,10 +61,10 @@ namespace Oi {
         typedef vector< shared_ptr<UFF> >::iterator uffIterator;
 
         // helper function for creating matrix of records
-        void loadRecords();
-        double findSamplingInterval(uffIterator it, int nrecords);
-        int findNumberOfSamples(uffIterator it, int nrecords);
-
+        int getNumberOfSamples();
+        
+        void loadChannelInfo(uffIterator it, int nsteps);
+        void loadChannels();
         template<typename T>
         void loadGeometry( arma::Mat<T>& geo, const string& category, int ncols);
 
@@ -78,10 +78,12 @@ namespace Oi {
         // Second pass is accomplished by created UFF object.
         void parse();
 
-        bool existNodes();
-        bool existLines();
-        bool existSurfaces();
-        bool existRecords();
+        bool existNodes() const;
+        bool existLines() const;
+        bool existSurfaces() const;
+        bool existChannels() const;
+        
+        double getSamplingInterval() const;
 
         /*
          *void save();

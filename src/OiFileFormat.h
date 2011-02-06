@@ -25,6 +25,7 @@
 #ifndef _OIFORMAT_H
 #define _OIFORMAT_H
 
+#include	<OiChannelInfo.h>
 #include    <armadillo>
 #include    <string>
 #include	<vector>
@@ -34,6 +35,7 @@
 #include	<boost/serialization/string.hpp>
 
 using boost::shared_ptr;
+using std::vector;
 using std::string;
 
 
@@ -44,91 +46,93 @@ namespace Oi {
     class FileFormatInterface
     {
         private:
-            friend class boost::serialization::access;
-            template<typename Archive>
-            void save(Archive& ar, unsigned int version)
-            {
-                int i; int itemp; double dtemp;
-                // nodes
-                ar & nodes_.n_rows;
-                ar & nodes_.n_cols;
-                for (i = 0; i < nodes_.n_elem; ++i)
-                {
-                    dtemp = nodes_(i); ar & dtemp;
-                }
-                // lines
-                ar & lines_.n_rows;
-                ar & lines_.n_cols;
-                for (i = 0; i < lines_.n_elem; ++i)
-                {
-                    itemp = lines_(i); ar & itemp;
-                }
-                // surfaces
-                ar & surfaces_.n_rows;
-                ar & surfaces_.n_cols;
-                for (i = 0; i < surfaces_.n_elem; ++i)
-                {
-                    itemp = surfaces_(i); ar & itemp;
-                }
-                // records
-                ar & records_.n_rows;
-                ar & records_.n_cols;
-                for (i = 0; i < records_.n_elem; ++i)
-                {
-                    dtemp = records_(i); ar & dtemp;
-                }
+/*
+ *            friend class boost::serialization::access;
+ *            template<typename Archive>
+ *            void save(Archive& ar, unsigned int version)
+ *            {
+ *                int i; int itemp; double dtemp;
+ *                // nodes
+ *                ar & nodes_.n_rows;
+ *                ar & nodes_.n_cols;
+ *                for (i = 0; i < nodes_.n_elem; ++i)
+ *                {
+ *                    dtemp = nodes_(i); ar & dtemp;
+ *                }
+ *                // lines
+ *                ar & lines_.n_rows;
+ *                ar & lines_.n_cols;
+ *                for (i = 0; i < lines_.n_elem; ++i)
+ *                {
+ *                    itemp = lines_(i); ar & itemp;
+ *                }
+ *                // surfaces
+ *                ar & surfaces_.n_rows;
+ *                ar & surfaces_.n_cols;
+ *                for (i = 0; i < surfaces_.n_elem; ++i)
+ *                {
+ *                    itemp = surfaces_(i); ar & itemp;
+ *                }
+ *                // records
+ *                ar & records_.n_rows;
+ *                ar & records_.n_cols;
+ *                for (i = 0; i < records_.n_elem; ++i)
+ *                {
+ *                    dtemp = records_(i); ar & dtemp;
+ *                }
+ *
+ *                ar & samplingInterval_;
+ *                ar & numberOfSamples_;
+ *                ar & file_;
+ *            }
+ *            template<typename Archive>
+ *            void load(Archive& ar, unsigned int version)
+ *            {
+ *                int i, rows, cols, itemp;
+ *                double dtemp;
+ *
+ *                nodes_.reset();
+ *                ar & rows;
+ *                ar & cols;
+ *                nodes_.set_size(rows, cols);
+ *                for (i = 0; i < nodes_.n_elem; ++i)
+ *                {
+ *                     ar & dtemp; nodes_(i) = dtemp;
+ *                }
+ *                // lines
+ *                lines_.reset();
+ *                ar & rows;
+ *                ar & cols;
+ *                lines_.set_size(rows, cols);
+ *                for (i = 0; i < lines_.n_elem; ++i)
+ *                {
+ *                    ar & itemp; lines_(i) = itemp;
+ *                }
+ *                // surfaces
+ *                surfaces_.reset();
+ *                ar & rows;
+ *                ar & cols;
+ *                for (i = 0; i < surfaces_.n_elem; ++i)
+ *                {
+ *                    ar & itemp; surfaces_(i) = itemp;
+ *                }
+ *                // records
+ *                records_.reset();
+ *                ar & rows;
+ *                ar & cols;
+ *                records_.set_size(rows, cols);
+ *                for (i = 0; i < records_.n_elem; ++i)
+ *                {
+ *                    ar & dtemp; records_(i) = dtemp;
+ *                }
+ *
+ *                ar & samplingInterval_;
+ *                ar & numberOfSamples_;
+ *                ar & file_;
+ *            }
+ */
 
-                ar & samplingInterval_;
-                ar & numberOfSamples_;
-                ar & file_;
-            }
-            template<typename Archive>
-            void load(Archive& ar, unsigned int version)
-            {
-                int i, rows, cols, itemp;
-                double dtemp;
-
-                nodes_.reset();
-                ar & rows;
-                ar & cols;
-                nodes_.set_size(rows, cols);
-                for (i = 0; i < nodes_.n_elem; ++i)
-                {
-                     ar & dtemp; nodes_(i) = dtemp;
-                }
-                // lines
-                lines_.reset();
-                ar & rows;
-                ar & cols;
-                lines_.set_size(rows, cols);
-                for (i = 0; i < lines_.n_elem; ++i)
-                {
-                    ar & itemp; lines_(i) = itemp;
-                }
-                // surfaces
-                surfaces_.reset();
-                ar & rows;
-                ar & cols;
-                for (i = 0; i < surfaces_.n_elem; ++i)
-                {
-                    ar & itemp; surfaces_(i) = itemp;
-                }
-                // records
-                records_.reset();
-                ar & rows;
-                ar & cols;
-                records_.set_size(rows, cols);
-                for (i = 0; i < records_.n_elem; ++i)
-                {
-                    ar & dtemp; records_(i) = dtemp;
-                }
-
-                ar & samplingInterval_;
-                ar & numberOfSamples_;
-                ar & file_;
-            }
-
-            BOOST_SERIALIZATION_SPLIT_MEMBER()
+//            BOOST_SERIALIZATION_SPLIT_MEMBER()
 
         public:
             FileFormatInterface(Root* owner, const string& file);
@@ -139,20 +143,19 @@ namespace Oi {
 
             virtual void parse() = 0;
             
-            virtual bool existNodes() = 0;
-            virtual bool existLines() = 0;
-            virtual bool existSurfaces() = 0;
-            virtual bool existRecords() = 0;
+            virtual bool existNodes() const = 0;
+            virtual bool existLines() const = 0;
+            virtual bool existSurfaces() const = 0;
+            virtual bool existChannels() const = 0;
+            
+            virtual double getSamplingInterval() const = 0;
 
-            const arma::mat& getRecords() const;
+            const arma::mat& getChannels() const;
             
             const double* getNodes(int& nrows, int& ncols) const;
             const unsigned int* getLines(int& nrows, int& ncols) const;
             const unsigned int* getSurfaces(int& nrows, int& ncols) const;
 
-            double getSamplingInterval() const;
-            int getNumberOfSamples() const;
-            
             string getFileName() const;
 
         protected:
@@ -163,12 +166,9 @@ namespace Oi {
             arma::Mat<double> nodes_;
             arma::Mat<unsigned int> lines_;
             arma::Mat<unsigned int> surfaces_;
-            arma::Mat<double> records_;
+            arma::Mat<double> channels_;
             
-            std::vector<string> variableNames; 
-
-            double samplingInterval_;
-            int numberOfSamples_;
+            vector<ChannelInfo> channelInfo_;
     };
 
 } // namespace Oi

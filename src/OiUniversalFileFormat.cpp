@@ -168,7 +168,7 @@ namespace Oi {
         }
         catch (bad_numeric_cast& en)
         {
-            std::cout << "My bad!" << std::endl;
+            std::cout << en.what() << std::endl;
         }
         catch (string& estring)
         {
@@ -180,16 +180,14 @@ namespace Oi {
         loadGeometry(nodes_, "nodes", 3); 
         loadGeometry(lines_, "lines", 2); 
         loadGeometry(surfaces_, "surfaces", 3); 
-        loadRecords();
+        loadChannels();
 
     } // method end
-    
-    double UniversalFileFormat::findSamplingInterval(uffIterator it, int nrecords)
+   
+    void UniversalFileFormat::loadChannelInfo(uffIterator it, int nrecords)
     {
-        // ----- Check if sampling interval in all records is the same.
-        vector<double> samplIntervals;
         boost::any anyInfo;
-        RecordHeader recordInfo; 
+        ChannelInfo channelInfo; 
 
         for (int i = 0; i < nrecords; ++i, ++it)
         {
@@ -197,52 +195,66 @@ namespace Oi {
             if (anyInfo.empty())
                 continue;
 
-            try { recordInfo = boost::any_cast<RecordHeader>(anyInfo); }
+            try { channelInfo = boost::any_cast<ChannelInfo>(anyInfo); }
             catch(boost::bad_any_cast& e) { std::cerr << e.what() << "\n"; continue; }
 
-            samplIntervals.push_back(recordInfo.sampling);
+            channelInfo_.push_back(channelInfo);
         }
+    }
 
-        if (samplIntervals.empty())
-        {
-            std::cerr << "Didn't found sampling interval value in records!\n";
-            return 0;
-        }
+    double UniversalFileFormat::getSamplingInterval() const
+    {
+        if (channelInfo_.empty())
+            return -1;
 
-        vector<double> sameValues(samplIntervals.size(), samplIntervals[0]);
-        if (!std::equal(samplIntervals.begin(), samplIntervals.end(), sameValues.begin()))
+        // ----- Check if sampling interval in all records is the same.
+        vector<double> samplingIntervals;
+        
+        std::transform(channelInfo_.begin(),
+                      channelInfo_.end(),
+                      back_inserter(samplingIntervals),
+                      boost::bind(&ChannelInfo::sampling, _1));
+
+        size_t nvalues = std::count(samplingIntervals.begin(), samplingIntervals.end(), samplingIntervals[0]);
+
+        if (nvalues != samplingIntervals.size())
         {
             std::cerr << "Sampling Intervals differs in records!\n";
-            return 0;
         }
         
         // all sampling interval values are equal. Return first one.
-        return samplIntervals[0];
+        return samplingIntervals[0];
     }
     
-    int UniversalFileFormat::findNumberOfSamples(uffIterator it, int nrecords)
+    int UniversalFileFormat::getNumberOfSamples()
     {
+        if (channelInfo_.empty())
+            return 0;
+
         // find minimum number of samples. If there are difference - all records will be sliced
         // to such minimum number of samples.
         vector<int> nsamples;
-        size_t sz(0);
-
-        for (int i = 0; i < nrecords; ++i, ++it)
-        {
-            (*it)->getData(sz);
-            nsamples.push_back(sz);
-        }
-
+        
+        std::transform(channelInfo_.begin(),
+                       channelInfo_.end(),
+                       back_inserter(nsamples),
+                       boost::bind(&ChannelInfo::nsamples, _1));
+        
         return *std::min_element(nsamples.begin(), nsamples.end());
     }
 
     // return pair as first - position in uffObject vector, second - number of such objects in a row.
-    void UniversalFileFormat::loadRecords()
+    void UniversalFileFormat::loadChannels()
     {
         if (uffObjects_.empty())
             return ;
 
-        // existing universal dataset numbers.
+        // First we create a vector of existing universal dataset numbers, and 
+        // we have information (dataset number) of registered records. Loop through 
+        // registred record numbers and find their existence in found UFF Objects. 
+        // stop the loop when first match is found.
+
+        // existing universal dataset numbers in a file.
         vector<int> univ_numbers;
         std::transform(uffObjects_.begin(),
                        uffObjects_.end(),
@@ -275,7 +287,7 @@ namespace Oi {
             if (count != 0)
             {
                 // if we are here - we found existing records. variable "count" holds how many uffObject
-                // exist, idx - as index.
+                // exist, iterator iit position holds information where uff object as record is.
                 iit = std::search_n(univ_numbers.begin(), univ_numbers.end(), count, recordKeys[idx]);
             }
             
@@ -285,109 +297,88 @@ namespace Oi {
                 int nsteps = (int)(iit - univ_numbers.begin());
                 std::advance(uit, nsteps);
                 
-                samplingInterval_ = findSamplingInterval(uit, count);
-                numberOfSamples_ = findNumberOfSamples(uit, count);
-
-                records_.set_size(numberOfSamples_, count);
+                loadChannelInfo(uit, count);
+                int nsamples = getNumberOfSamples();
+                
+                channels_.set_size(nsamples, count);
                 size_t sz(0); 
 
-                // Record matrix (column number represent record number) is initialized.
+                // Channel matrix (column number represent record number) is initialized.
                 // Next step copy data to that matrix.
                 for (int i = 0; i < count; ++i, ++uit)
                 {
-                    double* pdata = records_.colptr(i);
+                    double* pdata = channels_.colptr(i);
                     const void* praw = (*uit)->getData(sz);
                     if (praw == 0)
                         continue;
 
-                    std::memcpy(pdata, praw, numberOfSamples_*sizeof(double));
+                    std::memcpy(pdata, praw, nsamples*sizeof(double));
                 }
-                
             }
-               
         } // if (!recordKeys.empty())
-
     } // end of function 
  
     template<typename T>
     void UniversalFileFormat::loadGeometry( arma::Mat<T>& geo, const string& category, int ncols)
     {
-            vector<int> keys;
-            uffFactory_.selectKeysByCategory(keys, category);
-        
-            // existing universal dataset numbers.
-            vector<int> univ_numbers;
-            std::transform(uffObjects_.begin(),
-                           uffObjects_.end(),
-                           back_inserter(univ_numbers),
-                           boost::bind(&UFF::number, _1));                   
+        vector<int> keys;
+        uffFactory_.selectKeysByCategory(keys, category);
+    
+        // existing universal dataset numbers.
+        vector<int> univ_numbers;
+        std::transform(uffObjects_.begin(),
+                       uffObjects_.end(),
+                       back_inserter(univ_numbers),
+                       boost::bind(&UFF::number, _1));                   
 
-            vector<int>::const_iterator iit = univ_numbers.end();
-            if (!keys.empty())
+        vector<int>::const_iterator iit = univ_numbers.end();
+        if (!keys.empty())
+        {
+            iit = univ_numbers.end();
+            for (size_t idx = 0; idx < keys.size(); ++idx)
             {
-                iit = univ_numbers.end();
-                for (size_t idx = 0; idx < keys.size(); ++idx)
-                {
-                    iit = std::find(univ_numbers.begin(), univ_numbers.end(), keys[idx]);
-                    if ( iit != univ_numbers.end() )
-                        break;
-                }
-                
+                iit = std::find(univ_numbers.begin(), univ_numbers.end(), keys[idx]);
                 if ( iit != univ_numbers.end() )
-                {
-                    vector< shared_ptr<UFF> >::iterator uit = uffObjects_.begin();
-                    std::advance( uit, (int)(iit - univ_numbers.begin()) ); 
-
-                    size_t sz(0);
-                    const void* praw = (*uit)->getData(sz);
-
-                    geo.set_size(sz/ncols, ncols);
-                    T* pdata = geo.memptr();
-                    std::memcpy(pdata, praw, sz*sizeof(T));
-                }
+                    break;
             }
+            
+            if ( iit != univ_numbers.end() )
+            {
+                vector< shared_ptr<UFF> >::iterator uit = uffObjects_.begin();
+                std::advance( uit, (int)(iit - univ_numbers.begin()) ); 
+
+                size_t sz(0);
+                const void* praw = (*uit)->getData(sz);
+
+                geo.set_size(sz/ncols, ncols);
+                T* pdata = geo.memptr();
+                std::memcpy(pdata, praw, sz*sizeof(T));
+            }
+        }
      } 
      
      template void UniversalFileFormat::loadGeometry<double>( arma::Mat<double>& geo, const string& category, int ncols);
      template void UniversalFileFormat::loadGeometry<unsigned int>( arma::Mat<unsigned int>& geo, const string& category, int ncols);
     
-/*
- *    void UniversalFileFormat::save()
- *    {
- *        if (existNodes())
- *        {
- *            std::stringstream ss;
- *            pushToStream(ss, file_, nodes_); 
- *
- *            root_->getStorage()->write(ss); 
- *        }
- *    }
- *
- *    void UniversalFileFormat::load()
- *    {
- *
- *    }
- */
-
     
-    bool UniversalFileFormat::existNodes()
+    bool UniversalFileFormat::existNodes() const
     {
         return !nodes_.is_empty();
     }
 
-    bool UniversalFileFormat::existLines()
+    bool UniversalFileFormat::existLines() const
     {
         return !lines_.is_empty(); 
     }
 
-    bool UniversalFileFormat::existSurfaces()
+    bool UniversalFileFormat::existSurfaces() const
     {
         return !surfaces_.is_empty();
     }
 
-    bool UniversalFileFormat::existRecords()
+    bool UniversalFileFormat::existChannels() const 
     {
-        return !records_.is_empty();
+        return !channels_.is_empty();
     }
 
 } // namespace Oi

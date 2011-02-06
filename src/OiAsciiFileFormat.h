@@ -44,18 +44,17 @@ namespace Oi {
         public:
             void parse();
             
-            bool existNodes();
-            bool existLines();
-            bool existSurfaces();
-            bool existRecords();
+            bool existNodes() const;
+            bool existLines() const;
+            bool existSurfaces() const;
+            bool existChannels() const;
+            
+            double getSamplingInterval() const;
 
-            double getSamplingInterval();
-            int getNumberOfSamples();
-    
         private:
             std::ifstream fileStream_;
            
-            bool existData_;
+            bool existChannels_;
     };
 
 } // namespace Oi
