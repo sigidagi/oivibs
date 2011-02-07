@@ -37,6 +37,7 @@ namespace Oi
             string file_;
             arma::mat singulatValues_;
             arma::cx_cube singulatVectors_;
+            arma::colvec frequencies_;
 
         public:
             explicit SsiProcessing(const string& file);
@@ -45,6 +46,7 @@ namespace Oi
             bool start(const FileFormatInterface* format);
             string getFileName() const;
             const double* getSingularValues(int& nrows, int& ncols) const;
+            const double* getFrequencies(int& length) const;
             const arma::cx_cube& getSingularVectors() const;
     };
 

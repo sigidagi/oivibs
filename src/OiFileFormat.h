@@ -25,19 +25,12 @@
 #ifndef _OIFORMAT_H
 #define _OIFORMAT_H
 
-#include	<OiChannelInfo.h>
-#include    <armadillo>
 #include    <string>
-#include	<vector>
+#include	<armadillo>
 #include    <boost/shared_ptr.hpp>
-#include	<boost/archive/text_oarchive.hpp>
-#include	<boost/archive/text_iarchive.hpp>
-#include	<boost/serialization/string.hpp>
 
 using boost::shared_ptr;
-using std::vector;
 using std::string;
-
 
 namespace Oi {
     
@@ -45,7 +38,28 @@ namespace Oi {
 
     class FileFormatInterface
     {
-        private:
+        public:
+            virtual ~FileFormatInterface(){}
+
+        public:
+            static shared_ptr<FileFormatInterface> createFileFormat(Root* owner, const string& file);
+
+            virtual void parse() = 0;
+            
+            virtual bool existNodes() const = 0;
+            virtual bool existLines() const = 0;
+            virtual bool existSurfaces() const = 0;
+            virtual bool existChannels() const = 0;
+            
+            virtual const arma::mat& getChannels() const = 0;
+            virtual double getSamplingInterval() const = 0;
+
+            virtual const double* getNodes(int& nrows, int& ncols) const;
+            virtual const unsigned int* getLines(int& nrows, int& ncols) const;
+            virtual const unsigned int* getSurfaces(int& nrows, int& ncols) const;
+
+    };
+
 /*
  *            friend class boost::serialization::access;
  *            template<typename Archive>
@@ -133,43 +147,6 @@ namespace Oi {
  */
 
 //            BOOST_SERIALIZATION_SPLIT_MEMBER()
-
-        public:
-            FileFormatInterface(Root* owner, const string& file);
-            virtual ~FileFormatInterface(){}
-
-        public:
-            static shared_ptr<FileFormatInterface> createFileFormat(Root* owner, const string& file);
-
-            virtual void parse() = 0;
-            
-            virtual bool existNodes() const = 0;
-            virtual bool existLines() const = 0;
-            virtual bool existSurfaces() const = 0;
-            virtual bool existChannels() const = 0;
-            
-            virtual double getSamplingInterval() const = 0;
-
-            const arma::mat& getChannels() const;
-            
-            const double* getNodes(int& nrows, int& ncols) const;
-            const unsigned int* getLines(int& nrows, int& ncols) const;
-            const unsigned int* getSurfaces(int& nrows, int& ncols) const;
-
-            string getFileName() const;
-
-        protected:
-            Root* root_;
-            
-            string file_; 
-        
-            arma::Mat<double> nodes_;
-            arma::Mat<unsigned int> lines_;
-            arma::Mat<unsigned int> surfaces_;
-            arma::Mat<double> channels_;
-            
-            vector<ChannelInfo> channelInfo_;
-    };
 
 } // namespace Oi
 

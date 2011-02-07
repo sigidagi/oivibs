@@ -30,14 +30,6 @@
 
 namespace Oi 
 {
-    FileFormatInterface::FileFormatInterface(Root* owner, const string& file) : root_(owner)
-    {
-        string path = Oi::stripToPath(file);
-        chdir(path.c_str());
-
-        // save file name, 
-        file_ = Oi::stripToFileName(file);
-    }
 
     shared_ptr<FileFormatInterface> FileFormatInterface::createFileFormat(Root* owner, const string& file)
     {
@@ -58,12 +50,23 @@ namespace Oi
             }
     }
 
-    string FileFormatInterface::getFileName() const
+    const double* FileFormatInterface::getNodes(int& nrows, int& ncols) const
     {
-        return file_;
+        return NULL; 
+    }
+ 
+    const unsigned int* FileFormatInterface::getLines(int& nrows, int& ncols) const
+    {
+        return NULL; 
+    }
+   
+    const unsigned int* FileFormatInterface::getSurfaces(int& nrows, int& ncols) const
+    {
+        return NULL; 
     }
 
-/*
+ 
+ /*
  *    void FileFormatInterface::save()
  *    {
  *
@@ -91,32 +94,5 @@ namespace Oi
  *    {
  *
  *    }
- */
-
-    const double* FileFormatInterface::getNodes(int& nrows, int& ncols) const
-    {
-        nrows = nodes_.n_rows;
-        ncols = nodes_.n_cols;
-        return nodes_.memptr();
-    }
- 
-    const unsigned int* FileFormatInterface::getLines(int& nrows, int& ncols) const
-    {
-        nrows = lines_.n_rows;
-        ncols = lines_.n_cols;
-        return lines_.memptr();
-    }
-   
-    const unsigned int* FileFormatInterface::getSurfaces(int& nrows, int& ncols) const
-    {
-        nrows = surfaces_.n_rows;
-        ncols = surfaces_.n_cols;
-        return surfaces_.memptr();
-    }
-
-    const arma::mat& FileFormatInterface::getChannels() const
-    {
-        return channels_;
-    }
-  
+ */ 
 } // namspace Oi

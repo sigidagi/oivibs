@@ -67,4 +67,9 @@ namespace Oi {
     {
         return impl_->getSingularValues(fileName, nrows, ncols);
     }
+
+    const double* Proxy::getFrequencies(int& length) const
+    {
+        return impl_->getFrequencies(length);
+    }
 } // namespace Oi

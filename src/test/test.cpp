@@ -124,10 +124,15 @@ int main(int argc, const char** argv)
     vector<double> singularValues;
 
     const double* pvalues = 0;
+    const double* pfreq = 0;
+    int length(0);
+
     for ( i = 1; i < argc; ++i)
     {
         string fileName = argv[i];
         pvalues = proxy.getSingularValues(fileName, nrows, ncols);
+        pfreq = proxy.getFrequencies(length);
+
         if (pvalues != 0)
         {
             try 
@@ -135,12 +140,13 @@ int main(int argc, const char** argv)
                 Gnuplot gplot("Singular values");
                 gplot.set_title("singular values");
                 gplot.set_grid();
+                gplot.set_ylogscale();
                 gplot.set_style("steps");
                 std::stringstream ss;
                 for (int j = 0; j < ncols; ++j)
                 {
                     ss << "singular values " << j; 
-                    gplot.plot_x(pvalues+j*nrows, pvalues+(j+1)*nrows-1, ss.str() );                   
+                    gplot.plot_xy(pfreq, pfreq+length, pvalues+j*nrows, pvalues+(j+1)*nrows-1, ss.str() );                   
                     ss.str("");
                     ss.clear();
                 }

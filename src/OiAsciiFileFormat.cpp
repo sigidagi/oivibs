@@ -30,7 +30,7 @@
 namespace Oi {
 
     AsciiFileFormat::AsciiFileFormat(Root* owner, const string& file) 
-            : FileFormatInterface(owner, file), existChannels_(false)
+                : root_(owner), file_(file), existChannels_(false)
     {
 
     }
@@ -40,6 +40,37 @@ namespace Oi {
         bool status = channels_.load(file_, arma::raw_ascii);            
         if (status == true)
             existChannels_ = true;
+    }
+
+
+    double AsciiFileFormat::getSamplingInterval() const
+    {
+        return 1.0;
+    }
+
+    bool AsciiFileFormat::existNodes() const
+    {
+        return false;
+    }
+
+    bool AsciiFileFormat::existLines() const  
+    {
+        return false;
+    }
+
+    bool AsciiFileFormat::existSurfaces() const
+    {
+        return false;
+    }
+
+    bool AsciiFileFormat::existChannels() const
+    {
+        return existChannels_;
+    }
+    
+    const arma::mat& AsciiFileFormat::getChannels() const
+    {
+        return channels_;
     }
 
 /*
@@ -86,30 +117,4 @@ namespace Oi {
  *        return true;
  *    }
  */
-    double AsciiFileFormat::getSamplingInterval() const
-    {
-        return 1.0;
-    }
-
-    bool AsciiFileFormat::existNodes() const
-    {
-        return false;
-    }
-
-    bool AsciiFileFormat::existLines() const  
-    {
-        return false;
-    }
-
-    bool AsciiFileFormat::existSurfaces() const
-    {
-        return false;
-    }
-
-    bool AsciiFileFormat::existChannels() const
-    {
-        return existChannels_;
-    }
-
-
 } // namespace Oi

@@ -46,6 +46,8 @@ namespace Oi
             bool start(const FileFormatInterface* format);
             string getFileName() const;
             const double* getSingularValues(int& nrows, int& ncols) const;
+            const double* getFrequencies(int& length) const;
+            
             const arma::cx_cube& getSingularVectors() const;
 
             

@@ -46,7 +46,7 @@ using boost::get;
 namespace Oi {
 
     
-    UniversalFileFormat::UniversalFileFormat(Root* owner, const string& file) : FileFormatInterface(owner, file)
+    UniversalFileFormat::UniversalFileFormat(Root* owner, const string& file) : root_(owner), file_(file)
     {
         // Universal Dataset number is ID for registration of supported Universal Formats.
         uffFactory_.registerClass<UFF15>(15, "nodes");
@@ -162,17 +162,17 @@ namespace Oi {
 
             std::for_each(uffObjects_.begin(), uffObjects_.end(), boost::bind(&UFF::parse, _1));
         }
-        catch (bad_lexical_cast& ecast)
+        catch (bad_lexical_cast& el)
         {
-            std::cerr << ecast.what() << std::endl;
+            std::cerr << el.what() << std::endl;
         }
         catch (bad_numeric_cast& en)
         {
             std::cout << en.what() << std::endl;
         }
-        catch (string& estring)
+        catch (string& es)
         {
-            std::cerr << estring << std::endl;
+            std::cerr << es << std::endl;
         }
         std::cout << "Done!\n";
         std::cout << std::endl;
@@ -379,6 +379,37 @@ namespace Oi {
     bool UniversalFileFormat::existChannels() const 
     {
         return !channels_.is_empty();
+    }
+
+    string UniversalFileFormat::getFileName() const
+    {
+        return file_;
+    }
+
+    const double* UniversalFileFormat::getNodes(int& nrows, int& ncols) const
+    {
+        nrows = nodes_.n_rows;
+        ncols = nodes_.n_cols;
+        return nodes_.memptr();
+    }
+ 
+    const unsigned int* UniversalFileFormat::getLines(int& nrows, int& ncols) const
+    {
+        nrows = lines_.n_rows;
+        ncols = lines_.n_cols;
+        return lines_.memptr();
+    }
+   
+    const unsigned int* UniversalFileFormat::getSurfaces(int& nrows, int& ncols) const
+    {
+        nrows = surfaces_.n_rows;
+        ncols = surfaces_.n_cols;
+        return surfaces_.memptr();
+    }
+
+    const arma::mat& UniversalFileFormat::getChannels() const
+    {
+        return channels_;
     }
 
 } // namespace Oi

@@ -181,6 +181,20 @@ namespace Oi
         return pt->getSingularValues(nrows, ncols);
     }
 
+    const double* Root::getFrequencies(int& length) const
+    {
+        if (procList_.empty())
+            return NULL;
+        
+        foreach( shared_ptr<ProcessingInterface> proc, procList_)
+        {
+            if (proc->getFrequencies(length) != 0)
+                return proc->getFrequencies(length);
+        }
+
+        return NULL;
+    }
+
     shared_ptr<FileFormatInterface> Root::getFileFormat() 
     {
         assert(false);

@@ -231,6 +231,12 @@ namespace Oi
         ncols = singularValues_.n_cols;
         return singularValues_.memptr();
     }
+        
+    const double* FddProcessing::getFrequencies(int& length) const
+    {
+        length = frequencies_.n_elem;
+        return frequencies_.memptr();
+    }
 
     const arma::cx_cube& FddProcessing::getSingularVectors() const
     {

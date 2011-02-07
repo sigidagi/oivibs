@@ -54,6 +54,13 @@ namespace Oi {
     {
         return singulatVectors_;
     }
+    
+
+    const double* SsiProcessing::getFrequencies(int& length) const
+    {
+        length = frequencies_.n_elem;
+        return frequencies_.memptr();
+    }
 
 } // namespace Oi
 

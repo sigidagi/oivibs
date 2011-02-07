@@ -61,6 +61,7 @@ namespace Oi
                 const unsigned int* getLines(int& nrows, int& ncols) const;
                 const unsigned int* getSurfaces(int& nrows, int& ncols) const;
                 const double* getSingularValues(const string& fileName, int& nrows, int& ncols) const; 
+                const double* getFrequencies(int& lenght) const;
             
             public:
                 static Root* Instance();

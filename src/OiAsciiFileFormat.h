@@ -35,6 +35,8 @@ using std::string;
 
 namespace Oi {
     
+    class Root;
+
     class AsciiFileFormat : public FileFormatInterface  
     {
         public:
@@ -49,11 +51,16 @@ namespace Oi {
             bool existSurfaces() const;
             bool existChannels() const;
             
+            const arma::mat& getChannels() const;
             double getSamplingInterval() const;
 
         private:
+            Root* root_; 
+            string file_;
+            
+            arma::mat channels_;
+
             std::ifstream fileStream_;
-           
             bool existChannels_;
     };
 

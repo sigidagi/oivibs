@@ -26,6 +26,7 @@
 #define _UNIVERSALFORMAT_H
 
 #include    "OiUFF.h"
+#include	"OiChannelInfo.h"
 #include    "OiFileFormat.h"
 #include    <vector>
 #include    <string>
@@ -47,7 +48,16 @@ namespace Oi {
     {
     
     private:
-        // list of all possible universal dataset number which represent data (or records)
+        Root* root_;
+        
+        string file_; 
+    
+        arma::Mat<double> nodes_;
+        arma::Mat<unsigned int> lines_;
+        arma::Mat<unsigned int> surfaces_;
+        arma::Mat<double> channels_;
+        
+        vector<ChannelInfo> channelInfo_;
 
         // pivate data
     private:
@@ -73,6 +83,7 @@ namespace Oi {
         ~UniversalFileFormat();
 
         // FileFormatInterface
+        
         // First pass. It just find information: uff type or format, position in file 
         // and how big that format is (number of lines).
         // Second pass is accomplished by created UFF object.
@@ -83,7 +94,14 @@ namespace Oi {
         bool existSurfaces() const;
         bool existChannels() const;
         
+        const arma::mat& getChannels() const;
         double getSamplingInterval() const;
+
+        const double* getNodes(int& nrows, int& ncols) const;
+        const unsigned int* getLines(int& nrows, int& ncols) const;
+        const unsigned int* getSurfaces(int& nrows, int& ncols) const;
+
+        string getFileName() const;
 
         /*
          *void save();
