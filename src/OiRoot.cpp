@@ -37,7 +37,7 @@ namespace Oi
 
     Root* Root::instance_ = NULL;
     
-    Root::Root()
+    Root::Root() : processId_(-1)
     {
 
     }
@@ -63,9 +63,10 @@ namespace Oi
     
     // Implementation of ProxyInterface interface
 
-    bool Root::init(int argc, const char** argv, int processName)
+    bool Root::init(int argc, const char** argv, int processId)
     {
-        vector<string> fileList;
+        fileList_.clear();
+
         for (int i = 0; i < argc; ++i)
         {
             // check if file format is supported.
@@ -83,15 +84,15 @@ namespace Oi
                 strInFile = strInFile.substr(idx+1);
             }
 
-            fileList.push_back(strInFile);
+            fileList_.push_back(strInFile);
         }
         
-        if (fileList.empty())
+        if (fileList_.empty())
             return false;
              
         // Root is responsible for initialization of Storage
         // 
-        foreach(string file, fileList)
+        foreach(string file, fileList_)
         {
             shared_ptr<FileFormatInterface> fileFormat = FileFormatInterface::createFileFormat(this, file);
             fileFormat->parse();
@@ -105,7 +106,15 @@ namespace Oi
             
             if (fileFormat->existChannels())
             {
-                shared_ptr<ProcessingInterface> proc = ProcessingInterface::createProcess(processName, file);
+                shared_ptr<ProcessingInterface> proc = ProcessingInterface::createProcess(processId, file);
+                if (proc.get() == 0) 
+                {
+                    std::cerr << "Process name is incorrect!\n";
+                    continue;
+                }
+
+                processId_ = processId;
+               
                 if (proc->start(fileFormat.get()))
                     procList_.push_back(proc);
  
@@ -171,10 +180,76 @@ namespace Oi
         }
         return NULL;
     }
-
-    const double* Root::getSingularValues(const string& fileName, int& nrows, int& ncols) const 
+   
+    bool Root::selectProcess(int processId) 
     {
-        shared_ptr<ProcessingInterface> pt = getProcess(fileName);
+        if (procList_.empty())
+            return false;
+        
+        foreach(shared_ptr<ProcessingInterface> proc, procList_) 
+        {
+            // check if exist process with such id.
+            if (proc->getProcessId() == processId)
+            {
+                processId_ = processId;
+                return true;
+            }
+        }
+
+        return false;
+    }
+    
+    bool Root::applyProcess(int processId)
+    {
+        // check if exist channel data
+        if (fileFormatList_.empty())
+            return false;
+        
+        // check if process with such processId exist. If yes - there is no need to do it again.
+        if (selectProcess(processId))
+            return true;
+
+        // check if exist channel data
+        bool exitData = false;
+        foreach(shared_ptr<FileFormatInterface> format, fileFormatList_)
+        {
+            if (format->existChannels())
+            {
+                shared_ptr<ProcessingInterface> proc = ProcessingInterface::createProcess(processId, format->getFileName() );
+                // check if processId is valid
+                if (proc.get() == 0)
+                    return false;
+                
+                // do processing and append to the list processed data.
+                if (!proc->start(format.get()))
+                    return false;
+                
+                procList_.push_back(proc);
+                exitData = true;
+            }
+        }
+
+        return exitData;
+    }
+    
+    int Root::getNumberOfMeasurements() const
+    {
+        if (procList_.empty())
+            return 0;
+        
+        vector<int> idList;
+        std::transform(procList_.begin(),
+                       procList_.end(),
+                       back_inserter(idList),
+                       boost::bind(&ProcessingInterface::getProcessId, _1));
+
+        return std::count(idList.begin(), idList.end(), processId_);
+    }
+
+    const double* Root::getSingularValues(unsigned int measurementNumber, int& nrows, int& ncols) const 
+    {
+        // current (selected or by default) process.
+        shared_ptr<ProcessingInterface> pt = getProcess(processId_, measurementNumber);
         if (pt.get() == 0)
             return NULL;
         
@@ -183,42 +258,66 @@ namespace Oi
 
     const double* Root::getFrequencies(int& length) const
     {
-        if (procList_.empty())
+        // select the first measurement if exist. There should be no different
+        // sampling intervals between measurement if more exist.
+        shared_ptr<ProcessingInterface> pt = getProcess(processId_, 0); 
+        if (pt.get() == 0)
             return NULL;
         
-        foreach( shared_ptr<ProcessingInterface> proc, procList_)
-        {
-            if (proc->getFrequencies(length) != 0)
-                return proc->getFrequencies(length);
-        }
+        return pt->getFrequencies(length);
 
-        return NULL;
     }
 
+    const complex<double>* Root::getModes(double frequency, unsigned int measurementNumber, int& nchannels, int& nsvd) const 
+    {
+        shared_ptr<ProcessingInterface> proc = getProcess(processId_, measurementNumber);            
+        if (proc.get() == 0)
+            return NULL;
+    
+        int length(0);
+        const double* frequencies = proc->getFrequencies(length);         
+        if (frequencies == 0)
+            return NULL;
+        
+        int index = Oi::find_nearest(frequencies, frequencies+length, frequency);
+        const arma::cx_mat& modes = proc->getModes(index);
+        
+        if (modes.is_empty())
+            return NULL;
+
+        nchannels = modes.n_rows;
+        nsvd = modes.n_cols;
+        return modes.memptr(); 
+    }
+   
     shared_ptr<FileFormatInterface> Root::getFileFormat() 
     {
         assert(false);
         return shared_ptr<FileFormatInterface>();
     }
    
-    shared_ptr<ProcessingInterface> Root::getProcess(const string& fileName) const 
+    shared_ptr<ProcessingInterface> Root::getProcess(int processId, unsigned int measurementNumber) const 
     {
-        string file = Oi::stripToFileName(fileName);
-
-        vector<string> coll;
+        vector<int> coll;
         std::transform(procList_.begin(), 
                        procList_.end(), 
                        back_inserter(coll), 
-                       boost::bind(&ProcessingInterface::getFileName, _1));
+                       boost::bind(&ProcessingInterface::getProcessId, _1));
     
-        vector<string>::const_iterator cit;
+        // measurementNumber is zero based index measurementNumber. Check 
+        if ((int)coll.size() < (measurementNumber + 1))
+            return shared_ptr<ProcessingInterface>();
+
+
+        vector<int>::const_iterator cit;
         vector< shared_ptr<ProcessingInterface> >::const_iterator proc_it;
         
-        cit = find(coll.begin(), coll.end(), file);
+        cit = find(coll.begin(), coll.end(), processId);
         if (cit != coll.end())
         {
+            // iterator stops at the first found processId
             int idx = (int)(cit - coll.begin());
-            return procList_[idx]; 
+            return procList_[idx + measurementNumber]; 
         }
         else
             return shared_ptr<ProcessingInterface>();

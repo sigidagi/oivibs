@@ -44,10 +44,9 @@ namespace Oi {
         {
             return shared_ptr<ProcessingInterface>(new SsiProcessing(file));
         }
-        // default process.
         else
         {
-            return shared_ptr<ProcessingInterface>(new FddProcessing(file));
+            return shared_ptr<ProcessingInterface>();
         }
     }
    

@@ -48,7 +48,12 @@ namespace Oi
     {
         return file_;
     }
-        
+    
+    int FddProcessing::getProcessId() const
+    {
+        return Process::FDD;
+    }
+
     void  FddProcessing::inverse( Mat<double>& x)
     {
         if (x.n_cols == 0 || x.n_rows == 0)
@@ -241,6 +246,19 @@ namespace Oi
     const arma::cx_cube& FddProcessing::getSingularVectors() const
     {
         return singularVectors_;
+    }
+    
+    const arma::cx_mat& FddProcessing::getModes(unsigned int freqIndex)
+    {
+        if (frequencies_.n_elem < freqIndex)
+        {
+            modes_.reset();
+            return modes_;
+        }
+
+        modes_ = singularVectors_.slice(freqIndex);
+        return modes_;
+        
     }
 
 } // namespace Oi

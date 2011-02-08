@@ -23,6 +23,7 @@
 // =====================================================================================
 
 #include    "OiSsiProcessing.h"
+#include	"OiUtil.h"
 
 namespace Oi {
 
@@ -35,6 +36,11 @@ namespace Oi {
     {
         return file_;
     }
+    
+    int SsiProcessing::getProcessId() const
+    {
+        return Process::SSI;
+    }
 
     bool SsiProcessing::start(const FileFormatInterface* format)
     {
@@ -45,14 +51,14 @@ namespace Oi {
     
     const double* SsiProcessing::getSingularValues(int& nrows, int& ncols) const
     {
-        nrows = singulatValues_.n_rows;
-        ncols = singulatValues_.n_cols;
-        return singulatValues_.memptr();        
+        nrows = singularValues_.n_rows;
+        ncols = singularValues_.n_cols;
+        return singularValues_.memptr();        
     }
 
     const arma::cx_cube& SsiProcessing::getSingularVectors() const
     {
-        return singulatVectors_;
+        return singularVectors_;
     }
     
 
@@ -60,6 +66,18 @@ namespace Oi {
     {
         length = frequencies_.n_elem;
         return frequencies_.memptr();
+    }
+
+    const arma::cx_mat& SsiProcessing::getModes(unsigned int freqIndex)
+    {
+        if (frequencies_.n_elem < freqIndex)
+        {
+            modes_.reset();
+            return modes_;
+        }
+
+        modes_ = singularVectors_.slice(freqIndex);
+        return modes_;
     }
 
 } // namespace Oi

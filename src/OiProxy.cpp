@@ -63,13 +63,35 @@ namespace Oi {
         return impl_->getSurfaces(nrows, ncols);
     }
 
-    const double* Proxy::getSingularValues(const string& fileName, int& nrows, int& ncols) const 
+    const double* Proxy::getSingularValues(unsigned int measurementNumber, int& nrows, int& ncols) const 
     {
-        return impl_->getSingularValues(fileName, nrows, ncols);
+        return impl_->getSingularValues(measurementNumber, nrows, ncols);
     }
 
     const double* Proxy::getFrequencies(int& length) const
     {
         return impl_->getFrequencies(length);
     }
+
+    const complex<double>* Proxy::getModes(double frequency, unsigned int mesurementNumber, int& nchannels, int& nsvd) const 
+    {
+        return impl_->getModes(frequency, mesurementNumber, nchannels, nsvd);
+    }
+
+    bool Proxy::selectProcess(int processId)
+    {
+        return impl_->selectProcess(processId);
+    }
+
+    bool Proxy::applyProcess(int processId) 
+    {
+        return impl_->applyProcess(processId);
+    }
+
+    int Proxy::getNumberOfMeasurements() const
+    {
+        return impl_->getNumberOfMeasurements();
+    }
+
+
 } // namespace Oi

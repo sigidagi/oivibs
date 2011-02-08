@@ -25,9 +25,9 @@
 #ifndef _OIUTIL_H
 #define _OIUTIL_H
 
-#include <string>
-#include <boost/shared_ptr.hpp>
-#include <armadillo>
+#include    <string>
+#include    <boost/shared_ptr.hpp>
+#include    <armadillo>
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
@@ -45,7 +45,7 @@ namespace Oi
         {
             FDD, // frequency domain decomposition
             SSI  // stochastic subspace identification
-                 // other posisible methods..
+                 // other posible methods..
         };  
     };
 
@@ -54,7 +54,21 @@ namespace Oi
     string stripToFileName(const string& pathToFile);
     string stripToExtension(const string& pathToFile);
     string stripToPath(const string& pathToFile);
-
+   
+    // Array has to be sorted first. Returns index of nearest to the appled value. 
+    template<class Iterator, class T>
+    ptrdiff_t find_nearest(Iterator first, Iterator last, T value)
+    {
+        ptrdiff_t ret = 0;
+        while (first != last)
+        {
+            if (*first > value)
+                break;
+            ++first;
+            ++ret;
+        }
+        return ret;
+    }
     
     template<class T> 
     struct sort_index

@@ -126,39 +126,36 @@ int main(int argc, const char** argv)
     const double* pvalues = 0;
     const double* pfreq = 0;
     int length(0);
+    
+    // select first mesurement.
+    pvalues = proxy.getSingularValues(0, nrows, ncols);
+    pfreq = proxy.getFrequencies(length);
 
-    for ( i = 1; i < argc; ++i)
+    if (pvalues != 0)
     {
-        string fileName = argv[i];
-        pvalues = proxy.getSingularValues(fileName, nrows, ncols);
-        pfreq = proxy.getFrequencies(length);
-
-        if (pvalues != 0)
+        try 
         {
-            try 
+            Gnuplot gplot("Singular values");
+            gplot.set_title("singular values");
+            gplot.set_grid();
+            gplot.set_ylogscale();
+            gplot.set_style("steps");
+            std::stringstream ss;
+            for (int j = 0; j < ncols; ++j)
             {
-                Gnuplot gplot("Singular values");
-                gplot.set_title("singular values");
-                gplot.set_grid();
-                gplot.set_ylogscale();
-                gplot.set_style("steps");
-                std::stringstream ss;
-                for (int j = 0; j < ncols; ++j)
-                {
-                    ss << "singular values " << j; 
-                    gplot.plot_xy(pfreq, pfreq+length, pvalues+j*nrows, pvalues+(j+1)*nrows-1, ss.str() );                   
-                    ss.str("");
-                    ss.clear();
-                }
-                
-                wait_for_key();
+                ss << "singular values " << j; 
+                gplot.plot_xy(pfreq, pfreq+length, pvalues+j*nrows, pvalues+(j+1)*nrows-1, ss.str() );                   
+                ss.str("");
+                ss.clear();
             }
-            catch(GnuplotException& e)
-            {
-                std::cout << e.what() << "\n";
-            }
-
+            
+            wait_for_key();
         }
+        catch(GnuplotException& e)
+        {
+            std::cout << e.what() << "\n";
+        }
+
     }
     
 	return 0;

@@ -45,9 +45,11 @@ namespace Oi
          public:
             bool start(const FileFormatInterface* format);
             string getFileName() const;
+            int getProcessId() const;
             const double* getSingularValues(int& nrows, int& ncols) const;
             const double* getFrequencies(int& length) const;
             
+            const arma::cx_mat& getModes(unsigned int freqIndex);
             const arma::cx_cube& getSingularVectors() const;
 
             
@@ -68,6 +70,7 @@ namespace Oi
             arma::Mat<double> singularValues_;
             cx_cube singularVectors_;
             colvec frequencies_;
+            cx_mat modes_;
 
     };
 

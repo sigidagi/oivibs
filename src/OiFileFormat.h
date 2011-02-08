@@ -50,13 +50,15 @@ namespace Oi {
             virtual bool existLines() const = 0;
             virtual bool existSurfaces() const = 0;
             virtual bool existChannels() const = 0;
-            
+           
             virtual const arma::mat& getChannels() const = 0;
             virtual double getSamplingInterval() const = 0;
 
             virtual const double* getNodes(int& nrows, int& ncols) const;
             virtual const unsigned int* getLines(int& nrows, int& ncols) const;
             virtual const unsigned int* getSurfaces(int& nrows, int& ncols) const;
+
+            virtual string getFileName() const = 0;
 
     };
 

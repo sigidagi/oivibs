@@ -25,9 +25,11 @@
 #ifndef _OIPROXY_H
 #define _OIPROXY_H
 
-#include <string>
+#include    <string>
+#include	<complex>
 
 using std::string;
+using std::complex;
 
 #define DLL __atribute__(dllexport)
 
@@ -54,11 +56,19 @@ namespace Oi {
         public:
             virtual bool init(int argc, const char** fileList, int processName = 0) = 0;
             virtual bool connect(const string& name) = 0;
+            
             virtual const double* getNodes(int&, int& ) const = 0;
             virtual const unsigned int* getLines(int&, int& ) const = 0;
             virtual const unsigned int* getSurfaces(int&, int& ) const = 0;
-            virtual const double* getSingularValues(const string& fileName, int& nrows, int& ncols) const = 0; 
+           
+            virtual int getNumberOfMeasurements() const = 0;
+            virtual const double* getSingularValues(unsigned int mesurementNumber, int& nrows, int& ncols) const = 0; 
             virtual const double* getFrequencies(int& length) const = 0;
+            virtual const complex<double>* getModes(double frequency, unsigned int measurementNumber, int& nchannels, int& nsvd) const = 0; 
+
+            virtual bool selectProcess(int processId) = 0;
+            virtual bool applyProcess(int processId) = 0; 
+
     };
 } // namespace Oi
 
@@ -75,11 +85,18 @@ namespace Oi {
         public:
             bool init(int argc, const char** fileList, int processName = 0);
             bool connect(const string& name);
+
             const double* getNodes(int& nrows, int& ncols) const;
             const unsigned int* getLines(int& nrows, int& ncols) const;
             const unsigned int* getSurfaces(int& nrows, int& ncols) const;
-            const double* getSingularValues(const string& fileName, int& nrows, int& ncols) const; 
+
+            int getNumberOfMeasurements() const;
+            const double* getSingularValues(unsigned int mesurementNumber, int& nrows, int& ncols) const; 
             const double* getFrequencies(int& lenght) const;
+            const complex<double>* getModes(double frequency, unsigned int measurementNumber, int& nchannels, int& nsvd) const; 
+
+            bool selectProcess(int processId);
+            bool applyProcess(int processId); 
 
         private:
             ProxyInterface* impl_; 

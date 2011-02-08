@@ -72,7 +72,11 @@ namespace Oi {
     {
         return channels_;
     }
-
+    
+    string AsciiFileFormat::getFileName() const
+    {
+        return file_;
+    }
 /*
  *    bool AsciiFileFormat::searchSamplingInterval(const string& fileName)
  *    {

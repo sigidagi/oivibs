@@ -49,7 +49,9 @@ namespace Oi
                 Root& operator=(Root const&);
 
                 static Root* instance_;
+                int processId_;
 
+                vector<string> fileList_;
                 vector< shared_ptr<FileFormatInterface> >fileFormatList_;
                 vector< shared_ptr<ProcessingInterface> > procList_;
             
@@ -57,17 +59,24 @@ namespace Oi
             public:
                 bool init(int argc, const char** fileList, int processName = 0);
                 bool connect(const string& repoName);
+                
                 const double* getNodes(int& nrows, int& ncols) const;
                 const unsigned int* getLines(int& nrows, int& ncols) const;
                 const unsigned int* getSurfaces(int& nrows, int& ncols) const;
-                const double* getSingularValues(const string& fileName, int& nrows, int& ncols) const; 
+
+                int getNumberOfMeasurements() const;
+                const double* getSingularValues(unsigned int mesurementNumber, int& nrows, int& ncols) const; 
                 const double* getFrequencies(int& lenght) const;
-            
+                const complex<double>* getModes(double frequency, unsigned int measurementNumber, int& nchannels, int& nsvd) const; 
+                
+                bool selectProcess(int processId);
+                bool applyProcess(int processId); 
+
             public:
                 static Root* Instance();
                 
                 shared_ptr<FileFormatInterface> getFileFormat();
-                shared_ptr<ProcessingInterface> getProcess(const string& fileName) const;
+                shared_ptr<ProcessingInterface> getProcess(int processId, unsigned int measurementNumber) const; 
 
     };
 

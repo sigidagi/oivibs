@@ -53,6 +53,7 @@ namespace Oi {
             
             const arma::mat& getChannels() const;
             double getSamplingInterval() const;
+            string getFileName() const;
 
         private:
             Root* root_; 
