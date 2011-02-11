@@ -34,15 +34,18 @@
 #include	<vector>
 #include	<fstream>
 #include	<algorithm>
-#include	<boost/bind.hpp>
 #include	<boost/any.hpp>
+#include	<boost/bind.hpp>
+#include	<boost/function.hpp>
 #include	<boost/lexical_cast.hpp>
 #include	<boost/numeric/conversion/cast.hpp>
 
+using std::map;
 using std::string;
+using boost::function;
 using boost::lexical_cast;
-using boost::bad_lexical_cast;
 using boost::numeric_cast;
+using boost::bad_lexical_cast;
 using boost::bad_numeric_cast;
 
 
@@ -76,19 +79,18 @@ template<class K>
 class UFactory
 {
     private:
-        typedef UFF* (*createObjectFunc)();
+        function<UFF* ()> createObjectFunc;
 
-        std::map<K, createObjectFunc> objectCreator;
-        std::map<K, string> categoryList;
+        map<K, function<UFF* ()> > objectCreator;
+        map<K, string> categoryList;
 
         template<typename S>
         static UFF* createObject()
         {
             return new S();
         }
-
+    
     public:
-       
         template<typename S>
         void registerClass(K id, const string& category)
         {
@@ -98,14 +100,19 @@ class UFactory
                 // error handling here
                 return;
             }
-            objectCreator.insert( std::make_pair<K, createObjectFunc>(id, &createObject<S>) );
-            categoryList.insert( std::make_pair<K, string>(id, category) );
+
+            createObjectFunc = &createObject<S>;
+            std::pair<K, function<UFF* ()> > object(id, createObjectFunc);
+            objectCreator.insert( object );
+                
+            std::pair<K, string> cat(id, category);    
+            categoryList.insert( cat );
         }
         
         void getRegistrationKeys( std::vector<int>& keys)
         {
             keys.clear();
-            typename std::map<K, createObjectFunc>::iterator iter;
+            typename map<K, function<UFF* ()> >::iterator iter;
             for (iter = objectCreator.begin(); iter != objectCreator.end(); ++iter)
             {
                 keys.push_back( (*iter).first );
@@ -139,7 +146,7 @@ class UFactory
 
         UFF* createObject(K id)
         {
-            typename std::map<K, createObjectFunc>::iterator iter = objectCreator.find(id);
+            typename std::map<K, function<UFF* ()> >::iterator iter = objectCreator.find(id);
             if (iter == objectCreator.end())
                 return NULL;
 

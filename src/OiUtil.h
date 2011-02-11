@@ -80,7 +80,7 @@ namespace Oi
         }
         const T arr_;
     };
-
+    
 
     template<typename In, typename Out, typename Pred>
     Out copy_if(In first, In last, Out res, Pred Pr)

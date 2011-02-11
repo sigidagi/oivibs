@@ -25,12 +25,15 @@
 #ifndef _OIFORMAT_H
 #define _OIFORMAT_H
 
+#include	"OiChannelInfo.h"
 #include    <string>
+#include	<vector>
 #include	<armadillo>
 #include    <boost/shared_ptr.hpp>
 
 using boost::shared_ptr;
 using std::string;
+using std::vector;
 
 namespace Oi {
     
@@ -57,6 +60,7 @@ namespace Oi {
             virtual const double* getNodes(int& nrows, int& ncols) const;
             virtual const unsigned int* getLines(int& nrows, int& ncols) const;
             virtual const unsigned int* getSurfaces(int& nrows, int& ncols) const;
+            virtual const vector<ChannelInfo>* getChannelInfo() const;
 
             virtual string getFileName() const = 0;
 

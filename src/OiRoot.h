@@ -30,7 +30,6 @@
 #include    <boost/shared_ptr.hpp>
 #include    <vector>
 
-
 using boost::shared_ptr;
 using std::vector;
 
@@ -75,7 +74,7 @@ namespace Oi
             public:
                 static Root* Instance();
                 
-                shared_ptr<FileFormatInterface> getFileFormat();
+                shared_ptr<FileFormatInterface> getFileFormat(unsigned int measurementNumber) const;
                 shared_ptr<ProcessingInterface> getProcess(int processId, unsigned int measurementNumber) const; 
 
     };

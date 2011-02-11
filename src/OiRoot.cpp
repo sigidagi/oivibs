@@ -32,20 +32,16 @@
 
 #define     foreach BOOST_FOREACH
 
+using boost::bind;
+
 namespace Oi
 {
 
     Root* Root::instance_ = NULL;
     
-    Root::Root() : processId_(-1)
-    {
+    Root::Root() : processId_(-1) {}
 
-    }
-
-    Root::~Root()
-    {
-
-    }
+    Root::~Root() {}
 
     Root& Root::operator=(Root const&)
     {
@@ -117,10 +113,7 @@ namespace Oi
                
                 if (proc->start(fileFormat.get()))
                     procList_.push_back(proc);
- 
             }
-            
-
         } // end of foreach in fileList
         
         if (fileFormatList_.empty())
@@ -195,7 +188,6 @@ namespace Oi
                 return true;
             }
         }
-
         return false;
     }
     
@@ -228,7 +220,6 @@ namespace Oi
                 exitData = true;
             }
         }
-
         return exitData;
     }
     
@@ -265,7 +256,6 @@ namespace Oi
             return NULL;
         
         return pt->getFrequencies(length);
-
     }
 
     const complex<double>* Root::getModes(double frequency, unsigned int measurementNumber, int& nchannels, int& nsvd) const 
@@ -284,43 +274,80 @@ namespace Oi
         
         if (modes.is_empty())
             return NULL;
-
+    
+        // apply directions for every channel 
+        shared_ptr<FileFormatInterface> format = getFileFormat(measurementNumber);      
+        if (format.get() == 0)
+            return NULL;
+        
+        const vector<ChannelInfo>* channelInfo = format->getChannelInfo(); 
+        assert(channelInfo->size() == modes.n_rows);
+        
+        
+        /*
+         *for (size_t i = 0; i < channelInfo->size(); ++i)
+         *{
+         *    for (size_t j = 0; j < modes.n_cols; ++j)
+         *    {
+         *        int value = channelInfo->at(i).directionValue();
+         *        modes(i,j) = value % modes(i,j);
+         *    }
+         *}
+         */
+        
         nchannels = modes.n_rows;
         nsvd = modes.n_cols;
         return modes.memptr(); 
     }
    
-    shared_ptr<FileFormatInterface> Root::getFileFormat() 
+    shared_ptr<FileFormatInterface> Root::getFileFormat(unsigned int measurementNumber) const 
     {
-        assert(false);
+        if (fileFormatList_.empty())
+            return shared_ptr<FileFormatInterface>();
+        
+        int numberOfMeasurements(0);
+        foreach(shared_ptr<FileFormatInterface> format, fileFormatList_)
+        {
+            if (format->existChannels())
+                ++numberOfMeasurements;
+            if (numberOfMeasurements == (measurementNumber+1))
+                return format;
+        }
+        
         return shared_ptr<FileFormatInterface>();
     }
-   
+
     shared_ptr<ProcessingInterface> Root::getProcess(int processId, unsigned int measurementNumber) const 
     {
-        vector<int> coll;
-        std::transform(procList_.begin(), 
-                       procList_.end(), 
-                       back_inserter(coll), 
-                       boost::bind(&ProcessingInterface::getProcessId, _1));
-    
-        // measurementNumber is zero based index measurementNumber. Check 
-        if ((int)coll.size() < (measurementNumber + 1))
+        if (procList_.empty())
             return shared_ptr<ProcessingInterface>();
-
-
-        vector<int>::const_iterator cit;
-        vector< shared_ptr<ProcessingInterface> >::const_iterator proc_it;
         
-        cit = find(coll.begin(), coll.end(), processId);
-        if (cit != coll.end())
+        /*
+         *int numberOfMeasurements(0);
+         *foreach(shared_ptr<ProcessingInterface> proc, procList_)
+         *{
+         *    if (proc->getProcessId() == processId)
+         *        ++numberOfMeasurements;
+         *    if (numberOfMeasurements == (measurementNumber+1))
+         *        return proc;
+         *}
+         */
+        
+        vector< shared_ptr<ProcessingInterface> >::const_iterator proc_it;
+        proc_it = find_if(procList_.begin(),
+                          procList_.end(),
+                          bind(std::equal_to<int>(),
+                          bind(bind(&ProcessingInterface::getProcessId, _1),
+                          _1),
+                          processId));
+        
+        if (proc_it != procList_.end() && std::distance(proc_it, procList_.end()) > measurementNumber)
         {
-            // iterator stops at the first found processId
-            int idx = (int)(cit - coll.begin());
-            return procList_[idx + measurementNumber]; 
+             std::advance(proc_it, measurementNumber);     
+             return *proc_it;
         }
-        else
-            return shared_ptr<ProcessingInterface>();
+
+        return shared_ptr<ProcessingInterface>();
     }
 
 

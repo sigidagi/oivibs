@@ -67,17 +67,17 @@ namespace Oi {
         // holds raw data after parsing uff file.
         vector< shared_ptr<UFF> > uffObjects_;
         
-        UFactory<int> uffFactory_;
         typedef vector< shared_ptr<UFF> >::iterator uffIterator;
+        UFactory<int> uffFactory_;
 
         // helper function for creating matrix of records
         int getNumberOfSamples();
-        
         void loadChannelInfo(uffIterator it, int nsteps);
         void loadChannels();
+        
         template<typename T>
         void loadGeometry( arma::Mat<T>& geo, const string& category, int ncols);
-
+        
     public:
         UniversalFileFormat(Root* owner, const string& file);
         ~UniversalFileFormat();
@@ -100,9 +100,10 @@ namespace Oi {
         const double* getNodes(int& nrows, int& ncols) const;
         const unsigned int* getLines(int& nrows, int& ncols) const;
         const unsigned int* getSurfaces(int& nrows, int& ncols) const;
-
+        
+        // other public methods
         string getFileName() const;
-
+        const vector<ChannelInfo>* getChannelInfo() const;
         /*
          *void save();
          *void load();

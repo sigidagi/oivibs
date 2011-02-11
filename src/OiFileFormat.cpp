@@ -64,7 +64,11 @@ namespace Oi
     {
         return NULL; 
     }
-
+    
+    const vector<ChannelInfo>* FileFormatInterface::getChannelInfo() const
+    {
+        return NULL;
+    }
  
  /*
  *    void FileFormatInterface::save()

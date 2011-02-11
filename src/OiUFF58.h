@@ -111,7 +111,7 @@ class UFF58 : public UFF
             
             // Record 1. ID or name. 
             getline(fileStream, line);
-            info_.name = line;
+            info_.name( line );
 
             advanceLines(fileStream, 4);
 
@@ -135,10 +135,10 @@ class UFF58 : public UFF
 
             std::advance(string_it, 6);
             // field 6 - node.            
-            info_.node = numeric_cast<unsigned int>(lexical_cast<int>(*string_it));  
+            info_.node( numeric_cast<unsigned int>(lexical_cast<int>(*string_it)) );  
             std::advance(string_it, 1);
             // field 7 - direction
-            info_.direction = boost::lexical_cast<int>(*string_it);
+            info_.direction( boost::lexical_cast<int>(*string_it) );
 
             ss.str(""); ss.clear(); ss.seekg(0, std::ios::beg);
             
@@ -159,9 +159,9 @@ class UFF58 : public UFF
             ss.clear(); ss.seekg(0, std::ios::beg);
             
             std::advance(string_it, 2);
-            info_.nsamples = numeric_cast<unsigned int>(lexical_cast<int>(*string_it));
+            info_.nsamples( numeric_cast<unsigned int>(lexical_cast<int>(*string_it)) );
             std::advance(string_it, 3);
-            info_.sampling = boost::lexical_cast<double>(*string_it);
+            info_.sampling( boost::lexical_cast<double>(*string_it) );
 
             ss.str(""); ss.clear();
             // --------------------------end parse header------------------------
@@ -173,7 +173,7 @@ class UFF58 : public UFF
             // --------------------------- parse data -------------------------------
             // reserve memory for records_ data.
             records_.clear();
-            records_.reserve(info_.nsamples);
+            records_.reserve(info_.nsamples());
             double value(0.0);
             
             // 11 lines takes header of UFF58
@@ -193,12 +193,12 @@ class UFF58 : public UFF
             }
             // ---------------------------- end of parse data --------------------------
             
-            if (info_.nsamples != static_cast<unsigned int>(records_.size()))
+            if (info_.nsamples() != static_cast<unsigned int>(records_.size()))
             {
                 ss.clear(); ss.str("");
                 ss << "UFF58 Warning!  ";
                 ss << "Size mismatch between saved data(" << records_.size();
-                ss << ") and recorded number in the header(" << info_.nsamples << ")\n"; 
+                ss << ") and recorded number in the header(" << info_.nsamples() << ")\n"; 
                 std::cerr << ss.str();
 //                throw ss.str();
             }

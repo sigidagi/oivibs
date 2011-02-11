@@ -26,13 +26,66 @@
 #ifndef  OICHANNELINFO_INC
 #define  OICHANNELINFO_INC
 
-struct ChannelInfo 
+
+#include	<utility>
+
+class ChannelInfo 
 {
-    string name;
-    unsigned int node;
-    int direction;
-    unsigned int nsamples;
-    double sampling;
+    private:
+        string name_;
+        unsigned int node_;
+        int directionValue_;
+        int directionAxis_;
+        unsigned int nsamples_;
+        double sampling_;
+
+    public:
+        string name() const { return name_; }
+        void name(const string& name) { name_ = name; }
+
+        unsigned int node() const { return node_; }
+        void node(unsigned int node) { node_ = node; }
+        
+        int directionValue() const { return directionValue_; }
+        int directionAxis() const { return directionAxis_; }
+        void direction(int dir)
+        {
+            if (dir == 1)
+            {
+                directionAxis_ = 0; directionValue_ = 1;
+            }
+            else if (dir == -1)
+            {
+                directionAxis_ = 0; directionValue_ = -1;
+            }
+            else if (dir == 2)
+            {
+                directionAxis_ = 1; directionValue_ =  1;
+            }
+            else if (dir == -2)
+            {
+                directionAxis_ = 1; directionValue_ = -1;
+            }
+            else if (dir == 3)
+            {
+                directionAxis_ = 2; directionValue_ = 1;
+            }
+            else if (dir == -3)
+            {
+                directionAxis_ = 2; directionValue_ = -1;
+            }
+            else
+            {
+                directionAxis_ = -1; directionValue_ = 0;
+            }
+                
+        }
+
+        unsigned int nsamples() const { return nsamples_; }
+        void nsamples(unsigned int nsamples) { nsamples_ = nsamples; }
+
+        double sampling() const { return sampling_; }
+        void sampling(double sampling) { sampling_ = sampling; }
 };
 
 #endif   // ----- #ifndef OICHANNELINFO_INC  -----
