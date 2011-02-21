@@ -270,7 +270,7 @@ namespace Oi
             return NULL;
         
         int index = Oi::find_nearest(frequencies, frequencies+length, frequency);
-        const arma::cx_mat& modes = proc->getModes(index);
+        arma::cx_mat& modes = proc->getModes(index);
         
         if (modes.is_empty())
             return NULL;
@@ -281,23 +281,19 @@ namespace Oi
             return NULL;
         
         const vector<ChannelInfo>* channelInfo = format->getChannelInfo(); 
+        assert(channelInfo != 0);
         assert(channelInfo->size() == modes.n_rows);
         
+        nchannels = (int)modes.n_rows;
+        nsvd = (int)modes.n_cols;
         
-        /*
-         *for (size_t i = 0; i < channelInfo->size(); ++i)
-         *{
-         *    for (size_t j = 0; j < modes.n_cols; ++j)
-         *    {
-         *        int value = channelInfo->at(i).directionValue();
-         *        modes(i,j) = value % modes(i,j);
-         *    }
-         *}
-         */
+        for (int r = 0; r < nchannels; ++r)
+        {
+            for ( int c = 0; c < nsvd; ++c)
+                modes(r,c) = modes(r,c) * double(channelInfo->at(r).directionValue());
+        }
         
-        nchannels = modes.n_rows;
-        nsvd = modes.n_cols;
-        return modes.memptr(); 
+        return modes.memptr();
     }
    
     shared_ptr<FileFormatInterface> Root::getFileFormat(unsigned int measurementNumber) const 
@@ -306,13 +302,33 @@ namespace Oi
             return shared_ptr<FileFormatInterface>();
         
         int numberOfMeasurements(0);
-        foreach(shared_ptr<FileFormatInterface> format, fileFormatList_)
+        vector< shared_ptr<FileFormatInterface> >::const_iterator it;
+
+        it = std::find_if(fileFormatList_.begin(), 
+                      fileFormatList_.end(), 
+                      [&numberOfMeasurements, measurementNumber](shared_ptr<FileFormatInterface> format)->bool
         {
             if (format->existChannels())
                 ++numberOfMeasurements;
             if (numberOfMeasurements == (measurementNumber+1))
-                return format;
-        }
+                return true;
+            
+            return false;
+        });
+        
+        if (it != fileFormatList_.end())
+            return *it;
+
+        /*
+         *int numberOfMeasurements(0);
+         *foreach(shared_ptr<FileFormatInterface> format, fileFormatList_)
+         *{
+         *    if (format->existChannels())
+         *        ++numberOfMeasurements;
+         *    if (numberOfMeasurements == (measurementNumber+1))
+         *        return format;
+         *}
+         */
         
         return shared_ptr<FileFormatInterface>();
     }

@@ -6,15 +6,15 @@
 #include	<algorithm>
 #include	<iterator>
 #include	<sstream>
+#include	<complex>
 #include	"gnuplot_i.hpp"
 
-#include    <unistd.h>
 #include    <cstdio>
-#include	<memory.h>
 
 using namespace std;
 
 void wait_for_key();
+void delete_plot(Gnuplot*);
 
 int main(int argc, const char** argv)
 {
@@ -123,41 +123,64 @@ int main(int argc, const char** argv)
    
     vector<double> singularValues;
 
-    const double* pvalues = 0;
-    const double* pfreq = 0;
     int length(0);
     
-    // select first mesurement.
-    pvalues = proxy.getSingularValues(0, nrows, ncols);
-    pfreq = proxy.getFrequencies(length);
+    int numberOfMeasurements = proxy.getNumberOfMeasurements();    
+    vector<const double*> pvalues(numberOfMeasurements);
+    vector<const double*> pfreq(numberOfMeasurements);
+    vector<Gnuplot*> plots;
 
-    if (pvalues != 0)
+    for (i = 0; i < numberOfMeasurements; ++i)
     {
-        try 
+        pvalues[i] = proxy.getSingularValues(i, nrows, ncols);
+        pfreq[i] = proxy.getFrequencies(length);
+
+        if (pvalues[i] != 0)
         {
-            Gnuplot gplot("Singular values");
-            gplot.set_title("singular values");
-            gplot.set_grid();
-            gplot.set_ylogscale();
-            gplot.set_style("steps");
-            std::stringstream ss;
-            for (int j = 0; j < ncols; ++j)
+            try 
             {
-                ss << "singular values " << j; 
-                gplot.plot_xy(pfreq, pfreq+length, pvalues+j*nrows, pvalues+(j+1)*nrows-1, ss.str() );                   
-                ss.str("");
-                ss.clear();
+                std::stringstream ss;
+                ss << "Measurement: " << (i+1); 
+                Gnuplot* gplot = new Gnuplot(ss.str());
+                gplot->set_title(ss.str());
+                
+                ss.str(""); ss.clear();
+                
+                gplot->set_grid();
+                gplot->set_ylogscale();
+                gplot->set_style("steps");
+                for (int j = 0; j < ncols; ++j)
+                {
+                    ss << "singular values " << j; 
+                    gplot->plot_xy(pfreq[i], pfreq[i]+length, pvalues[i]+j*nrows, pvalues[i]+(j+1)*nrows-1, ss.str() );                   
+                    ss.str(""); ss.clear();
+                }
+
+                plots.push_back(gplot);
+                
             }
-            
-            wait_for_key();
-        }
-        catch(GnuplotException& e)
-        {
-            std::cout << e.what() << "\n";
+            catch(GnuplotException& e)
+            {
+                std::cout << e.what() << "\n";
+                std::for_each(plots.begin(), plots.end(), delete_plot);     
+            }
+
         }
 
     }
+
+    wait_for_key();
+    std::for_each(plots.begin(), plots.end(), delete_plot); 
     
+
+    double natFreq = 33.8;
+    int nchannels(0), nsvd(0);
+    const complex<double>* pmodes = proxy.getModes(natFreq, 0, nchannels, nsvd);
+    
+    vector< complex<double> > modesList(nchannels*nsvd);
+    std::copy(pmodes, pmodes+nchannels*nsvd, &modesList[0]);
+
+
 	return 0;
 }
 
@@ -167,4 +190,10 @@ void wait_for_key()
     std::cin.clear();
     std::cin.ignore(std::cin.rdbuf()->in_avail());
     std::cin.get();
+}
+
+void delete_plot(Gnuplot* plot)
+{
+    if (plot != 0)
+        delete plot;
 }

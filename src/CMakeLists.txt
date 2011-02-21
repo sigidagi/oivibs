@@ -43,7 +43,7 @@ ELSE(OI_USE_MYSQLPP)
 ENDIF(OI_USE_MYSQLPP)
 
 
-ADD_SUBDIRECTORY(test)
+ADD_SUBDIRECTORY(client)
 
 ENABLE_TESTING()
 ADD_TEST(SimpleTest ./test/dlltest /var/www/uploads/test2.uff)

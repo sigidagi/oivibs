@@ -25,7 +25,7 @@
 #ifndef _UNIVERSALFORMAT_H
 #define _UNIVERSALFORMAT_H
 
-#include    "OiUFF.h"
+#include    "formats/OiUFF.h"
 #include	"OiChannelInfo.h"
 #include    "OiFileFormat.h"
 #include    <vector>
@@ -47,9 +47,10 @@ namespace Oi {
     class UniversalFileFormat : public FileFormatInterface
     {
     
+    // pivate data
     private:
+
         Root* root_;
-        
         string file_; 
     
         arma::Mat<double> nodes_;
@@ -59,8 +60,6 @@ namespace Oi {
         
         vector<ChannelInfo> channelInfo_;
 
-        // pivate data
-    private:
         // 1st tuple variable - uff format nummber, 2nd - position in file, 3rd - number of lines.
         vector< tuple<int, int, int> > info_;
 
@@ -69,14 +68,16 @@ namespace Oi {
         
         typedef vector< shared_ptr<UFF> >::iterator uffIterator;
         UFactory<int> uffFactory_;
-
+        
+    // private methods    
+    private:     
         // helper function for creating matrix of records
         int getNumberOfSamples();
         void loadChannelInfo(uffIterator it, int nsteps);
         void loadChannels();
         
         template<typename T>
-        void loadGeometry( arma::Mat<T>& geo, const string& category, int ncols);
+        void loadGeometry( arma::Mat<T>& geo, const string& category);
         
     public:
         UniversalFileFormat(Root* owner, const string& file);

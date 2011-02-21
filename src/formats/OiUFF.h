@@ -60,7 +60,7 @@ class UFF
         virtual void setParameters(const string& file, int position, int nlines) = 0;
         virtual void parse() = 0; 
 
-        virtual const void* getData(size_t& size) = 0;
+        virtual const void* getData(int& nrows, int& ncols) = 0;
         virtual boost::any getExtraData() 
         {
             return boost::any();

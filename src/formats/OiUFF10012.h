@@ -1,11 +1,11 @@
 // =====================================================================================
 // 
-//       Filename:  OiUFF2412.h
+//       Filename:  OiUFF10012.h
 // 
 //    Description:  
 // 
 //        Version:  1.0
-//        Created:  2011-01-18 13:28:19
+//        Created:  2011-02-21 14:00:21
 //       Revision:  none
 //       Compiler:  g++
 // 
@@ -23,8 +23,9 @@
 // =====================================================================================
 
 
-#ifndef  OIUFF2412_INC
-#define  OIUFF2412_INC
+#ifndef  OIUFF10012_INC
+#define  OIUFF10012_INC
+
 
 #include	"OiUFF.h"
 #include	<string>
@@ -38,7 +39,7 @@ using std::string;
 
 namespace Oi {
 
-class UFF2412 : public UFF
+class UFF10012 : public UFF
 {
     private:
         vector<int> surfaces_;
@@ -47,12 +48,12 @@ class UFF2412 : public UFF
         int numberOfLines_;
     
     public:
-        UFF2412() : file_(""), position_(0), numberOfLines_(0) {}
-        UFF2412(const string& file, int pos, int nlines) : file_(file), position_(pos), numberOfLines_(nlines) {}
+        UFF10012() : file_(""), position_(0), numberOfLines_(0) {}
+        UFF10012(const string& file, int pos, int nlines) : file_(file), position_(pos), numberOfLines_(nlines) {}
         
-        typedef UFF2412 uff_type;
+        typedef UFF10012 uff_type;
 
-        const int number() const { return 2412; }
+        const int number() const { return 10012; }
 
         void setParameters(const string& file, int position, int nlines)
         {
@@ -61,9 +62,10 @@ class UFF2412 : public UFF
             numberOfLines_ = nlines;
         }
 
-        const void* getData(size_t& size)
+        const void* getData(int& nrows, int& ncols)
         {
-            size = surfaces_.size();
+            nrows = surfaces_.size()/3;
+            ncols = 3; 
             return reinterpret_cast<void*>(&surfaces_[0]);
         }
 
@@ -80,27 +82,16 @@ class UFF2412 : public UFF
             fileStream.open(file_.c_str(), std::ios::in);
             if (!fileStream.is_open())
             {
-                std::cerr << "UFF2412::parse --\n";
+                std::cerr << "UFF10012::parse --\n";
                 std::cerr << "Can NOT open file: " << file_ << "\n";
                 return;
             }
 
-            
             fileStream.seekg(position_, std::ios::beg);
 
             string line;
             std::stringstream ss;
-            int surface(0), descriptor(0), physicalProperty(0),materialProperty(0), color(0), nnodes(0);
             int node1(0), node2(0), node3(0);
-            
-           
-            // check only first line, if conditions is satisfied.
-            getline(fileStream, line);
-            ss << line;
-            ss >> surface >> descriptor >> physicalProperty >> materialProperty >> color >> nnodes;
-                
-            if ( descriptor != 91 || nnodes != 3) // 91 - code of triangular elements, numberOfNodes - 3. 
-                return;
             
             vector<int> vNode1;
             vector<int> vNode2;
@@ -121,21 +112,14 @@ class UFF2412 : public UFF
             }
 
             fileStream.close();
-            
-            size_t i(0);
             surfaces_.clear();
-
-            for (i = 0; i < vNode1.size(); i+=2)
-                surfaces_.push_back( vNode1[i] );
-
-            for (i = 0; i < vNode2.size(); i+=2)
-                surfaces_.push_back( vNode2[i] );
             
-            for (i = 0; i < vNode3.size(); i+=2)
-                surfaces_.push_back( vNode3[i] );
-
+            std::copy(vNode1.begin(), vNode1.end(), back_inserter(surfaces_));
+            std::copy(vNode2.begin(), vNode2.end(), back_inserter(surfaces_));
+            std::copy(vNode3.begin(), vNode3.end(), back_inserter(surfaces_));
         }
 };
 
 } // namespace Oi
-#endif   // ----- #ifndef OIUFF2412_INC  -----
+
+#endif   // ----- #ifndef OIUFF10012_INC  -----

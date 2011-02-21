@@ -50,7 +50,7 @@ namespace Oi
             const double* getSingularValues(int& nrows, int& ncols) const;
             const double* getFrequencies(int& length) const;
             const arma::cx_cube& getSingularVectors() const;
-            const arma::cx_mat& getModes(unsigned int freqIndex);
+            arma::cx_mat& getModes(unsigned int freqIndex);
     };
 
 } // namespace Oi

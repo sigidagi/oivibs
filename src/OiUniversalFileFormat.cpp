@@ -25,11 +25,7 @@
 #include    "OiUniversalFileFormat.h"
 #include    "OiUtil.h"
 #include    "OiRoot.h"
-
-#include    "OiUFF15.h"
-#include    "OiUFF58.h"
-#include    "OiUFF82.h"
-#include    "OiUFF2412.h"
+#include	"formats/OiUFFAll.h"
 
 #include	<iomanip>
 #include    <algorithm>
@@ -37,9 +33,6 @@
 #include    <sstream>
 #include    <unistd.h>
 #include    <boost/bind.hpp>
-#include    <boost/foreach.hpp>
-
-#define foreach BOOST_FOREACH 
 
 using boost::get;
 
@@ -50,9 +43,17 @@ namespace Oi {
     {
         // Universal Dataset number is ID for registration of supported Universal Formats.
         uffFactory_.registerClass<UFF15>(15, "nodes");
+        uffFactory_.registerClass<UFF10015>(10015, "nodes");
+        
         uffFactory_.registerClass<UFF82>(82, "lines");
+        uffFactory_.registerClass<UFF10082>(10082, "lines");
+        uffFactory_.registerClass<UFF82>(82, "lines");
+
         uffFactory_.registerClass<UFF2412>(2412, "surfaces");
+        uffFactory_.registerClass<UFF10012>(10012, "surfaces");
+        
         uffFactory_.registerClass<UFF58>(58, "records");
+        uffFactory_.registerClass<UFF10058>(10058, "records");
     }
 
     UniversalFileFormat::~UniversalFileFormat()
@@ -132,6 +133,7 @@ namespace Oi {
 
         } // if fileStream.is_open()
         
+        std::cout << "File: " << file_ << "\n";
         // Check if found in a file UFF format is supported by the program.
         // And if supported - initialize UFF object and set relevant parameters for later parsing.
         for (size_t i = 0; i < info_.size(); ++i)
@@ -156,7 +158,6 @@ namespace Oi {
         // UFF object will be filed with data from parsed file. 
         
         std::cout << std::endl;
-        std::cout << "Parsing....\n";
 
         try {
 
@@ -174,12 +175,10 @@ namespace Oi {
         {
             std::cerr << es << std::endl;
         }
-        std::cout << "Done!\n";
-        std::cout << std::endl;
 
-        loadGeometry(nodes_, "nodes", 3); 
-        loadGeometry(lines_, "lines", 2); 
-        loadGeometry(surfaces_, "surfaces", 3); 
+        loadGeometry(nodes_, "nodes"); 
+        loadGeometry(lines_, "lines"); 
+        loadGeometry(surfaces_, "surfaces"); 
         loadChannels();
 
     } // method end
@@ -276,7 +275,8 @@ namespace Oi {
         cit = std::find_first_of(unumbers.begin(), unumbers.end(), recordKeys.begin(), recordKeys.end()); 
         if (cit == unumbers.end())
             return;
-
+        
+        // count how many object carry data.
         int count = (int)std::count(unumbers.begin(), unumbers.end(), *cit); 
 
         // if we are here - we found existing records. variable "count" holds how many uffObject
@@ -286,27 +286,45 @@ namespace Oi {
         int nsteps = (int)(cit - unumbers.begin());
         std::advance(uit, nsteps);
         
-        this->loadChannelInfo(uit, count);
-        int nsamples = this->getNumberOfSamples();
-        
-        channels_.set_size(nsamples, count);
-        size_t sz(0); 
-
-        // Channel matrix (column number represent record number) is initialized.
-        // Next step copy data to that matrix.
-        for (int i = 0; i < count; ++i, ++uit)
+       
+        int nrows(0), ncols(0); 
+        // TODO: needs better implementation.
+        if (count == 1)
         {
-            double* pdata = channels_.colptr(i);
-            const void* praw = (*uit)->getData(sz);
-            if (praw == 0)
-                continue;
+            // then is suposed that that one object can hold several channels
+            //
+            const double* praw = reinterpret_cast<const double*>((*uit)->getData(nrows, ncols));
+            channels_.set_size(nrows, ncols);
 
-            std::memcpy(pdata, praw, nsamples*sizeof(double));
+            for (int i = 0; i < ncols; ++i)
+            {
+                double* pdata = channels_.colptr(i);
+                std::copy(praw+(i*nrows), praw+((i+1)*nrows), pdata);
+            }
+        }
+        else
+        {
+            this->loadChannelInfo(uit, count);
+            int nsamples = this->getNumberOfSamples();
+            channels_.set_size(nsamples, count);
+
+            // Channel matrix (column number represent record number) is initialized.
+            // Next step copy data to that matrix.
+            for (int i = 0; i < count; ++i, ++uit)
+            {
+                double* pdata = channels_.colptr(i);
+                const double* praw = reinterpret_cast<const double*>((*uit)->getData(nrows, ncols));
+                if (praw == 0)
+                    continue;
+
+                std::copy(praw, praw+(nrows+ncols), pdata);
+            }
+
         }
     } // end of function 
  
     template<typename T>
-    void UniversalFileFormat::loadGeometry( arma::Mat<T>& geo, const string& category, int ncols)
+    void UniversalFileFormat::loadGeometry( arma::Mat<T>& geo, const string& category)
     {
         vector<int> keys;
         uffFactory_.selectKeysByCategory(keys, category);
@@ -328,16 +346,16 @@ namespace Oi {
         uffIterator uit = uffObjects_.begin();
         std::advance( uit, (int)(cit - unumbers.begin()) ); 
 
-        size_t sz(0);
-        const void* praw = (*uit)->getData(sz);
+        int nrows(0), ncols(0);
+        const T* praw = reinterpret_cast<const T*>((*uit)->getData(nrows, ncols));
 
-        geo.set_size(sz/ncols, ncols);
+        geo.set_size(nrows, ncols);
         T* pdata = geo.memptr();
-        std::memcpy(pdata, praw, sz*sizeof(T));
+        std::copy(praw, praw+(nrows*ncols), pdata);
      } 
      
-     template void UniversalFileFormat::loadGeometry<double>( arma::Mat<double>& geo, const string& category, int ncols);
-     template void UniversalFileFormat::loadGeometry<unsigned int>( arma::Mat<unsigned int>& geo, const string& category, int ncols);
+     template void UniversalFileFormat::loadGeometry<double>( arma::Mat<double>& geo, const string& category);
+     template void UniversalFileFormat::loadGeometry<unsigned int>( arma::Mat<unsigned int>& geo, const string& category);
     
     
     bool UniversalFileFormat::existNodes() const

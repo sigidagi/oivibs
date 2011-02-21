@@ -29,6 +29,8 @@
 
 #include	<utility>
 
+namespace Oi {
+
 class ChannelInfo 
 {
     private:
@@ -87,5 +89,43 @@ class ChannelInfo
         double sampling() const { return sampling_; }
         void sampling(double sampling) { sampling_ = sampling; }
 };
+
+// 
+/*
+ *bool isChannelsEqual(const ChannelInfo& first, const ChannelInfo& other)
+ *{
+ *    if (first.node() == other.node() 
+ *        && first.directionAxis() == other.directionAxis()
+ *        && first.directionValue() == other.directionValue())
+ *    {
+ *        return true;
+ *    }
+ *    else
+ *        return false;
+ *}
+ */
+
+/*
+ *bool operator==(const ChannelInfo& lhs, const ChannelInfo& rhs) const
+ *{
+ *    if (lhs.node() == rhs.node() 
+ *        && lhs.directionAxis() == rhs.directionAxis()
+ *        && lhs.directionValue() == rhs.directionValue())
+ *    {
+ *        return true;
+ *    }
+ *    else
+ *        return false;
+ *
+ *}
+ *
+ *bool operator!=(const ChannelInfo& lhs, const ChannelInfo& rhs) const
+ *{
+ *    return (*);
+ *}
+ */
+
+} // namespace Oi
+
 
 #endif   // ----- #ifndef OICHANNELINFO_INC  -----

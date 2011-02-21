@@ -60,9 +60,10 @@ class UFF82 : public UFF
             numberOfLines_ = nlines;
         }
 
-        const void* getData(size_t& size)
+        const void* getData(int& nrows, int& ncols)
         {
-            size = lines_.size();
+            nrows = lines_.size()/2;
+            ncols = 2;
             return reinterpret_cast<void*>(&lines_[0]);
         }
 

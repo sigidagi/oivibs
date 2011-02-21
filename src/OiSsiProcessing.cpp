@@ -68,7 +68,7 @@ namespace Oi {
         return frequencies_.memptr();
     }
 
-    const arma::cx_mat& SsiProcessing::getModes(unsigned int freqIndex)
+    arma::cx_mat& SsiProcessing::getModes(unsigned int freqIndex)
     {
         if (frequencies_.n_elem < freqIndex)
         {

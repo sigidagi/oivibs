@@ -1,11 +1,11 @@
 // =====================================================================================
 // 
-//       Filename:  OiUFF15.h
+//       Filename:  OiUFF10015.h
 // 
 //    Description:  
 // 
 //        Version:  1.0
-//        Created:  2011-01-18 12:10:59
+//        Created:  2011-02-21 10:39:11
 //       Revision:  none
 //       Compiler:  g++
 // 
@@ -23,8 +23,9 @@
 // =====================================================================================
 
 
-#ifndef  OIUFF15_INC
-#define  OIUFF15_INC
+#ifndef  OIUFF10015_INC
+#define  OIUFF10015_INC
+
 
 #include	"OiUFF.h"
 #include	<string>
@@ -32,6 +33,7 @@
 #include	<algorithm>
 #include	<fstream>
 #include    <sstream>
+#include	<iostream>
 
 using std::vector;
 using std::string;
@@ -40,7 +42,7 @@ using std::stringstream;
 
 namespace Oi {
 
-class UFF15 : public UFF
+class UFF10015 : public UFF
 {
     private:
         vector<double> nodes_;
@@ -49,12 +51,12 @@ class UFF15 : public UFF
         int numberOfLines_;
 
     public:
-        UFF15() : file_(""), position_(0), numberOfLines_(0) {}
-        UFF15(const string& file, int pos, int nlines) : file_(file), position_(pos), numberOfLines_(nlines) {} 
+        UFF10015() : file_(""), position_(0), numberOfLines_(0) {}
+        UFF10015(const string& file, int pos, int nlines) : file_(file), position_(pos), numberOfLines_(nlines) {} 
         
-        typedef UFF15 uff_type;
+        typedef UFF10015 uff_type;
 
-        const int number() const { return 15; }
+        const int number() const { return 10015; }
         
         void setParameters(const string& file, int position, int nlines)
         {
@@ -63,12 +65,12 @@ class UFF15 : public UFF
             numberOfLines_ = nlines;
         }
 
-        const void* getData(size_t& size)
+        const void* getData(int& nrows, int& ncols)
         {
-            size = nodes_.size();
+            nrows = nodes_.size()/3;
+            ncols = 3;
             return reinterpret_cast<void*>(&nodes_[0]);
         }
-       
 
         void parse()
         {
@@ -79,26 +81,26 @@ class UFF15 : public UFF
             if (!nodes_.empty())
                 return;
 
-
             std::ifstream fileStream;
             fileStream.open(file_.c_str(), std::ios::in);
             if (!fileStream.is_open())
             {
-                std::cerr << "UFF15::parse --\n";
+                std::cerr << "UFF10015::parse --\n";
                 std::cerr << "Can NOT open file: " << file_ << "\n";
                 return;
             }
             
             fileStream.seekg(position_, std::ios::beg);
-
-            int nodeNumber(0), temp(0); 
+            
+            vector< vector<double> > coll;
+            int nodeNumber(0); 
             string line;
             stringstream ss;
         
             double x(0.0), y(0.0), z(0.0);
+            
             vector<int> nodeNumberList;
-            vector<int> numberList;
-            nodes_.resize(3*numberOfLines_);
+            coll.resize(numberOfLines_);
 
             for (int j = 0; j < numberOfLines_; ++j)
             {
@@ -108,51 +110,51 @@ class UFF15 : public UFF
                 ss << line;
                 ss >> nodeNumber;
                 
-                numberList.push_back(1+j);
                 nodeNumberList.push_back(nodeNumber);
-                ss >> temp >> temp >> temp;
                 ss >> x >> y >> z;
-            
-                nodes_[j] = x;
-                nodes_[1*numberOfLines_+j] = y;
-                nodes_[2*numberOfLines_+j] = z;
+                
+                coll[j].push_back(x);
+                coll[j].push_back(y);
+                coll[j].push_back(z);
             }
 
             fileStream.close();
-           
-            // check if vector nodeNumberList contains values in ascending order.
-            if(!std::equal( nodeNumberList.begin(), nodeNumberList.end(), numberList.begin()))
+
+            // in some case nodes in a file can be presented not in ascending order.
+            // following procedure rearange matrix that first node starts in first column,
+            // second - in second column.
+            vector<int>::const_iterator it;
+            vector<int>::const_iterator it_first = nodeNumberList.begin();
+            vector<int>::const_iterator it_next;
+            vector<int>::const_iterator it_last = nodeNumberList.end();
+            
+            int number(1);
+            // now fill up matrix (variable UniversalFileFormat::nodes__) 
+            for (it_next = it_first; it_next != it_last; ++it_next)
+            { 
+                // node numbers starts from 1.
+                it = std::find(it_first, it_last, number);
+                if (it != it_last && it != it_next)
+                {
+                    std::swap(nodeNumberList[it-it_first], nodeNumberList[it_next-it_first]);
+                    std::swap(coll[it-it_first], coll[it_next-it_first]); 
+                    ++number;
+                }
+            }
+            
+            for (size_t i = 0; i < 3; ++i)
             {
-                    std::cerr << "UFF::NodeInfo::parse --\n";
-                    std::cerr << "Inconsistency in Node numbering!\n";
+                for (size_t j = 0; j < coll.size(); ++j)
+                    nodes_.push_back( coll[j][i] );
             }
 
-/*
- *            // in some case nodes in a file can be presented not in ascending order.
- *            // following procedure rearange matrix that first node starts in first column,
- *            // second - in second column.
- *            vector<int>::const_iterator it;
- *            vector<int>::const_iterator beg = nodeNumberList.begin();
- *            nodes_.reshape(nodeNumberList.size(), 3);
- *            // now fill up matrix (variable UniversalFileFormat::nodes__) 
- *            for (size_t i = 0; i < nodeNumberList.size(); ++i)
- *            {
- *                // node numbers starts from 1.
- *                
- *                it = std::find(nodeNumberList.begin(), nodeNumberList.end(), i+1);
- *                if (it == nodeNumberList.end())
- *                {
- *                    std::cerr << "UFF::NodeInfo::parse --\n";
- *                    std::cerr << "Inconsistency in Node numbering!\n";
- *                }
- *                
- *                //std::cout << (int)(it - nodeNumberList.begin()) << std::endl;
- *
- *                nodes_(i,0) = nodes(0, it-beg);
- *                nodes_(i,1) = nodes(1, it-beg);
- *                nodes_(i,2) = nodes(2, it-beg);
- *            }
- */
+            /*
+             *if(!std::equal( nodeNumberList.begin(), nodeNumberList.end(), numberList.begin()))
+             *{
+             *        std::cerr << "UFF::NodeInfo::parse --\n";
+             *        std::cerr << "Inconsistency in Node numbering!\n";
+             *}
+             */
 
         } // end of parse()
 
@@ -160,4 +162,4 @@ class UFF15 : public UFF
 
 } // namespace Oi
 
-#endif   // ----- #ifndef OIUFF15_INC  -----
+#endif   // ----- #ifndef OIUFF10015_INC  -----

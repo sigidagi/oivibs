@@ -192,8 +192,7 @@ namespace Oi
             ++nslices;
             ++showProgess;
         }
-        
-        cout << "Done.\n";
+        cout << "Done.\n\n";
 
         double T = format->getSamplingInterval();
         frequencies_ = 1/(2.0*T) * linspace<colvec>(0,1, segmentLength/2); 
@@ -226,7 +225,6 @@ namespace Oi
         }
 
         return true;
-
     }
 
 
@@ -248,7 +246,7 @@ namespace Oi
         return singularVectors_;
     }
     
-    const arma::cx_mat& FddProcessing::getModes(unsigned int freqIndex)
+    arma::cx_mat& FddProcessing::getModes(unsigned int freqIndex)
     {
         if (frequencies_.n_elem < freqIndex)
         {
@@ -258,7 +256,6 @@ namespace Oi
 
         modes_ = singularVectors_.slice(freqIndex);
         return modes_;
-        
     }
 
 } // namespace Oi
