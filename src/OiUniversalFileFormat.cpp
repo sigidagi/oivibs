@@ -203,8 +203,9 @@ namespace Oi {
 
     double UniversalFileFormat::getSamplingInterval() const
     {
+        // if thereis no information about sampling interval - set to 1
         if (channelInfo_.empty())
-            return -1;
+            return 1.0;
         
         // get first sampling interval and compare with others.
         double samplingInterval = channelInfo_[0].sampling();
@@ -286,7 +287,9 @@ namespace Oi {
         int nsteps = (int)(cit - unumbers.begin());
         std::advance(uit, nsteps);
         
-       
+        // load information: sampling interval, number of samples, cahnnel names, etc..
+        this->loadChannelInfo(uit, count);
+        
         int nrows(0), ncols(0); 
         // TODO: needs better implementation.
         if (count == 1)
@@ -304,7 +307,6 @@ namespace Oi {
         }
         else
         {
-            this->loadChannelInfo(uit, count);
             int nsamples = this->getNumberOfSamples();
             channels_.set_size(nsamples, count);
 
@@ -317,7 +319,7 @@ namespace Oi {
                 if (praw == 0)
                     continue;
 
-                std::copy(praw, praw+(nrows+ncols), pdata);
+                std::copy(praw, praw+(nrows*ncols), pdata);
             }
 
         }

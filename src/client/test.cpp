@@ -173,12 +173,14 @@ int main(int argc, const char** argv)
     std::for_each(plots.begin(), plots.end(), delete_plot); 
     
 
-    double natFreq = 33.8;
-    int nchannels(0), nsvd(0);
-    const complex<double>* pmodes = proxy.getModes(natFreq, 0, nchannels, nsvd);
-    
-    vector< complex<double> > modesList(nchannels*nsvd);
-    std::copy(pmodes, pmodes+nchannels*nsvd, &modesList[0]);
+    /*
+     *double natFreq = 33.8;
+     *int nchannels(0), nsvd(0);
+     *const complex<double>* pmodes = proxy.getModes(natFreq, 0, nchannels, nsvd);
+     *
+     *vector< complex<double> > modesList(nchannels*nsvd);
+     *std::copy(pmodes, pmodes+nchannels*nsvd, &modesList[0]);
+     */
 
 
 	return 0;

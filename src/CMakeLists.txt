@@ -23,26 +23,23 @@ SOURCE_GROUP("Header files" FILES ${folder_header})
 
 ADD_LIBRARY( OiVibrations SHARED ${folder_source} )
 
-IF(OI_USE_MYSQLPP)
-    MESSAGE(STATUS "Mysql++ is found. Set variable OI_USE_MYSQLPP  = ${OI_USE_MYSQLPP}")
+#IF(OI_USE_MYSQLPP)
+    #MESSAGE(STATUS "Mysql++ is found. Set variable OI_USE_MYSQLPP  = ${OI_USE_MYSQLPP}")
     
-    TARGET_LINK_LIBRARIES( OiVibrations mysqlpp armadillo)
-    IF(NEKO_FOUND)
-        ADD_LIBRARY( Vibrations SHARED ${folder_source} neko/NekoInterface.cpp )
-        SET_TARGET_PROPERTIES( Vibrations
-            PROPERTIES 
-                LIBRARY_OUTPUT_DIRECTORY ./neko
-                SUFFIX .ndll 
-                PREFIX Oi )
-        TARGET_LINK_LIBRARIES( Vibrations mysqlpp armadillo neko)
-        ADD_SUBDIRECTORY(neko)
-    ENDIF(NEKO_FOUND)
+    #TARGET_LINK_LIBRARIES( OiVibrations mysqlpp armadillo)
+    #IF(NEKO_FOUND)
+        #ADD_LIBRARY( Vibrations SHARED ${folder_source} client_neko/NekoInterface.cpp )
+        #SET_TARGET_PROPERTIES( Vibrations
+            #PROPERTIES 
+                #LIBRARY_OUTPUT_DIRECTORY ./client_neko
+                #SUFFIX .ndll 
+                #PREFIX Oi )
+        #TARGET_LINK_LIBRARIES( Vibrations mysqlpp armadillo neko)
+        #ADD_SUBDIRECTORY(client_neko)
+    #ENDIF(NEKO_FOUND)
+#ENDIF(OI_USE_MYSQLPP)
 
-ELSE(OI_USE_MYSQLPP)
-    TARGET_LINK_LIBRARIES( OiVibrations armadillo)
-ENDIF(OI_USE_MYSQLPP)
-
-
+TARGET_LINK_LIBRARIES( OiVibrations armadillo)
 ADD_SUBDIRECTORY(client)
 
 ENABLE_TESTING()

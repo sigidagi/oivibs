@@ -55,7 +55,6 @@ namespace Oi
             
         // private methods 
         private:
-            void createPSD(cx_cube& psd, mat& chunk);
             void detrend( Mat<double>& x, int p = 1);
             colvec hamming(int m);
             

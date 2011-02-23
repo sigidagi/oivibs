@@ -7,5 +7,5 @@ build/src
 build/src/**/*
 src/tags
 src/*.swp
-src/neko/tags
-src/neko/*.swp
+src/client_neko/tags
+src/client_neko/*.swp

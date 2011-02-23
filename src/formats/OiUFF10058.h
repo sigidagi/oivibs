@@ -130,16 +130,13 @@ class UFF10058 : public UFF
             fileStream.read((char*)&nrows_, sizeof(int));  
             fileStream.read((char*)&ncols_, sizeof(int));  
                 
-            std::cout << "Rows: " << nrows_ << "\n";
-            std::cout << "Cols: " << ncols_ << "\n";
-
             records_.clear();
             records_.resize(nrows_*ncols_);
-            vector<double> buffer(nrows_);
+            vector<float> buffer(nrows_);
 
             for (int i = 0; i < ncols_; ++i)
             {
-                fileStream.read((char*)&buffer[0], sizeof(double)*nrows_);
+                fileStream.read((char*)&buffer[0], nrows_*sizeof(float));
                 std::copy(buffer.begin(), buffer.end(), records_.begin() + (i*nrows_)); 
             }
 

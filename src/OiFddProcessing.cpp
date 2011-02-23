@@ -31,6 +31,8 @@
 #include "gfft/gfft.h"
 #include <boost/progress.hpp>
 
+using std::conj;
+
 namespace Oi 
 {
 
@@ -100,29 +102,6 @@ namespace Oi
         return ham;
     }
 
-    void FddProcessing::createPSD(cx_cube& psd, mat& chunk)
-    {
-        std::complex<double> value1;
-        std::complex<double> value2;
-        size_t row, col, col2;
-        
-        for (row = 0; row < chunk.n_rows/2; ++row)
-        {
-            for (col = 0; col < chunk.n_cols; ++col)
-            {
-                 //          
-                 value1 = complex<double>(chunk(2*row, col), chunk(2*row+1, col));                      
-                
-                 for (col2 = 0; col2 < chunk.n_cols; ++col2)
-                 {
-                     value2 = complex<double>(chunk(2*row, col2), chunk(2*row+1, col2));
-                     psd(col, col2, row) += value1*std::conj(value2);
-                 }
-            }
-        }
-
-    }
-
     bool FddProcessing::start(const FileFormatInterface* format)
     {
         if (format == NULL)
@@ -164,7 +143,6 @@ namespace Oi
         unsigned int j;
         int row_pos = 0;
         powerSpectrum_ = zeros<cx_cube>(ncols, ncols, segmentLength/2+1);
-        mat chunk(segmentLength, ncols);
         int step = segmentLength - overlap;
         unsigned int nslices = 0;
 
@@ -175,10 +153,13 @@ namespace Oi
             row_pos += step;
         }
         
-        cout << "-- PSD calculation ---\n";
+        cout << "-- CSD calculation ---\n";
         boost::progress_display showProgess(positions.size());
 
+        mat chunk(segmentLength, ncols);
+        cx_mat chunk2(segmentLength/2, ncols);
         vector<int>::iterator it;
+        
         for( it = positions.begin(); it != positions.end(); ++it)
         {
             chunk = refData.rows(*it, *it + segmentLength-1);
@@ -186,15 +167,31 @@ namespace Oi
             for (j = 0; j < ncols; ++j)
             {
                 chunk.col(j) = chunk.col(j) % hamming;
-                gfft->fft(chunk.memptr() + j*segmentLength );
-                createPSD(powerSpectrum_, chunk);    
+                gfft->fft( chunk.colptr(j) );
+                Oi::transform_pairs(chunk.begin_col(j), chunk.end_col(j), chunk2.begin_col(j), [](double v1, double v2)
+                {
+                    return complex<double>(v1,v2); 
+                });
             }
+            
+            for (size_t col = 0; col < chunk2.n_cols; ++col)
+            {
+                for (size_t col2 = 0; col2 < chunk2.n_cols; ++col2)
+                {
+                    for (size_t row = 0; row < chunk2.n_rows; ++row)
+                        powerSpectrum_(col, col2, row) += chunk2(row, col)*conj(chunk2(row, col2));
+                }
+            }
+   
             ++nslices;
             ++showProgess;
         }
         cout << "Done.\n\n";
 
         double T = format->getSamplingInterval();
+        if (T == 1)
+            std::cout << "Coundn't get sampling interval. Set value to 1\n";
+
         frequencies_ = 1/(2.0*T) * linspace<colvec>(0,1, segmentLength/2); 
         
         // Scale factor
