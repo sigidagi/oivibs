@@ -22,23 +22,20 @@
 // 
 // =====================================================================================
 
-#include "OiFddProcessing.h"
-#include "OiFileFormat.h"
-#include "OiUniversalFileFormat.h"
-
-#include <iostream>
-#include <cmath>
-#include "gfft/gfft.h"
-#include <boost/progress.hpp>
+#include    "OiFddProcessing.h"
+#include    "OiFileFormat.h"
+#include    "OiUniversalFileFormat.h"
+#include    <iostream>
+#include    <boost/progress.hpp>
 
 using std::conj;
 
 namespace Oi 
 {
 
-    FddProcessing::FddProcessing(const string& file) : file_(file)
+    FddProcessing::FddProcessing(const string& file) : file_(file), samplingInterval_(1.0), segmentLength_(2048)
     {
-
+        frequencies_.set_size(segmentLength_/2+1);        
     }
 
     FddProcessing::~FddProcessing()
@@ -56,170 +53,126 @@ namespace Oi
         return Process::FDD;
     }
 
-    void  FddProcessing::inverse( Mat<double>& x)
-    {
-        if (x.n_cols == 0 || x.n_rows == 0)
-            return;
-
-        arma::pinv(x); 
-    }
 
     // 
-    void  FddProcessing::detrend( Mat<double>& x, int p)
+    void FddProcessing::powerSpectralDensity(const mat& channels)
     {
-        if (x.n_cols == 0 || x.n_rows == 0)
+        //  numbers of rows and cols should be equal to number of channels.
+        //  segmentLength represent cube depth where PSD values are stored.
+        unsigned int nrows = channels.n_rows;
+        unsigned int ncols = channels.n_cols;
+        if (nrows == 0 || ncols == 0)
             return;
 
-        if (x.n_rows == 1)
-            x = arma::trans(x);
-       
-       // create a matrix b where columns represent polinomial order:
-       // second column - linear approximation of data
-       // third column - second order polinomial approximation of data.
-       // and so on..
-       // number of rows size of data. 
-        int rows = x.n_rows;
-        mat b = (linspace<colvec>(1,rows,rows) * ones<rowvec>(p+1));
-
-        for (int i = 0; i < (int)b.n_cols; ++i)
-        {
-            b.col(0) = pow(b.col(0), 0);
-        }
+        PSD_.reset();
+        PSD_ = zeros<mat>(segmentLength_/2+1, ncols);
+   
+        pwelch_.apply(channels, PSD_); 
         
-        // subtract approximation curve from original data.
-        x = x - b *( arma::pinv(b)*x );
+                /*
+                 *chunk.col(j) = chunk.col(j) % hamming;
+                 *gfft.exec( chunk.colptr(j), tempPSD.colptr(j) );
+                 */
+                
+/*
+ *                mat R;
+ *                int M(10), p(2);
+ *                Oi::covar(chunk.col(j), M, R); 
+ *
+ *                vec eigval;
+ *                mat eigvec;
+ *                arma::eig_sym(eigval, eigvec, R);
+ *                
+ *                uvec indices = arma::sort_index(eigval);
+ *                int nfft = chunk.n_rows;
+ *
+ *                cx_vec out(nfft/2+1);
+ *
+ *                for (int i = 0; i <= M-p; ++i)
+ *                {
+ *                    gfft.exec( eigvec.n_rows, eigvec.colptr(indices(i)), out.memptr() );
+ *                    tempPSD.col(j) += out; 
+ *                }
+ */
+
+                /*
+                 *mat R;
+                 *int p(256);
+                 *Oi::covar(chunk.col(j), p+1, R);
+                 *vec eigval;
+                 *mat eigvec;
+                 *arma::eig_sym(eigval, eigvec, R);
+                 *
+                 *int nfft = chunk.n_rows;
+                 *cx_vec out(nfft/2+1);
+                 *int index = arma::min(eigval);
+                 *gfft.exec(eigvec.n_rows, eigvec.colptr(index), out.memptr() );
+                 *tempPSD.col(j) = out;
+                 */
+
+
     }
-
-    colvec  hamming(int m)
+    
+    void FddProcessing::singularValueDecomposition()
     {
-        colvec ham;
-        if ( m <= 0)
-           return ham;
 
-        ham.set_size(m);
-        ham = 0.54 - 0.46 * cos( 2 * M_PI * linspace<colvec>(0,m-1, m)/ (m-1) );
+        cx_cube& CSD = pwelch_.getCSD();
+        if (CSD.is_empty())
+            return;
 
-        return ham;
+        // form singular values matrix
+        // after FFT power spectrum is fliped.
+        // CSD_.n_slices == segmentLength_/2+1
+        singularValues_.set_size(CSD.n_slices, CSD.n_cols);
+        colvec singvalues(CSD.n_cols);
+        singularVectors_.set_size(CSD.n_cols, CSD.n_cols, CSD.n_slices);
+        cx_mat Uunitary;
+        cx_mat Vunitary;
+
+        unsigned int lastSlice = CSD.n_slices-1;
+        int idx = (int)lastSlice; 
+ 
+        cout << "-- SVD calculation ---\n";
+        boost::progress_display showProgess(idx);
+        
+        for (unsigned int i = 0; i < CSD.n_slices; ++i) 
+        {
+            arma::svd(Uunitary, singvalues, Vunitary, CSD.slice(i));
+            
+            singularValues_.row(i) = trans(singvalues);
+            singularVectors_.slice(i) = Uunitary;
+            ++showProgess;
+        }
+        cout << "Done\n\n";
     }
 
     bool FddProcessing::start(const FileFormatInterface* format)
     {
         if (format == NULL)
             return false;
-        
+ 
         // search for data, if not exist - return from function.
-        const mat& refData = format->getChannels();
+        const mat& channels = format->getChannels();
 
-        unsigned int nrows = refData.n_rows;
-        unsigned int ncols = refData.n_cols;
+        unsigned int nrows = channels.n_rows;
+        unsigned int ncols = channels.n_cols;
         if (nrows == 0 || ncols == 0)
+        {
+            cout << "No data exist!\n";
             return false;
-
-        // runtime definition of the data length
-        // P - power of 2: 2^10 = 1024 samples (after FFT)
-        int P = 10;
-        // lenght of data before FFT; 
-        int segmentLength = 2*(1 << P);
-        int overlap = std::floor(segmentLength*2/3);
-
-    // range of the needed GFFT classes
-        const unsigned Min = 1;
-        const unsigned Max = 27;
-
-    // initialization of the object factory
-        Loki::Factory<AbstractFFT<Tp>,unsigned int> gfft_factory;
-        FactoryInit<GFFTList<GFFT,Min,Max>::Result>::apply(gfft_factory);
-
-    // create an instance of the GFFT
-        AbstractFFT<Tp>* gfft = gfft_factory.CreateObject(P);
-
-    //    mat X(segmentLength, ncols);
-    //    cx_mat Y(segmentLength, ncols);
-    //
-    //  numbers of rows and cols should be equal to number of channels.
-    //  segmentLength represent cube depth where PSD values are stored.
-        colvec hamming = Oi::hamming(segmentLength);
-       
-        unsigned int j;
-        int row_pos = 0;
-        powerSpectrum_ = zeros<cx_cube>(ncols, ncols, segmentLength/2+1);
-        int step = segmentLength - overlap;
-        unsigned int nslices = 0;
-
-        vector<int> positions;
-        while ((row_pos + segmentLength) < nrows)
-        {
-            positions.push_back(row_pos);
-            row_pos += step;
         }
-        
-        cout << "-- CSD calculation ---\n";
-        boost::progress_display showProgess(positions.size());
 
-        mat chunk(segmentLength, ncols);
-        cx_mat chunk2(segmentLength/2, ncols);
-        vector<int>::iterator it;
-        
-        for( it = positions.begin(); it != positions.end(); ++it)
-        {
-            chunk = refData.rows(*it, *it + segmentLength-1);
-            detrend(chunk);
-            for (j = 0; j < ncols; ++j)
-            {
-                chunk.col(j) = chunk.col(j) % hamming;
-                gfft->fft( chunk.colptr(j) );
-                Oi::transform_pairs(chunk.begin_col(j), chunk.end_col(j), chunk2.begin_col(j), [](double v1, double v2)
-                {
-                    return complex<double>(v1,v2); 
-                });
-            }
-            
-            for (size_t col = 0; col < chunk2.n_cols; ++col)
-            {
-                for (size_t col2 = 0; col2 < chunk2.n_cols; ++col2)
-                {
-                    for (size_t row = 0; row < chunk2.n_rows; ++row)
-                        powerSpectrum_(col, col2, row) += chunk2(row, col)*conj(chunk2(row, col2));
-                }
-            }
-   
-            ++nslices;
-            ++showProgess;
-        }
-        cout << "Done.\n\n";
-
-        double T = format->getSamplingInterval();
-        if (T == 1)
+        samplingInterval_ = format->getSamplingInterval();
+        if (samplingInterval_  == 1)
             std::cout << "Coundn't get sampling interval. Set value to 1\n";
-
-        frequencies_ = 1/(2.0*T) * linspace<colvec>(0,1, segmentLength/2); 
         
-        // Scale factor
-        // scale = n_ffts * seg_len * Fs * win_meansq
-        // where win_meansq = (window.' * window)/seg_len;
-        double win_meansq = arma::accu(hamming % hamming)/hamming.n_elem;
-        double scale = win_meansq * nslices * (double)segmentLength/(2.0*T);
-       
-        powerSpectrum_ = powerSpectrum_ / scale;
-       
-        // form singular values matrix
-        // after FFT power spectrum is fliped.
-        singularValues_.set_size(powerSpectrum_.n_slices, ncols);
-        colvec singvalues(ncols);
-        singularVectors_.set_size(ncols, ncols, powerSpectrum_.n_slices);
-        cx_mat Uunitary;
-        cx_mat Vunitary;
+        frequencies_ = arma::linspace<colvec>(0, 1/(2.0*samplingInterval_), segmentLength_/2+1); 
 
-        unsigned int lastSlice = powerSpectrum_.n_slices-1;
-        int idx = (int)lastSlice; 
+        // calculate PSD using welch method 
+        powerSpectralDensity(channels);
         
-        while (idx != -1)       
-        {
-            arma::svd(Uunitary, singvalues, Vunitary, powerSpectrum_.slice(idx));
-            singularValues_.row(lastSlice-idx) = trans(singvalues);
-            singularVectors_.slice(lastSlice-idx) = Uunitary;
-            --idx;
-        }
+        // singular values and singular vectors across frequency line.
+        singularValueDecomposition();
 
         return true;
     }
@@ -236,6 +189,13 @@ namespace Oi
     {
         length = frequencies_.n_elem;
         return frequencies_.memptr();
+    }
+    
+    const double* FddProcessing::getSpectralDensity(int& nsamples, int& nchannels) const
+    {
+        nsamples = PSD_.n_rows;
+        nchannels = PSD_.n_cols;
+        return PSD_.memptr();
     }
 
     const arma::cx_cube& FddProcessing::getSingularVectors() const

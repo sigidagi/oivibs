@@ -25,10 +25,14 @@
 #ifndef _OIFDDPROCESSING_H
 #define _OIFDDPROCESSING_H
 
-#include "OiProcessing.h" 
-#include <armadillo>
+#include    "OiProcessing.h" 
+#include	"OiMath.h"
+#include	<fftw3.h>
+#include    <armadillo>
+#include	<complex>
 
 using namespace arma;
+using std::complex;
 
 namespace Oi 
 {
@@ -46,6 +50,8 @@ namespace Oi
             bool start(const FileFormatInterface* format);
             string getFileName() const;
             int getProcessId() const;
+            
+            const double* getSpectralDensity(int& nsamples, int& nchannels) const;
             const double* getSingularValues(int& nrows, int& ncols) const;
             const double* getFrequencies(int& length) const;
             
@@ -55,20 +61,25 @@ namespace Oi
             
         // private methods 
         private:
-            void detrend( Mat<double>& x, int p = 1);
-            colvec hamming(int m);
             
-            // pseudo inverse using SVD
-            void inverse( Mat<double>& x );
+            void powerSpectralDensity(const mat& channels);
+            //void crossSpectralDensity();
+            void singularValueDecomposition();
 
         // private member variables.
         private:
             string file_;   
 
-            cx_cube powerSpectrum_;
+            PWelch pwelch_; 
+            mat PSD_;
+            
             arma::Mat<double> singularValues_;
             cx_cube singularVectors_;
             colvec frequencies_;
+
+            double samplingInterval_;
+            // segmentLength_ just a duoble value of nfft. if nfft = 1024, then segmentLength_ = 2*1024.
+            int segmentLength_;
             cx_mat modes_;
 
     };

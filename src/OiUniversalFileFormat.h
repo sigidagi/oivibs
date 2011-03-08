@@ -94,6 +94,7 @@ namespace Oi {
         bool existLines() const;
         bool existSurfaces() const;
         bool existChannels() const;
+        int getNumberOfChannels() const;
         
         const arma::mat& getChannels() const;
         double getSamplingInterval() const;

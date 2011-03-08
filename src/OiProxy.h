@@ -62,6 +62,9 @@ namespace Oi {
             virtual const unsigned int* getSurfaces(int&, int& ) const = 0;
            
             virtual int getNumberOfMeasurements() const = 0;
+            virtual int getNumberOfChannels(unsigned int measurementNumber) const = 0;
+            virtual const double* getSpectralDensity(unsigned int measurementNumber, int& nsamples, int& nchannels) const = 0;
+
             virtual const double* getSingularValues(unsigned int mesurementNumber, int& nrows, int& ncols) const = 0; 
             virtual const double* getFrequencies(int& length) const = 0;
             virtual const complex<double>* getModes(double frequency, unsigned int measurementNumber, int& nchannels, int& nsvd) const = 0; 
@@ -91,6 +94,9 @@ namespace Oi {
             const unsigned int* getSurfaces(int& nrows, int& ncols) const;
 
             int getNumberOfMeasurements() const;
+            int getNumberOfChannels(unsigned int measurementNumber) const;
+            const double* getSpectralDensity(unsigned int measurementNumber, int& nsamples, int& nchannels) const;
+
             const double* getSingularValues(unsigned int mesurementNumber, int& nrows, int& ncols) const; 
             const double* getFrequencies(int& lenght) const;
             const complex<double>* getModes(double frequency, unsigned int measurementNumber, int& nchannels, int& nsvd) const; 

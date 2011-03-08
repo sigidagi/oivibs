@@ -236,6 +236,24 @@ namespace Oi
 
         return std::count(idList.begin(), idList.end(), processId_);
     }
+    
+    int Root::getNumberOfChannels(unsigned int measurementNumber) const
+    {
+        shared_ptr<FileFormatInterface> pt = getFileFormat(measurementNumber);
+        if (pt.get() == 0)
+            return 0;
+        
+        return pt->getNumberOfChannels();
+    }
+
+    const double* Root::getSpectralDensity(unsigned int measurementNumber, int& nsamples, int& nchannels) const
+    {
+        shared_ptr<ProcessingInterface> pt = getProcess(processId_, measurementNumber);
+        if (pt.get() == 0)
+            return NULL;
+        
+        return pt->getSpectralDensity(nsamples, nchannels);
+    }
 
     const double* Root::getSingularValues(unsigned int measurementNumber, int& nrows, int& ncols) const 
     {

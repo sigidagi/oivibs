@@ -64,6 +64,9 @@ namespace Oi
                 const unsigned int* getSurfaces(int& nrows, int& ncols) const;
 
                 int getNumberOfMeasurements() const;
+                int getNumberOfChannels(unsigned int measurementNumber) const;
+                const double* getSpectralDensity(unsigned int measurementNumber, int& nsamples, int& nchannels) const;
+
                 const double* getSingularValues(unsigned int mesurementNumber, int& nrows, int& ncols) const; 
                 const double* getFrequencies(int& lenght) const;
                 const complex<double>* getModes(double frequency, unsigned int measurementNumber, int& nchannels, int& nsvd) const; 

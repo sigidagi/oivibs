@@ -323,6 +323,9 @@ namespace Oi {
             }
 
         }
+
+//        channels_.save("Plate.txt", arma::arma_ascii); 
+
     } // end of function 
  
     template<typename T>
@@ -415,6 +418,11 @@ namespace Oi {
     {
         return &channelInfo_; 
     }
-
+   
+    int UniversalFileFormat::getNumberOfChannels() const
+    {
+        return (int)(channels_.n_cols);
+    }
+        
 } // namespace Oi
 

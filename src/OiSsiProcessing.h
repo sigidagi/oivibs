@@ -47,6 +47,8 @@ namespace Oi
             bool start(const FileFormatInterface* format);
             string getFileName() const;
             int getProcessId() const; 
+
+            const double* getSpectralDensity(int& nsamples, int& nchannels) const;
             const double* getSingularValues(int& nrows, int& ncols) const;
             const double* getFrequencies(int& length) const;
             const arma::cx_cube& getSingularVectors() const;

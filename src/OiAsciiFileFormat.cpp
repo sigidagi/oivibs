@@ -77,6 +77,12 @@ namespace Oi {
     {
         return file_;
     }
+
+    int AsciiFileFormat::getNumberOfChannels() const
+    {
+        return (int)(channels_.n_cols);
+    }
+
 /*
  *    bool AsciiFileFormat::searchSamplingInterval(const string& fileName)
  *    {

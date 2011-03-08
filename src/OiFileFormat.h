@@ -56,7 +56,8 @@ namespace Oi {
            
             virtual const arma::mat& getChannels() const = 0;
             virtual double getSamplingInterval() const = 0;
-
+            
+            virtual int getNumberOfChannels() const = 0;
             virtual const double* getNodes(int& nrows, int& ncols) const;
             virtual const unsigned int* getLines(int& nrows, int& ncols) const;
             virtual const unsigned int* getSurfaces(int& nrows, int& ncols) const;

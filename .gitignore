@@ -9,3 +9,4 @@ src/tags
 src/*.swp
 src/client_neko/tags
 src/client_neko/*.swp
+src/client/tags

@@ -92,6 +92,16 @@ namespace Oi {
     {
         return impl_->getNumberOfMeasurements();
     }
+    
+    int Proxy::getNumberOfChannels(unsigned int measurementNumber) const
+    {
+        return impl_->getNumberOfChannels(measurementNumber);
+    }
+
+    const double* Proxy::getSpectralDensity(unsigned int measurementNumber, int& nsamples, int& nchannels) const
+    {
+        return impl_->getSpectralDensity(measurementNumber, nsamples, nchannels);
+    }
 
 
 } // namespace Oi

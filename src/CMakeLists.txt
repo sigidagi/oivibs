@@ -39,7 +39,7 @@ ADD_LIBRARY( OiVibrations SHARED ${folder_source} )
     #ENDIF(NEKO_FOUND)
 #ENDIF(OI_USE_MYSQLPP)
 
-TARGET_LINK_LIBRARIES( OiVibrations armadillo)
+TARGET_LINK_LIBRARIES( OiVibrations armadillo fftw3)
 ADD_SUBDIRECTORY(client)
 
 ENABLE_TESTING()

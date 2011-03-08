@@ -61,6 +61,10 @@ namespace Oi {
         return singularVectors_;
     }
     
+    const double* SsiProcessing::getSpectralDensity(int& nsamples, int& nchannels) const
+    {
+        return NULL;
+    }
 
     const double* SsiProcessing::getFrequencies(int& length) const
     {

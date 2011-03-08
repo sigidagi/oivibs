@@ -132,7 +132,9 @@ int main(int argc, const char** argv)
 
     for (i = 0; i < numberOfMeasurements; ++i)
     {
-        pvalues[i] = proxy.getSingularValues(i, nrows, ncols);
+        //pvalues[i] = proxy.getSingularValues(i, nrows, ncols);
+        pvalues[i] = proxy.getSpectralDensity(i, nrows, ncols);
+
         pfreq[i] = proxy.getFrequencies(length);
 
         if (pvalues[i] != 0)
@@ -152,7 +154,7 @@ int main(int argc, const char** argv)
                 for (int j = 0; j < ncols; ++j)
                 {
                     ss << "singular values " << j; 
-                    gplot->plot_xy(pfreq[i], pfreq[i]+length, pvalues[i]+j*nrows, pvalues[i]+(j+1)*nrows-1, ss.str() );                   
+                    gplot->plot_xy(pfreq[i], pfreq[i]+length, pvalues[i]+j*nrows, pvalues[i]+(j+1)*nrows, ss.str() );                   
                     ss.str(""); ss.clear();
                 }
 

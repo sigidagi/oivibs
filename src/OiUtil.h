@@ -55,18 +55,6 @@ namespace Oi
     string stripToExtension(const string& pathToFile);
     string stripToPath(const string& pathToFile);
     
-    template<class In, class Out, class BinaryOperator>
-    Out transform_pairs(In first, In last, Out res, BinaryOperator op)
-    {
-        In prev;
-        while (first != last)
-        {
-           prev = first++; 
-           *res++ = op(*prev, *first); 
-           ++first;
-        }
-        return res;
-    }
 
     // Array has to be sorted first. Returns index of nearest to the appled value. 
     template<class Iterator, class T>
