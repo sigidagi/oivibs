@@ -1,48 +1,33 @@
-# - Find Linear Algerba library Armadillo 
+#  Find Linear Algerba library Armadillo 
 #
-#  ARMA_INCLUDE_DIR - where to find iarmadillo file.
-#  ARMA_LIBRARY   - List of libraries when using armadillo.
-#  ARMA_FOUND       - True if armadillo found.
+#  ARMADILLO_INCLUDE_DIR - where to find iarmadillo file.
+#  ARMADILLO_LIBRARY   - List of libraries when using armadillo.
+#  ARMADILLO_FOUND       - True if armadillo found.
 
-IF (ARMA_INCLUDE_DIR)
+IF (ARMADILLO_INCLUDE_DIR)
   # Already in cache, be silent
-  SET(ARMA_FIND_QUIETLY TRUE)
-ENDIF (ARMA_INCLUDE_DIR)
+   SET(ARMADILLO_FIND_QUIETLY TRUE)
+ENDIF (ARMADILLO_INCLUDE_DIR)
 
-FIND_PATH(ARMA_INCLUDE_DIR 
+FIND_PATH(ARMADILLO_INCLUDE_DIR 
   NAMES armadillo	
   PATHS /usr/local/include 
 		/usr/include 
 )
 
 # Finally the library itself
-FIND_LIBRARY(ARMA_LIBRARY
+FIND_LIBRARY(ARMADILLO_LIBRARY
   NAME armadillo 
   PATHS /usr/lib
 		/usr/local/lib
 )
 
-SET(NEKO_ARMA armadillo)
-
-IF (ARMA_INCLUDE_DIR AND ARMA_LIBRARY)
-  SET(ARMA_FOUND TRUE)
-  SET( ARMA_LIBRARIES ${ARMA_LIBRARY} )
-ELSE (ARMA_INCLUDE_DIR AND ARMA_LIBRARY)
-  SET(ARMA_FOUND FALSE)
-  SET( ARMA_LIBRARIES )
-ENDIF (ARMA_INCLUDE_DIR AND ARMA_LIBRARY)
-
-# Just display a message about success or fail.
-IF (ARMA_FOUND)
-    MESSAGE(STATUS "Found Armadillo: ${ARMA_LIBRARY}")
-ELSE (ARMA_FOUND)
-  IF (ARMA_FIND_REQUIRED)
-    MESSAGE(STATUS "Looked for Armadillo libraries named ${ARMA_NAMES}.")
-    MESSAGE(FATAL_ERROR "Could NOT find armadillo library")
-  ENDIF (ARMA_FIND_REQUIRED)
-ENDIF (ARMA_FOUND)
+# handle the QUIETLY and REQUIRED arguments and set ARMADILLO_FOUND to TRUE if 
+# all listed variables are TRUE
+INCLUDE(FindPackageHandleStandardArgs)
+FIND_PACKAGE_HANDLE_STANDARD_ARGS(Armadillo DEFAULT_MSG ARMADILLO_LIBRARY ARMADILLO_INCLUDE_DIR)
 
 MARK_AS_ADVANCED(
-  ARMA_LIBRARY
-  ARMA_INCLUDE_DIR
+  ARMADILLO_LIBRARY
+  ARMADILLO_INCLUDE_DIR
  )

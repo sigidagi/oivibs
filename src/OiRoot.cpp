@@ -319,34 +319,33 @@ namespace Oi
         if (fileFormatList_.empty())
             return shared_ptr<FileFormatInterface>();
         
-        int numberOfMeasurements(0);
-        vector< shared_ptr<FileFormatInterface> >::const_iterator it;
+        unsigned int numberOfMeasurements(0);
+/*
+ *        vector< shared_ptr<FileFormatInterface> >::const_iterator it;
+ *
+ *        it = std::find_if(fileFormatList_.begin(), 
+ *                      fileFormatList_.end(), 
+ *                      [&numberOfMeasurements, measurementNumber](shared_ptr<FileFormatInterface> format)->bool
+ *        {
+ *            if (format->existChannels())
+ *                ++numberOfMeasurements;
+ *            if (numberOfMeasurements == (measurementNumber+1))
+ *                return true;
+ *            
+ *            return false;
+ *        });
+ *        
+ *        if (it != fileFormatList_.end())
+ *            return *it;
+ */
 
-        it = std::find_if(fileFormatList_.begin(), 
-                      fileFormatList_.end(), 
-                      [&numberOfMeasurements, measurementNumber](shared_ptr<FileFormatInterface> format)->bool
+        foreach(shared_ptr<FileFormatInterface> format, fileFormatList_)
         {
             if (format->existChannels())
                 ++numberOfMeasurements;
             if (numberOfMeasurements == (measurementNumber+1))
-                return true;
-            
-            return false;
-        });
-        
-        if (it != fileFormatList_.end())
-            return *it;
-
-        /*
-         *int numberOfMeasurements(0);
-         *foreach(shared_ptr<FileFormatInterface> format, fileFormatList_)
-         *{
-         *    if (format->existChannels())
-         *        ++numberOfMeasurements;
-         *    if (numberOfMeasurements == (measurementNumber+1))
-         *        return format;
-         *}
-         */
+                return format;
+        }
         
         return shared_ptr<FileFormatInterface>();
     }

@@ -9,10 +9,7 @@ SET(OI_PATCH 10)
 MESSAGE(STATUS "Configuring OiVibartions ${ARMA_MAJOR}.${ARMA_MINOR}.${ARMA_PATCH}")
 MESSAGE(STATUS "Configuring OiVibartions cmake_source_dir  = ${CMAKE_SOURCE_DIR}")
 
-
 SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/build/cmake/Modules/")
-
-#INCLUDE(FindBoost)
 
 PROJECT(OiVibrations CXX)
 
@@ -22,26 +19,10 @@ PROJECT(OiVibrations CXX)
 SET(OI_USE_NEKO false)
 SET(OI_USE_MYSQLPP false)
 SET(OI_USE_BOOST  false)
+SET(OI_USE_FFTTW3  false)
 
-MESSAGE(STATUS "*** ")
-MESSAGE(STATUS "*** The OiVibrations run-time library component will be an alias for the following libraries:")
-MESSAGE(STATUS "*** OI_LIBS = ${OI_LIBS}")
-MESSAGE(STATUS "*** ")
 
 FIND_PACKAGE(Boost REQUIRED)
-FIND_PACKAGE(Armadillo REQUIRED)
-FIND_PACKAGE(FFTW3 REQUIRED)
-FIND_PACKAGE(Neko)
-FIND_PACKAGE(Mysql++)
-
-IF(MYSQLPP_FOUND)
-    INCLUDE_DIRECTORIES(${MYSQLPP_INCLUDE_DIR})   
-    MESSAGE(STATUS "Mysql++_INCLUDE_DIR = ${MYSQLPP_INCLUDE_DIR}")
-    INCLUDE_DIRECTORIES(${MYSQL_INCLUDE_DIR})
-    MESSAGE(STATUS "Mysql_INCLUDE_DIR = ${MYSQL_INCLUDE_DIR}")
-    SET(OI_USE_MYSQLPP true)
-ENDIF(MYSQLPP_FOUND)
-
 
 IF(Boost_FOUND)
   MESSAGE(STATUS "Boost_MAJOR_VERSION = ${Boost_MAJOR_VERSION}")
@@ -62,15 +43,42 @@ IF(OI_USE_BOOST STREQUAL false)
   MESSAGE(STATUS "( It's possible that CMake didn't find the particular version of Boost you may have. )")
 ENDIF(OI_USE_BOOST STREQUAL false)
 
+FIND_PACKAGE(Armadillo REQUIRED)
+SET(OI_LIBS ${ARMADILLO_LIBRARY})
+
+FIND_PACKAGE(FFTW3 REQUIRED)
+SET(OI_LIBS ${OI_LIBS} ${FFTW3_LIBRARY})
+
+FIND_PACKAGE(Neko)
 
 IF(NEKO_FOUND)
     SET(OI_USE_NEKO true)
+    SET(OI_LIBS ${OI_LIBS} ${Neko_LIBRARY})
 ENDIF(NEKO_FOUND)
 
-IF(OI_USE_BOOST STREQUAL true)
-  INCLUDE_DIRECTORIES(include ${Boost_INCLUDE_DIR})
-ELSE(OI_USE_BOOST STREQUAL true)
-  INCLUDE_DIRECTORIES(include)
-ENDIF(OI_USE_BOOST STREQUAL true)
+FIND_PACKAGE(Mysql++)
+
+IF(MYSQLPP_FOUND)
+    MESSAGE(STATUS "Found Mysql++ library")
+    MESSAGE(STATUS "Mysql database}")
+    SET(OI_USE_MYSQLPP true)
+    SET(OI_LIBS ${OI_LIBS} ${MYSQLPP_LIBRARY})
+ENDIF(MYSQLPP_FOUND)
+
+FIND_PROGRAM(GNUPLOT_EXECUTABLE
+  NAMES gnuplot 
+)
+
+IF(GNUPLOT_EXECUTABLE)
+    MESSAGE(STATUS "Found GnuPlot executable")
+ELSE(GNUPLOT_EXECUTABLE)
+    MESSAGE(STATUS "Warning! Can NOT find GnuPlot. Client program needs for data visualization.")
+ENDIF()
+
+
+MESSAGE(STATUS "*** ")
+MESSAGE(STATUS "*** The OiVibrations run-time library component will be an alias for the following libraries:")
+MESSAGE(STATUS "*** OI_LIBS = ${OI_LIBS}")
+MESSAGE(STATUS "*** ")
 
 ADD_SUBDIRECTORY(src)
