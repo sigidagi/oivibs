@@ -14,7 +14,6 @@ INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR} ${OIVIBS_SOURCE_DIR} ${OIVIBS_BINARY_DIR
 ## what you're doing.  It might be better to add the
 ## path to the "/etc/ld.so.conf" file and then run "ldconfig".
 
-SET(CMAKE_CXX_FLAGS "-g -Wall -std=c++0x")
 
 FILE(GLOB folder_source *.cpp)
 FILE(GLOB folder_header *.h)

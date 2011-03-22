@@ -26,8 +26,7 @@
 #define _OIFDDPROCESSING_H
 
 #include    "OiProcessing.h" 
-#include	"OiMath.h"
-#include	<fftw3.h>
+#include	"OiPWelch.h"
 #include    <armadillo>
 #include	<complex>
 

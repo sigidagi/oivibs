@@ -320,24 +320,24 @@ namespace Oi
             return shared_ptr<FileFormatInterface>();
         
         unsigned int numberOfMeasurements(0);
-/*
- *        vector< shared_ptr<FileFormatInterface> >::const_iterator it;
- *
- *        it = std::find_if(fileFormatList_.begin(), 
- *                      fileFormatList_.end(), 
- *                      [&numberOfMeasurements, measurementNumber](shared_ptr<FileFormatInterface> format)->bool
- *        {
- *            if (format->existChannels())
- *                ++numberOfMeasurements;
- *            if (numberOfMeasurements == (measurementNumber+1))
- *                return true;
- *            
- *            return false;
- *        });
- *        
- *        if (it != fileFormatList_.end())
- *            return *it;
- */
+        vector< shared_ptr<FileFormatInterface> >::const_iterator it;
+
+        /*
+         *it = std::find_if(fileFormatList_.begin(), 
+         *              fileFormatList_.end(), 
+         *              [&numberOfMeasurements, measurementNumber](shared_ptr<FileFormatInterface> format)->bool
+         *{
+         *    if (format->existChannels())
+         *        ++numberOfMeasurements;
+         *    if (numberOfMeasurements == (measurementNumber+1))
+         *        return true;
+         *    
+         *    return false;
+         *});
+         *
+         *if (it != fileFormatList_.end())
+         *    return *it;
+         */
 
         foreach(shared_ptr<FileFormatInterface> format, fileFormatList_)
         {

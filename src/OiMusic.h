@@ -1,11 +1,11 @@
 // =====================================================================================
 // 
-//       Filename:  OiMath.h
+//       Filename:  OiMusic.h
 // 
 //    Description:  
 // 
 //        Version:  1.0
-//        Created:  2011-03-02 12:02:46
+//        Created:  2011-03-12 22:06:06
 //       Revision:  none
 //       Compiler:  g++
 // 
@@ -22,32 +22,42 @@
 // 
 // =====================================================================================
 
-#ifndef  OIMATH_INC
-#define  OIMATH_INC
+#ifndef  OIMUSIC_INC
+#define  OIMUSIC_INC
 
-#include	"OiFFTWest.h"
 #include	<armadillo>
-#include	<complex>
+#include	<OiFFTWest.h>
 
 using namespace arma;
-using std::complex;
 
 namespace Oi {
 
-    void detrend( Mat<double>& x, int p = 1);
-    void inverse( Mat<double>& x);
-    colvec hamming(int m);
-
-    void convmtx(colvec in, int p, mat& out);
-    void covar(colvec in, int p, mat& out );
-
-    
-    
-    class Pisarenko
+    class Music
     {
+        private:
+            FFTWest gfft_;
+            int segmentLength_;
+            double samplingInterval_;
+            int overlap_;
+            bool calcCSD_;
+            
+            cx_cube CSD_;
+        public:
+            Music();
+            Music(int segmentLength);
+            Music(int segmentLength, double sampling);
+            Music(int segmentLength, double sampling, bool calcCSD);
+    
+            void setSamplingInterval(double sampling);
+            void setSegmentLength(int length);
+            void setCalculateCSD(bool calcCSD);
 
+            void apply(const mat& in, mat& out);
+            cx_cube& getCSD();
     };
+
 
 } // namespace Oi
 
-#endif   // ----- #ifndef OIMATH_INC  -----
+
+#endif   // ----- #ifndef OIMUSIC_INC  -----
