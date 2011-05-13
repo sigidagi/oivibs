@@ -22,7 +22,6 @@
 // 
 // =====================================================================================
 
-
 #ifndef  OIUFACTORY_INC
 #define  OIUFACTORY_INC
 
@@ -49,7 +48,6 @@ class UFactory
         function<UFF* ()> createObjectFunc;
 
         map<K, function<UFF* ()> > objectCreator;
-//        map<K, unsigned int> categoryList;
 
         template<typename S>
         static UFF* createObject()
@@ -71,11 +69,6 @@ class UFactory
             createObjectFunc = &createObject<S>;
             std::pair<K, function<UFF* ()> > object(id, createObjectFunc);
             objectCreator.insert( object );
-                
-            /*
-             *std::pair<K, string> cat(id, category);    
-             *categoryList.insert( cat );
-             */
         }
         
         void getRegistrationKeys( std::vector<int>& keys)
@@ -88,30 +81,6 @@ class UFactory
             }
         }
        
-        /*
-         *void selectKeysByCategory( std::vector<int>& keys, const string& category)
-         *{
-         *    keys.clear();
-         *    Oi::transform_if(categoryList.begin(),
-         *                     categoryList.end(),
-         *                     back_inserter(keys),
-         *                     boost::bind(Oi::is_value_equal<int, string>, _1, category),
-         *                     Oi::make_select1st(categoryList));
-         *}
-         */
-
-        /*
-         *string selectCategory(K id)
-         *{
-         *    typename std::map<K, string>::iterator it;
-         *    it = categoryList.find(id);
-         *    if (it != categoryList.end())
-         *        return it->second;
-         *    else
-         *        return string();
-         *}
-         */
-
         bool hasClass(K id)
         {
             return (objectCreator.find(id) != objectCreator.end() );

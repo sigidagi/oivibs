@@ -128,12 +128,11 @@ namespace Oi {
             if (uffFactory_.hasClass( get<0>(info_[i]) ))
             {
                  std::cout << "Found universal dataset number: " << get<0>(info_[i]) << "... OK\n";
-                 //std::cout << std::setw(10) << uffFactory_.selectCategory( get<0>(info_[i]) ) << "... OK\n";
                  // first parameter - UFF format type(integer). It'll be used as ID to create UFF object. 
                  shared_ptr<UFF> uff(uffFactory_.createObject( get<0>(info_[i]) ));
+                 
                  // second and third parameters: position in file and number of lines to parse accordingly.
                  uff->setParameters(file_, get<1>(info_[i]), get<2>(info_[i])); 
-
 
                  uffObjects_.push_back( uff );
             }     
@@ -143,7 +142,6 @@ namespace Oi {
         
         // One UFF object are found and initialized - parse those objects according their format. 
         // UFF object will be filed with data from parsed file. 
-        
         std::cout << std::endl;
 
         try {
@@ -233,26 +231,23 @@ namespace Oi {
         if (uffObjects_.empty())
             return ;
         
-        vector< shared_ptr<UFF> >::iterator it_beg, it_end;
+        vector< shared_ptr<UFF> >::iterator it, it_end;
 
-        it_beg = std::find_if(uffObjects_.begin(), 
+        it = std::find_if(uffObjects_.begin(), 
                           uffObjects_.end(), 
                           boost::bind(std::equal_to<unsigned int>(), boost::bind(&UFF::category, _1), RECORDS )); 
 
-        if (it_beg == uffObjects_.end())
+        if (it == uffObjects_.end())
             return;
  
-        it_end = std::find_if(it_beg, 
-                          uffObjects_.end(), 
-                          boost::bind(std::not_equal_to<unsigned int>(), boost::bind(&UFF::category, _1), RECORDS )); 
+        it_end = std::find_if(it, 
+                             uffObjects_.end(), 
+                             boost::bind(std::not_equal_to<unsigned int>(), boost::bind(&UFF::category, _1), RECORDS )); 
 
-        int count = (int)(it_end - it_beg);
-        int nsteps = (int)(it_beg - uffObjects_.begin());
-        uffIterator uit = uffObjects_.begin();
-        std::advance(uit, nsteps);
+        int count = (int)(it_end - it);
 
         // load information: sampling interval, number of samples, cahnnel names, etc..
-        this->loadChannelInfo(uit, count);
+        this->loadChannelInfo(it, count);
         
         int nrows(0), ncols(0); 
         // TODO: needs better implementation.
@@ -260,7 +255,7 @@ namespace Oi {
         {
             // then is suposed that that one object can hold several channels
             //
-            const double* praw = reinterpret_cast<const double*>((*uit)->getData(nrows, ncols));
+            const double* praw = reinterpret_cast<const double*>((*it)->getData(nrows, ncols));
             channels_.set_size(nrows, ncols);
 
             for (int i = 0; i < ncols; ++i)
@@ -276,10 +271,10 @@ namespace Oi {
 
             // Channel matrix (column number represent record number) is initialized.
             // Next step copy data to that matrix.
-            for (int i = 0; i < count; ++i, ++uit)
+            for (int i = 0; i < count; ++i, ++it)
             {
                 double* pdata = channels_.colptr(i);
-                const double* praw = reinterpret_cast<const double*>((*uit)->getData(nrows, ncols));
+                const double* praw = reinterpret_cast<const double*>((*it)->getData(nrows, ncols));
                 if (praw == 0)
                     continue;
 
