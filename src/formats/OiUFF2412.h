@@ -53,6 +53,7 @@ class UFF2412 : public UFF
         typedef UFF2412 uff_type;
 
         const int number() const { return 2412; }
+        Category category() const { return SURFACES; }
 
         void setParameters(const string& file, int position, int nlines)
         {

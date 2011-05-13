@@ -33,10 +33,16 @@
 #include	<algorithm>
 #include	<iterator>
 #include    <sstream>
+#include	<boost/lexical_cast.hpp>
+#include	<boost/numeric/conversion/cast.hpp>
 
 using std::vector;
 using std::string;
 using std::stringstream;
+using boost::lexical_cast;
+using boost::numeric_cast;
+using boost::bad_lexical_cast;
+using boost::bad_numeric_cast;
 
 namespace Oi {
 
@@ -60,6 +66,7 @@ class UFF58 : public UFF
         typedef UFF58 uff_type;
         
         const int number() const { return 58; }
+        Category category() const { return RECORDS; }
 
         void setParameters(const string& file, int position, int nlines)
         {

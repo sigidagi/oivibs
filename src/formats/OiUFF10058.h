@@ -61,6 +61,7 @@ class UFF10058 : public UFF
         typedef UFF10058 uff_type;
         
         const int number() const { return 10058; }
+        Category category() const { return RECORDS; }
 
         void setParameters(const string& file, int position, int nlines)
         {

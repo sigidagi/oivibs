@@ -57,6 +57,7 @@ class UFF10015 : public UFF
         typedef UFF10015 uff_type;
 
         const int number() const { return 10015; }
+        Category category() const { return NODES; }
         
         void setParameters(const string& file, int position, int nlines)
         {

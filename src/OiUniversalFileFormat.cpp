@@ -25,7 +25,6 @@
 #include    "OiUniversalFileFormat.h"
 #include    "OiUtil.h"
 #include    "OiRoot.h"
-#include	"formats/OiUFFAll.h"
 
 #include	<iomanip>
 #include    <algorithm>
@@ -41,19 +40,7 @@ namespace Oi {
     
     UniversalFileFormat::UniversalFileFormat(Root* owner, const string& file) : root_(owner), file_(file)
     {
-        // Universal Dataset number is ID for registration of supported Universal Formats.
-        uffFactory_.registerClass<UFF15>(15, "nodes");
-        uffFactory_.registerClass<UFF10015>(10015, "nodes");
-        
-        uffFactory_.registerClass<UFF82>(82, "lines");
-        uffFactory_.registerClass<UFF10082>(10082, "lines");
-        uffFactory_.registerClass<UFF82>(82, "lines");
-
-        uffFactory_.registerClass<UFF2412>(2412, "surfaces");
-        uffFactory_.registerClass<UFF10012>(10012, "surfaces");
-        
-        uffFactory_.registerClass<UFF58>(58, "records");
-        uffFactory_.registerClass<UFF10058>(10058, "records");
+        uffFactory_.registerAllFormats();
     }
 
     UniversalFileFormat::~UniversalFileFormat()
@@ -140,8 +127,8 @@ namespace Oi {
         {
             if (uffFactory_.hasClass( get<0>(info_[i]) ))
             {
-                 std::cout << "Found universal dataset number: " << get<0>(info_[i]) << "\t";
-                 std::cout << std::setw(10) << uffFactory_.selectCategory( get<0>(info_[i]) ) << "... OK\n";
+                 std::cout << "Found universal dataset number: " << get<0>(info_[i]) << "... OK\n";
+                 //std::cout << std::setw(10) << uffFactory_.selectCategory( get<0>(info_[i]) ) << "... OK\n";
                  // first parameter - UFF format type(integer). It'll be used as ID to create UFF object. 
                  shared_ptr<UFF> uff(uffFactory_.createObject( get<0>(info_[i]) ));
                  // second and third parameters: position in file and number of lines to parse accordingly.
@@ -176,9 +163,9 @@ namespace Oi {
             std::cerr << es << std::endl;
         }
 
-        loadGeometry(nodes_, "nodes"); 
-        loadGeometry(lines_, "lines"); 
-        loadGeometry(surfaces_, "surfaces"); 
+        loadGeometry(nodes_, NODES); 
+        loadGeometry(lines_, LINES); 
+        loadGeometry(surfaces_, SURFACES); 
         loadChannels();
 
     } // method end
@@ -213,11 +200,8 @@ namespace Oi {
         // ----- Check if sampling interval in all records is the same.
         size_t nvalues = std::count_if(channelInfo_.begin(),
                                        channelInfo_.end(),
-                                       bind(std::equal_to<double>(),
-                                       bind(bind(&ChannelInfo::sampling, _1),
-                                       _1),
-                                       samplingInterval));
-
+                                       bind(std::equal_to<double>(), bind(&ChannelInfo::sampling, _1), samplingInterval));
+                                            
         if (nvalues != channelInfo_.size())
         {
             std::cerr << "Sampling Intervals differs in records!\n";
@@ -248,45 +232,25 @@ namespace Oi {
     {
         if (uffObjects_.empty())
             return ;
-
-        // First we create a vector of existing universal dataset numbers, and 
-        // we have information (dataset number) of registered records. Loop through 
-        // registred record numbers and find their existence in found UFF Objects. 
-        // stop the loop when first match is found.
-
-        // existing universal dataset numbers in a file.
-        vector<int> unumbers;
-        std::transform(uffObjects_.begin(),
-                       uffObjects_.end(),
-                       back_inserter(unumbers),
-                       boost::bind(&UFF::number, _1));                   
-      
-        // ----------------------------- RECORDS-------------------------------
-        //
-        // acccess records as raw data and form arma matrix
-        vector<int> recordKeys;
-        uffFactory_.selectKeysByCategory( recordKeys, "records");
-
-        // loop through possible dataset numbers. First match with existed uffObject
-        // will be chosen that dataset number as number represented recorded data.
-        if (recordKeys.empty())
-            return;
-       
-        vector<int>::const_iterator cit;
-        cit = std::find_first_of(unumbers.begin(), unumbers.end(), recordKeys.begin(), recordKeys.end()); 
-        if (cit == unumbers.end())
-            return;
         
-        // count how many object carry data.
-        int count = (int)std::count(unumbers.begin(), unumbers.end(), *cit); 
+        vector< shared_ptr<UFF> >::iterator it_beg, it_end;
 
-        // if we are here - we found existing records. variable "count" holds how many uffObject
-        // exist, iterator iit position holds information where uff object as record is.
-    
+        it_beg = std::find_if(uffObjects_.begin(), 
+                          uffObjects_.end(), 
+                          boost::bind(std::equal_to<unsigned int>(), boost::bind(&UFF::category, _1), RECORDS )); 
+
+        if (it_beg == uffObjects_.end())
+            return;
+ 
+        it_end = std::find_if(it_beg, 
+                          uffObjects_.end(), 
+                          boost::bind(std::not_equal_to<unsigned int>(), boost::bind(&UFF::category, _1), RECORDS )); 
+
+        int count = (int)(it_end - it_beg);
+        int nsteps = (int)(it_beg - uffObjects_.begin());
         uffIterator uit = uffObjects_.begin();
-        int nsteps = (int)(cit - unumbers.begin());
         std::advance(uit, nsteps);
-        
+
         // load information: sampling interval, number of samples, cahnnel names, etc..
         this->loadChannelInfo(uit, count);
         
@@ -324,43 +288,30 @@ namespace Oi {
 
         }
 
-//        channels_.save("Plate.txt", arma::arma_ascii); 
 
     } // end of function 
  
     template<typename T>
-    void UniversalFileFormat::loadGeometry( arma::Mat<T>& geo, const string& category)
+    void UniversalFileFormat::loadGeometry( arma::Mat<T>& geo, Category category)
     {
-        vector<int> keys;
-        uffFactory_.selectKeysByCategory(keys, category);
-        if (keys.empty())
+        uffIterator it;
+        it = std::find_if(uffObjects_.begin(),
+                          uffObjects_.end(),
+                          boost::bind( std::equal_to<unsigned int>(), boost::bind(&UFF::category, _1), category));
+        
+        if (it == uffObjects_.end())
             return;
-
-        // existing universal dataset numbers.
-        vector<int> unumbers;
-        std::transform(uffObjects_.begin(),
-                       uffObjects_.end(),
-                       back_inserter(unumbers),
-                       boost::bind(&UFF::number, _1));                   
-
-        vector<int>::const_iterator cit;
-        cit = std::find_first_of(unumbers.begin(), unumbers.end(), keys.begin(), keys.end());
-        if (cit == unumbers.end())
-            return;
-
-        uffIterator uit = uffObjects_.begin();
-        std::advance( uit, (int)(cit - unumbers.begin()) ); 
 
         int nrows(0), ncols(0);
-        const T* praw = reinterpret_cast<const T*>((*uit)->getData(nrows, ncols));
+        const T* praw = reinterpret_cast<const T*>((*it)->getData(nrows, ncols));
 
         geo.set_size(nrows, ncols);
         T* pdata = geo.memptr();
         std::copy(praw, praw+(nrows*ncols), pdata);
      } 
      
-     template void UniversalFileFormat::loadGeometry<double>( arma::Mat<double>& geo, const string& category);
-     template void UniversalFileFormat::loadGeometry<unsigned int>( arma::Mat<unsigned int>& geo, const string& category);
+     template void UniversalFileFormat::loadGeometry<double>( arma::Mat<double>& geo, Category category);
+     template void UniversalFileFormat::loadGeometry<unsigned int>( arma::Mat<unsigned int>& geo, Category category);
     
     
     bool UniversalFileFormat::existNodes() const

@@ -26,30 +26,20 @@
 #ifndef  OIUFF_INC
 #define  OIUFF_INC
 
-
-#include    "OiUtil.h"	
-#include	<map>
-#include	<list>
 #include    <string>
-#include	<vector>
 #include	<fstream>
 #include	<algorithm>
 #include	<boost/any.hpp>
-#include	<boost/bind.hpp>
-#include	<boost/function.hpp>
-#include	<boost/lexical_cast.hpp>
-#include	<boost/numeric/conversion/cast.hpp>
 
-using std::map;
 using std::string;
-using boost::function;
-using boost::lexical_cast;
-using boost::numeric_cast;
-using boost::bad_lexical_cast;
-using boost::bad_numeric_cast;
-
 
 namespace Oi {
+
+enum Category
+{
+    NODES, LINES, SURFACES, RECORDS 
+};
+
 
 class UFF
 {
@@ -59,6 +49,7 @@ class UFF
         virtual const int number() const = 0;
         virtual void setParameters(const string& file, int position, int nlines) = 0;
         virtual void parse() = 0; 
+        virtual Category category() const = 0;
 
         virtual const void* getData(int& nrows, int& ncols) = 0;
         virtual boost::any getExtraData() 
@@ -72,85 +63,6 @@ class UFF
             string temp;
             for (unsigned int i = 0; i < numberOfLines; ++i)
                 getline(fs, temp);
-        }
-};
-
-template<class K>
-class UFactory
-{
-    private:
-        function<UFF* ()> createObjectFunc;
-
-        map<K, function<UFF* ()> > objectCreator;
-        map<K, string> categoryList;
-
-        template<typename S>
-        static UFF* createObject()
-        {
-            return new S();
-        }
-    
-    public:
-        template<typename S>
-        void registerClass(K id, const string& category)
-        {
-            if (objectCreator.find(id) != objectCreator.end())
-            {
-                // class already registered and exist
-                // error handling here
-                return;
-            }
-
-            createObjectFunc = &createObject<S>;
-            std::pair<K, function<UFF* ()> > object(id, createObjectFunc);
-            objectCreator.insert( object );
-                
-            std::pair<K, string> cat(id, category);    
-            categoryList.insert( cat );
-        }
-        
-        void getRegistrationKeys( std::vector<int>& keys)
-        {
-            keys.clear();
-            typename map<K, function<UFF* ()> >::iterator iter;
-            for (iter = objectCreator.begin(); iter != objectCreator.end(); ++iter)
-            {
-                keys.push_back( (*iter).first );
-            }
-        }
-       
-        void selectKeysByCategory( std::vector<int>& keys, const string& category)
-        {
-            keys.clear();
-            Oi::transform_if(categoryList.begin(),
-                             categoryList.end(),
-                             back_inserter(keys),
-                             boost::bind(Oi::is_value_equal<int, string>, _1, category),
-                             Oi::make_select1st(categoryList));
-        }
-
-        string selectCategory(K id)
-        {
-            typename std::map<K, string>::iterator it;
-            it = categoryList.find(id);
-            if (it != categoryList.end())
-                return it->second;
-            else
-                return string();
-        }
-
-        bool hasClass(K id)
-        {
-            return (objectCreator.find(id) != objectCreator.end() );
-        }
-
-        UFF* createObject(K id)
-        {
-            typename std::map<K, function<UFF* ()> >::iterator iter = objectCreator.find(id);
-            if (iter == objectCreator.end())
-                return NULL;
-
-            return ((*iter).second)();
         }
 };
 

@@ -25,7 +25,7 @@
 #ifndef _UNIVERSALFORMAT_H
 #define _UNIVERSALFORMAT_H
 
-#include    "formats/OiUFF.h"
+#include    "formats/OiUFactory.h"
 #include	"OiChannelInfo.h"
 #include    "OiFileFormat.h"
 #include    <vector>
@@ -77,7 +77,7 @@ namespace Oi {
         void loadChannels();
         
         template<typename T>
-        void loadGeometry( arma::Mat<T>& geo, const string& category);
+        void loadGeometry( arma::Mat<T>& geo, Category category);
         
     public:
         UniversalFileFormat(Root* owner, const string& file);

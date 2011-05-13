@@ -22,6 +22,8 @@
 // 
 // =====================================================================================
 
+
+#include    "OiUFactory.h"
 #include    "OiUFF15.h"
 #include    "OiUFF10015.h"
 #include    "OiUFF58.h"

@@ -52,6 +52,7 @@ class UFF82 : public UFF
         typedef UFF82 uff_type;
 
         const int number() const { return 82; }
+        Category category() const { return LINES; }
 
         void setParameters(const string& file, int position, int nlines)
         {
