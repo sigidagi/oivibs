@@ -68,49 +68,6 @@ namespace Oi
         PSD_ = zeros<mat>(segmentLength_/2+1, ncols);
    
         pwelch_.apply(channels, PSD_); 
-        
-                /*
-                 *chunk.col(j) = chunk.col(j) % hamming;
-                 *gfft.exec( chunk.colptr(j), tempPSD.colptr(j) );
-                 */
-                
-/*
- *                mat R;
- *                int M(10), p(2);
- *                Oi::covar(chunk.col(j), M, R); 
- *
- *                vec eigval;
- *                mat eigvec;
- *                arma::eig_sym(eigval, eigvec, R);
- *                
- *                uvec indices = arma::sort_index(eigval);
- *                int nfft = chunk.n_rows;
- *
- *                cx_vec out(nfft/2+1);
- *
- *                for (int i = 0; i <= M-p; ++i)
- *                {
- *                    gfft.exec( eigvec.n_rows, eigvec.colptr(indices(i)), out.memptr() );
- *                    tempPSD.col(j) += out; 
- *                }
- */
-
-                /*
-                 *mat R;
-                 *int p(256);
-                 *Oi::covar(chunk.col(j), p+1, R);
-                 *vec eigval;
-                 *mat eigvec;
-                 *arma::eig_sym(eigval, eigvec, R);
-                 *
-                 *int nfft = chunk.n_rows;
-                 *cx_vec out(nfft/2+1);
-                 *int index = arma::min(eigval);
-                 *gfft.exec(eigvec.n_rows, eigvec.colptr(index), out.memptr() );
-                 *tempPSD.col(j) = out;
-                 */
-
-
     }
     
     void FddProcessing::singularValueDecomposition()
