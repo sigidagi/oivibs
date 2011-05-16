@@ -1,9 +1,0 @@
-cmake_minimum_required(VERSION 2.6)
-
-#INCLUDE_DIRECTORIES(${OIVIBS_SOURCE_DIR})
-#LINK_DIRECTORIES(${OIVIBS_BINARY_DIR}) 
-
-SET(CMAKE_CXX_FLAGS "-g -Wall")
-
-ADD_EXECUTABLE(dlltest test.cpp)
-TARGET_LINK_LIBRARIES(dlltest OiVibrations)

@@ -5,8 +5,14 @@ build/Makefile
 build/cmake_install.cmake
 build/src
 build/src/**/*
+build/CPackConfig.cmake
+build/CPackSourceConfig.cmake
+build/OiVibrations-0.1.1-Linux.deb
+build/_CPack_Packages/
+build/install_manifest.txt
 src/tags
 src/*.swp
 src/client_neko/tags
 src/client_neko/*.swp
 src/client/tags
+

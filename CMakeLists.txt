@@ -14,7 +14,7 @@ SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/build/cmake/Modu
 #SET(CMAKE_CXX_COMPILER "g++")
 PROJECT(OiVibrations CXX)
 
-SET(CMAKE_CXX_FLAGS "-g -Wall -std=gnu++0x")
+#SET(CMAKE_CXX_FLAGS "-g -Wall -std=gnu++0x")
 
 SET(OI_USE_NEKO false)
 SET(OI_USE_MYSQLPP false)

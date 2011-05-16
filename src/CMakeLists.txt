@@ -14,7 +14,6 @@ INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR} ${OIVIBS_SOURCE_DIR} ${OIVIBS_BINARY_DIR
 ## what you're doing.  It might be better to add the
 ## path to the "/etc/ld.so.conf" file and then run "ldconfig".
 
-
 FILE(GLOB folder_source *.cpp)
 FILE(GLOB folder_header *.h)
 SOURCE_GROUP("Source files" FILES ${folder_source})
@@ -39,11 +38,14 @@ ADD_LIBRARY( OiVibrations SHARED ${folder_source} )
 #ENDIF(OI_USE_MYSQLPP)
 
 TARGET_LINK_LIBRARIES( OiVibrations armadillo fftw3)
-ADD_SUBDIRECTORY(client)
+#ADD_SUBDIRECTORY(client)
 
-ENABLE_TESTING()
-ADD_TEST(SimpleTest ./test/dlltest /var/www/uploads/test2.uff)
+ADD_EXECUTABLE(vibclient client/test.cpp)
+TARGET_LINK_LIBRARIES(vibclient OiVibrations)
 
+
+#ENABLE_TESTING()
+#ADD_TEST(SimpleTest ./test/dlltest /var/www/uploads/test2.uff)
 
 #SET_TARGET_PROPERTIES(OiVibartions PROPERTIES VERSION ${ARMA_MAJOR}.${ARMA_MINOR}.${ARMA_PATCH} SOVERSION 0)
 
@@ -57,27 +59,24 @@ ADD_TEST(SimpleTest ./test/dlltest /var/www/uploads/test2.uff)
 
 #MESSAGE(STATUS "CMAKE_INSTALL_PREFIX = ${CMAKE_INSTALL_PREFIX}")
 
-
-## Allow for the "lib" directory to be specified on the command line
-
-#IF(NOT LIB_INSTALL_DIR)
-  #IF(UNIX AND NOT APPLE)   # I don't know how Mac OS handles 64 bit systems
-    #IF(CMAKE_SIZEOF_VOID_P EQUAL 8)
-      #MESSAGE(STATUS "Detected 64 bit system")
-      #SET(LIB_INSTALL_DIR "lib64")
-    #ELSE(CMAKE_SIZEOF_VOID_P EQUAL 8)
-      #SET(LIB_INSTALL_DIR "lib")
-    #ENDIF(CMAKE_SIZEOF_VOID_P EQUAL 8)
+# Allow for the "lib" directory to be specified on the command line
+IF(NOT LIB_INSTALL_DIR)
+  IF(UNIX AND NOT APPLE)   # I don't know how Mac OS handles 64 bit systems
+    IF(CMAKE_SIZEOF_VOID_P EQUAL 8)
+      MESSAGE(STATUS "Detected 64 bit system")
+      SET(LIB_INSTALL_DIR "lib64")
+    ELSE(CMAKE_SIZEOF_VOID_P EQUAL 8)
+      SET(LIB_INSTALL_DIR "lib")
+    ENDIF(CMAKE_SIZEOF_VOID_P EQUAL 8)
   
-  #ELSE(UNIX AND NOT APPLE)
-    #SET(LIB_INSTALL_DIR "lib")
-  #ENDIF(UNIX AND NOT APPLE)
-#ENDIF(NOT LIB_INSTALL_DIR)
+  ELSE(UNIX AND NOT APPLE)
+    SET(LIB_INSTALL_DIR "lib")
+  ENDIF(UNIX AND NOT APPLE)
+ENDIF(NOT LIB_INSTALL_DIR)
 
-#MESSAGE(STATUS "LIB_INSTALL_DIR = ${LIB_INSTALL_DIR}")
+MESSAGE(STATUS "LIB_INSTALL_DIR = ${LIB_INSTALL_DIR}")
 
 ## Allow for the "include" directory to be specified on the command line
-
 #IF(NOT INCLUDE_INSTALL_DIR)
   #SET(INCLUDE_INSTALL_DIR "include")
 #ENDIF(NOT INCLUDE_INSTALL_DIR)
@@ -86,7 +85,6 @@ ADD_TEST(SimpleTest ./test/dlltest /var/www/uploads/test2.uff)
 
 
 ## Note that the trailing / character in "include/" is critical
-
 #INSTALL(DIRECTORY include/ DESTINATION ${INCLUDE_INSTALL_DIR}
 #PATTERN ".svn" EXCLUDE
 #PATTERN "*.cmake" EXCLUDE
@@ -94,5 +92,13 @@ ADD_TEST(SimpleTest ./test/dlltest /var/www/uploads/test2.uff)
 #PATTERN "*orig" EXCLUDE
 #)
 
-#INSTALL(TARGETS OiVibrations DESTINATION ${LIB_INSTALL_DIR})
+INSTALL(TARGETS OiVibrations LIBRARY DESTINATION /usr/${LIB_INSTALL_DIR})
+INSTALL(TARGETS vibclient RUNTIME DESTINATION /usr/bin)
 
+SET(CPACK_GENERATOR "DEB")
+SET(CPACK_DEBIAN_PACKAGE_MAINTAINER "Sigitas Dagilis") 
+ 
+INCLUDE(CPack)
+# To use this:
+# make package
+# sudo dpkg -i OiVibrations-0.1.1-Linux.deb
