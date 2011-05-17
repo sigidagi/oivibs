@@ -11,7 +11,10 @@ MESSAGE(STATUS "Configuring OiVibartions cmake_source_dir  = ${CMAKE_SOURCE_DIR}
 
 SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/build/cmake/Modules/")
 
-#SET(CMAKE_CXX_COMPILER "g++")
+SET(CMAKE_CXX_COMPILER "g++")
+SET(CMAKE_FORTRAN_COMPILER "gfortran")
+ENABLE_LANGUAGE(Fortran)
+
 PROJECT(OiVibrations)
 
 #SET(CMAKE_CXX_FLAGS "-g -Wall -std=gnu++0x")
@@ -57,7 +60,7 @@ IF(LAPACK_FOUND AND BLAS_FOUND)
 ELSEIF(ACMLMP_FOUND)
     SET(OI_LIBS ${OI_LIBS} ${ACMLMP_LIBRARY})
 ELSE()
-    MESSAGE(FATAL ERROR "lapack/blass or acml libraries should be installed!") 
+    MESSAGE(FATAL_ERROR "lapack/blass or acml libraries should be installed!") 
 ENDIF()
 
 FIND_PACKAGE(FFTW3 REQUIRED)
