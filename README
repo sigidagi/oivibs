@@ -23,8 +23,7 @@
 === 1.0. Introduction ===
 
 OiVibration is a C++ library for estimation of madal parameters
-using Operational Modal Analysis, OMA technique. OMA is also 
-called output-only modal analysis. 
+using FFT and SVD techniques (Output-only modal analysis). 
 
 
 === 2.0. Installation: Preliminaries ===
